@@ -10,7 +10,7 @@
  */
 
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { basename, resolve } from 'node:path';
+import { basename, dirname, resolve } from 'node:path';
 
 import { analyzeST, type Diagnostic } from './dialect/analyzer.ts';
 import { parseWithRecovery } from './dialect/recovery.ts';
@@ -28,6 +28,12 @@ import { generateFromSpec } from './gen/generate.ts';
 import { parseCompilerErrors } from './gen/compiler-feedback.ts';
 import { listTemplates } from './templates/index.ts';
 import { formatSpecDiagnostics } from './spec/index.ts';
+import {
+  formatSimDiagnostics,
+  formatSimReport,
+  runScenarioWithObservations,
+  validateScenario,
+} from './sim/index.ts';
 import { convertAIGenerated, type AIGeneratedProject } from './ai/convert.ts';
 import { generateST, loadLLMConfig } from './ai/client.ts';
 import { buildSystemPrompt } from './ai/prompt.ts';
@@ -327,6 +333,97 @@ async function cmdBuildXml(args: Args): Promise<number> {
 }
 
 /**
+ * `sim <scenario.json> [--observed obs.json]`：仿真场景 DSL 校验 + 半自动断言。
+ *
+ * 不带 --observed 时输出执行清单（供在 GX Simulator3 中操作并采集观测值）。
+ */
+async function cmdSim(args: Args): Promise<number> {
+  const scenarioPath = args._[0];
+  if (!scenarioPath) {
+    console.error('用法: ai-st-gxworks3 sim <scenario.json> [--observed obs.json] [--write-obs-template obs.json] [-o outdir]');
+    return 2;
+  }
+  const scenarioFile = resolve(scenarioPath);
+  let raw: unknown;
+  try {
+    raw = JSON.parse(await readFile(scenarioFile, 'utf8'));
+  } catch (e) {
+    console.error(`读取场景失败：${e instanceof Error ? e.message : String(e)}`);
+    return 2;
+  }
+  const validated = validateScenario(raw);
+  if (validated.diagnostics.length > 0) console.log(formatSimDiagnostics(validated.diagnostics));
+  if (!validated.ok || !validated.scenario) {
+    console.error('场景校验失败。');
+    return 1;
+  }
+  const scenario = validated.scenario;
+  const outDir = typeof args.out === 'string' ? resolve(args.out) : resolve('out', `${scenario.name}-sim`);
+
+  const observedPath = typeof args.observed === 'string' ? args.observed : undefined;
+  const tplPath = typeof args['write-obs-template'] === 'string' ? args['write-obs-template'] : undefined;
+  if (tplPath) {
+    const template = {
+      scenario: scenario.name,
+      observedAt: new Date().toISOString(),
+      steps: scenario.steps.map((s, i) => ({
+        step: i + 1,
+        name: s.name,
+        values: {},
+      })),
+    };
+    await writeFile(resolve(tplPath), JSON.stringify(template, null, 2), 'utf8');
+    console.log(`已写出观测文件模板：${resolve(tplPath)}（填入各步骤实际读到的设备值）`);
+  }
+
+  if (!observedPath) {
+    console.log(`\n场景 ${scenario.name}（${scenario.steps.length} 步）执行清单：`);
+    scenario.steps.forEach((s, i) => {
+      const sets = s.set ? Object.entries(s.set).map(([k, v]) => `${k}=${String(v)}`).join(', ') : '';
+      const exps = s.expect ? Object.entries(s.expect).map(([k, v]) => `${k}=${String(v)}`).join(', ') : '';
+      console.log(`  ${i + 1}. ${s.name}${sets ? ` | 写: ${sets}` : ''}${exps ? ` | 期望: ${exps}` : ''}`);
+    });
+    console.log('\n操作：GX Works3 打开工程 → 调试 → 仿真 → 开始仿真 → 批监视写/读设备，');
+    console.log('      把每步读到的值填入观测文件，再用 --observed <obs.json> 运行断言。');
+    return 0;
+  }
+
+  let observationsRaw: unknown;
+  try {
+    observationsRaw = JSON.parse(await readFile(resolve(observedPath), 'utf8'));
+  } catch (e) {
+    console.error(`读取观测文件失败：${e instanceof Error ? e.message : String(e)}`);
+    return 2;
+  }
+  const result = runScenarioWithObservations(scenario, observationsRaw as never);
+  if (result.diagnostics.length > 0) console.log(formatSimDiagnostics(result.diagnostics));
+  console.log(formatSimReport(result));
+
+  await mkdir(outDir, { recursive: true });
+  const reportPath = resolve(outDir, 'report.json');
+  await writeFile(
+    reportPath,
+    JSON.stringify(
+      {
+        scenario: scenario.name,
+        scenarioFile,
+        observedFile: resolve(observedPath),
+        ok: result.ok,
+        mismatchCount: result.mismatchCount,
+        steps: result.steps,
+        diagnostics: result.diagnostics,
+        generatedAt: new Date().toISOString(),
+      },
+      null,
+      2,
+    ),
+    'utf8',
+  );
+  console.log(`报告：${reportPath}`);
+  return result.ok ? 0 : 1;
+}
+
+/**
  * `gen <spec.json>`：Spec → 模板实例化 → 解析/方言检查 → IEC XML 工程包。
  *
  * 当前为确定性模板路径；LLM 兜底与编译诊断修复循环在后续迭代接入。
@@ -535,6 +632,7 @@ function usage(): void {
 用法:
   ai-st-gxworks3 check <file.st> [...]        校验 ST（语法 + 三菱方言检查）
   ai-st-gxworks3 gen <spec.json>              ★ Spec → 模板生成 ST + IEC XML 工程包
+  ai-st-gxworks3 sim <scenario.json>           ★ 仿真场景校验 + 半自动断言（观测文件）
   ai-st-gxworks3 build-xml <file.st>          生成 IEC 61131-10 XML（可直接导入 GX Works3）
   ai-st-gxworks3 build-text <file.st>          生成 ST 文本 + 标签 CSV（备选通道）
   ai-st-gxworks3 generate "<需求>"             AI 生成 ST（LLM，旧流程）
@@ -588,6 +686,9 @@ async function main(): Promise<void> {
       break;
     case 'gen':
       code = await cmdGen(cmdArgs);
+      break;
+    case 'sim':
+      code = await cmdSim(cmdArgs);
       break;
     case 'generate':
       code = await cmdGenerate(cmdArgs);

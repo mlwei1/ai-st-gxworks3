@@ -1,0 +1,48 @@
+{
+  "name": "motor_start_stop_sim",
+  "title": "电机启停仿真场景（b_motor_start_stop）",
+  "spec": "bench/b_motor_start_stop.json",
+  "cpu": "FX5U",
+  "program": { "resource": "MAIN", "name": "Main" },
+  "initial": {
+    "X0": 0,
+    "X1": 0,
+    "X2": 0,
+    "X3": 0,
+    "Y0": 0
+  },
+  "steps": [
+    {
+      "name": "按下启动 X0=1",
+      "set": { "X0": 1 },
+      "waitMs": 500,
+      "expect": { "Y0": 1 },
+      "note": "启动按钮点动：写 X0=1 后 Y0 应为 ON"
+    },
+    {
+      "name": "松开启动 X0=0（自锁保持）",
+      "set": { "X0": 0 },
+      "waitMs": 500,
+      "expect": { "Y0": 1 },
+      "note": "程序自锁：X0 松开后 Y0 保持 ON"
+    },
+    {
+      "name": "按下停止 X1=1",
+      "set": { "X1": 1 },
+      "waitMs": 500,
+      "expect": { "Y0": 0 },
+      "note": "停止优先：Y0 应为 OFF"
+    },
+    {
+      "name": "松开停止 X1=0",
+      "set": { "X1": 0 },
+      "waitMs": 300,
+      "expect": { "Y0": 0 },
+      "note": "停止释放后保持停机，直到再次启动"
+    }
+  ],
+  "meta": {
+    "version": "0.1.0",
+    "source": "gen bench/b_motor_start_stop.json（模板 motor_start_stop）"
+  }
+}
