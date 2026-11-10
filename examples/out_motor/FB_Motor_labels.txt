@@ -1,0 +1,9 @@
+(* FB_Motor —— 在「标签设置」工作表按此表逐行录入
+   方向    标签名              数据类型   初始值   软元件     注释
+   输入     bEnable              BOOL                           
+   输入     nTarget              INT                            
+   输出     bRunning             BOOL                           
+   输出     nSpeed               INT                            
+   局部     tRampTimer           TON                            
+   局部     nRampStep            INT        0                   
+*)

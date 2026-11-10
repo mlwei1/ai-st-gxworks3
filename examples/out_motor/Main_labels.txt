@@ -1,0 +1,11 @@
+(* Main —— 在「标签设置」工作表按此表逐行录入
+   方向    标签名              数据类型   初始值   软元件     注释
+   局部     bStart               BOOL       FALSE               
+   局部     bStop                BOOL       FALSE               
+   局部     bReset               BOOL       FALSE               
+   局部     bFault               BOOL       FALSE               
+   局部     bAutoStop            BOOL       FALSE               
+   局部     tRunTimer            TON                            
+   局部     stMotor              ST_Motor                       
+   局部     nStep                INT        0                   
+*)

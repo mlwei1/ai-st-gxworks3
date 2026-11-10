@@ -1,0 +1,17 @@
+(* 需要在「标签设置」工作表中创建/确认的局部标签：
+   POU名	标签名	类型	方向	软元件	初始值	注释
+   Main	bStart	BOOL	局部		FALSE	
+   Main	bStop	BOOL	局部		FALSE	
+   Main	bReset	BOOL	局部		FALSE	
+   Main	bFault	BOOL	局部		FALSE	
+   Main	bAutoStop	BOOL	局部		FALSE	
+   Main	tRunTimer	TON	局部			
+   Main	stMotor	ST_Motor	局部			
+   Main	nStep	INT	局部		0	
+   FB_Motor	bEnable	BOOL	输入			
+   FB_Motor	nTarget	INT	输入			
+   FB_Motor	bRunning	BOOL	输出			
+   FB_Motor	nSpeed	INT	输出			
+   FB_Motor	tRampTimer	TON	局部			
+   FB_Motor	nRampStep	INT	局部		0	
+*)

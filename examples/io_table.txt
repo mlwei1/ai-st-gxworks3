@@ -1,0 +1,14 @@
+(*
+  IO 分配表示例 —— 供 --io 参数使用
+
+  格式：地址  名称            类型    说明
+*)
+
+X0    g_Start          BOOL    启动按钮输入
+X1    g_Stop           BOOL    停止按钮输入
+X2    g_Fault          BOOL    故障信号输入
+Y0    g_Pump           BOOL    水泵输出
+Y1    g_LowAlarm       BOOL    低液位报警输出
+Y2    g_HighAlarm      BOOL    高液位报警输出
+D100  g_TankLevel      REAL    液位值 (REAL 占 D100-D101)
+D110  g_TankLevelPct   REAL    液位百分比 (REAL 占 D110-D111)

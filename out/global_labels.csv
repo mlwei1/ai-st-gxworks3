@@ -1,0 +1,3 @@
+﻿名称,数据类型,软元件号,注释
+nSpeedSet,INT,D200,
+nActualSpeed,INT,D201,

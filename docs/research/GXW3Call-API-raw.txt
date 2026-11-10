@@ -1,0 +1,655 @@
+﻿TypeInfoCount=142
+
+=== [TKIND_COCLASS] CompReg  guid=db4da351-a241-46cb-b41b-4557c3d1b463  funcs=0  vartypes=0
+
+=== [TKIND_DISPATCH] IComponentRegistrar  guid=a817e7a2-43fa-11d0-9e44-00aa00b6770a  funcs=13  vartypes=0
+   1610612736 func  QueryInterface(QueryInterface, riid, ppvObj)  params=2  funckind=FUNC_DISPATCH  vtable=0
+   1610612737 func  AddRef(AddRef)  params=0  funckind=FUNC_DISPATCH  vtable=8
+   1610612738 func  Release(Release)  params=0  funckind=FUNC_DISPATCH  vtable=16
+   1610678272 func  GetTypeInfoCount(GetTypeInfoCount, pctinfo)  params=1  funckind=FUNC_DISPATCH  vtable=24
+   1610678273 func  GetTypeInfo(GetTypeInfo, itinfo, lcid, pptinfo)  params=3  funckind=FUNC_DISPATCH  vtable=32
+   1610678274 func  GetIDsOfNames(GetIDsOfNames, riid, rgszNames, cNames, lcid, rgdispid)  params=5  funckind=FUNC_DISPATCH  vtable=40
+   1610678275 func  Invoke(Invoke, dispidMember, riid, lcid, wFlags, pdispparams, pvarResult, pexcepinfo, puArgErr)  params=8  funckind=FUNC_DISPATCH  vtable=48
+   1 func  Attach(Attach, bstrPath)  params=1  funckind=FUNC_DISPATCH  vtable=56
+   2 func  RegisterAll(RegisterAll)  params=0  funckind=FUNC_DISPATCH  vtable=64
+   3 func  UnregisterAll(UnregisterAll)  params=0  funckind=FUNC_DISPATCH  vtable=72
+   4 func  GetComponents(GetComponents, pbstrCLSIDs, pbstrDescriptions)  params=2  funckind=FUNC_DISPATCH  vtable=80
+   5 func  RegisterComponent(RegisterComponent, bstrCLSID)  params=1  funckind=FUNC_DISPATCH  vtable=88
+   6 func  UnregisterComponent(UnregisterComponent, bstrCLSID)  params=1  funckind=FUNC_DISPATCH  vtable=96
+
+=== [TKIND_DISPATCH] _IGXW3CallProjectEvents  guid=0ac7ae46-9849-4c91-9d02-3a441cd8e7d6  funcs=0  vartypes=0
+
+=== [TKIND_COCLASS] GXW3CallProject  guid=b8fb0f14-3102-4c45-bc50-ddd931402475  funcs=0  vartypes=0
+
+=== [TKIND_DISPATCH] IGXW3CallProject  guid=e08d3c60-12e5-4f3c-9a79-315cfbfe3389  funcs=100  vartypes=0
+   1610612736 func  QueryInterface(QueryInterface, riid, ppvObj)  params=2  funckind=FUNC_DISPATCH  vtable=0
+   1610612737 func  AddRef(AddRef)  params=0  funckind=FUNC_DISPATCH  vtable=8
+   1610612738 func  Release(Release)  params=0  funckind=FUNC_DISPATCH  vtable=16
+   1610678272 func  GetTypeInfoCount(GetTypeInfoCount, pctinfo)  params=1  funckind=FUNC_DISPATCH  vtable=24
+   1610678273 func  GetTypeInfo(GetTypeInfo, itinfo, lcid, pptinfo)  params=3  funckind=FUNC_DISPATCH  vtable=32
+   1610678274 func  GetIDsOfNames(GetIDsOfNames, riid, rgszNames, cNames, lcid, rgdispid)  params=5  funckind=FUNC_DISPATCH  vtable=40
+   1610678275 func  Invoke(Invoke, dispidMember, riid, lcid, wFlags, pdispparams, pvarResult, pexcepinfo, puArgErr)  params=8  funckind=FUNC_DISPATCH  vtable=48
+   1 func  Initialize(Initialize, lpCommandSender)  params=1  funckind=FUNC_DISPATCH  vtable=56
+   2 func  GetPlcTypeString(GetPlcTypeString, lpbCallID, lpszPlcTypeString, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=64
+   3 func  CreateNewProject(CreateNewProject, bstrProjectPath, bstrTitle, lSaveType, dwPlcSeries, dwPlcType, dwLanguageType, wTimeOut, lUserInterfaceMode, lpbCallID, lplReturnCode)  params=10  funckind=FUNC_DISPATCH  vtable=72
+   4 func  OpenProject(OpenProject, bstrProjectPath, wTimeOut, lUserInterfaceMode, lpbCallID, pbIsReadOnly, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=80
+   5 func  CloseProject(CloseProject, lpbCallID, lOption, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=88
+   6 func  AttachProject(AttachProject, bstrProjectPath, lpbCallID, pbIsReadOnly, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=96
+   7 func  SaveProject(SaveProject, lpbCallID, lplReturnCode)  params=2  funckind=FUNC_DISPATCH  vtable=104
+   8 func  SaveAsProject(SaveAsProject, lpbCallID, bstrNewProjectPath, bstrNewTitle, lSaveType, lInheritanceRights, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=112
+   9 func  DeleteProject(DeleteProject, lpbCallID, bstrProjectPath, bDeleteWorkspaceIfEmpty, wTimeOut, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=120
+   10 func  RenameProject(RenameProject, bstrProjectPath, bstrNewProjectName, wTimeOut, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=128
+   11 func  IsProjectOpened(IsProjectOpened, bstrProjectPath, lplOpenCount, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=136
+   12 func  GetProjectStatus(GetProjectStatus, lpbCallID, bstrProjectPath, wTimeOut, lpdwStatus, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=144
+   13 func  SetProjectStatus(SetProjectStatus, lpbCallID, dwStatus, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=152
+   14 func  GetPlcType(GetPlcType, lpbCallID, lpdwPlcType, lpdwPlcSeries, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=160
+   15 func  GetDefaultConnection(GetDefaultConnection, lpbCallID, lpstConnectionInfo, lpbstrConnectionName, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=168
+   16 func  SetDefaultConnection(SetDefaultConnection, lpbCallID, stConnectionInfo, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=176
+   17 func  InitializeEX(InitializeEX, lpCommandSender, bstrCultureName)  params=2  funckind=FUNC_DISPATCH  vtable=184
+   18 func  ExportProjectXml(ExportProjectXml, lpbCallID, bstrExportFilePath, bFormat, lplExportErrors, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=192
+   19 func  ExportObjectXml(ExportObjectXml, lpbCallID, bstrExportFilePath, bFormat, bstrObjectName, lObjectType, lplExportErrors, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=200
+   20 func  ImportProjectXml(ImportProjectXml, lpbCallID, bstrImportFilePath, lImportFlags, lImportMode, bstrReservedForFutureUse, lplImportErrors, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=208
+   21 func  DeleteProjectViewObject(DeleteProjectViewObject, lpbCallID, bstrObjectName, lObjectType, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=216
+   22 func  CalcDataCRC(CalcDataCRC, lpbCallID, lpvData, lDataSize, bFileFooter, lCRCType, bMirror, lpullCRC, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=224
+   23 func  ExportProjectXmlExt(ExportProjectXmlExt, lpbCallID, bstrExportFilePath, bFormat, lExportMode, lplExportErrors, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=232
+   24 func  ExportObjectXmlExt(ExportObjectXmlExt, lpbCallID, bstrExportFilePath, bFormat, bstrObjectName, lObjectType, lExportMode, lplExportErrors, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=240
+   25 func  CreateNewProjectWithPassword(CreateNewProjectWithPassword, bstrProjectPath, bstrTitle, lSaveType, dwPlcSeries, dwPlcType, dwLanguageType, wTimeOut, lUserInterfaceMode, bstrUserName, bstrPassword, lpbCallID, lplReturnCode)  params=12  funckind=FUNC_DISPATCH  vtable=248
+   26 func  OpenProjectWithPassword(OpenProjectWithPassword, bstrProjectPath, wTimeOut, lUserInterfaceMode, bstrUserName, bstrPassword, lpbCallID, pbIsReadOnly, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=256
+   27 func  ChangePlcType(ChangePlcType, lpbCallID, dwPlcSeries, dwPlcType, bstrUserName, bstrPassword, bstrNewProjectPath, bOverwrite, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=264
+   28 func  GetEZSocketOpenParam(GetEZSocketOpenParam, lpbCallID, lpstComOpen, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=272
+   29 func  SaveFileStartupData(SaveFileStartupData, lpbCallID, bstrProjectPath, wSaveFlag, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=280
+   30 func  LoadFileStartupData(LoadFileStartupData, lpbCallID, bstrProjectPath, wLoadFlag, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=288
+   31 func  IsProjectModified(IsProjectModified, lpbCallID, lpbIsModified, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=296
+   32 func  IsProjectCompiled(IsProjectCompiled, lpbCallID, lpbIsCompiled, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=304
+   33 func  RenameObject(RenameObject, lpbCallID, bstrObjectName, lObjectType, bstrNewObjectName, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=312
+   34 func  BuildProject(BuildProject, lpbCallID, lpdwError, lpdwWarning, lpdwCheckWarning, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=320
+   35 func  RebuildProject(RebuildProject, lpbCallID, lLabelAssignmentType, bCheckProgram, lpdwError, lpdwWarning, lpdwCheckWarning, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=328
+   36 func  GetSystemHardwareConfiguration(GetSystemHardwareConfiguration, lpbCallID, lpSystem, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=336
+   37 func  CreateNewProjectWithPasswordExt(CreateNewProjectWithPasswordExt, bstrProjectPath, bstrTitle, lSaveType, dwPlcSeries, dwPlcType, dwLanguageType, wTimeOut, lUserInterfaceMode, bstrUserName, bstrPassword, dwOperationMode, lpbCallID, lplReturnCode)  params=13  funckind=FUNC_DISPATCH  vtable=344
+   38 func  GetOperationMode(GetOperationMode, lpbCallID, bstrProjectPath, wTimeOut, lpdwOperationMode, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=352
+   39 func  GetConnectionList(GetConnectionList, lpbCallID, lpdwSize, lpstConnectionList, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=360
+   40 func  CreateNewProjectForChangePcType(CreateNewProjectForChangePcType, dwPlcSeries, dwPlcType, wTimeOut, lUserInterfaceMode, lpbCallID, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=368
+   41 func  PastePrivateData(PastePrivateData, lpbCallID, dwSize, lpucData, bstrProgDataMapFileName, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=376
+   42 func  ImportPrivateData(ImportPrivateData, lpbCallID, dwSize, lpucData, bstrProgDataMapFileName, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=384
+   43 func  GetTempraryFolder(GetTempraryFolder, lpbCallID, lpszTemporaryFolder, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=392
+   44 func  ChangeDeviceForChangePcType(ChangeDeviceForChangePcType, lpbCallID, dwConvPattern, bstrProgDataMapFileName, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=400
+   45 func  CloseProjectForChangePcType(CloseProjectForChangePcType, lpbCallID, lOption, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=408
+   46 func  ChangePlcTypeExt(ChangePlcTypeExt, lpbCallID, dwPlcSeries, dwPlcType, dwOperationMode, bstrUserName, bstrPassword, bstrNewProjectPath, bOverwrite, lplReturnCode)  params=9  funckind=FUNC_DISPATCH  vtable=416
+   47 func  GetSystemHardwareConfigurationFXV(GetSystemHardwareConfigurationFXV, lpbCallID, lpSystem, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=424
+   48 func  ImportPlcFormatData(ImportPlcFormatData, lpbCallID, dwPlcFileDataSize, lpstPlcFileDataList, bstrTargetFolder, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=432
+   49 func  ExportPlcFormatData(ExportPlcFormatData, lpbCallID, dwPlcFileDataSize, lpstPlcFileDataList, bstrTargetFolder, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=440
+   50 func  ExportProgramViewHtml(ExportProgramViewHtml, lpbCallID, bstrProgramName, bstrExportFilePath, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=448
+   51 func  GetEZSocketOpenParamExt(GetEZSocketOpenParamExt, lpbCallID, bstrProjectPath, wTimeOut, lpstComOpen, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=456
+   52 func  GetGlobalLabelListNames(GetGlobalLabelListNames, lpbCallID, lpdwSize, lppstNames, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=464
+   53 func  GetSDTNames(GetSDTNames, lpbCallID, lpdwSize, lppstNames, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=472
+   54 func  GetPOUNames(GetPOUNames, lpbCallID, lPOUType, lpdwSize, lppstNames, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=480
+   55 func  GetLabels(GetLabels, lpbCallID, lLabelListType, bstrLabelListName, lClassFilter, lRequestedProperties, lpdwSize, lpppstLabels, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=488
+   56 func  ExportLibrary(ExportLibrary, lpbCallID, bstrFilePath, bAllowOverwrite, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=496
+   57 func  OpenLibrary(OpenLibrary, bstrFilePath, wTimeOut, lUserInterfaceMode, bstrPassword, lpbCallID, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=504
+   58 func  GetLabelAssignment(GetLabelAssignment, lpbCallID, bstrLabelName, bstrObjectName, lObjecType, lpbstrLabelAssignment, lpbstrLabelClass, lpbstrLabelDataType, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=512
+   59 func  UpdateLibraryPou(UpdateLibraryPou, lpbCallID, bstrLibraryPath, dwObjectCount, lpstObjectList, bUpdateDependentObjects, lplErrorCount, lppstErrorDetail, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=520
+   60 func  GetMemCardFilePasswordTargetList(GetMemCardFilePasswordTargetList, lpbCallID, lDriveNo, bstrTargetFolder, lpdwFilePasswordSize, lpstFilePasswordList, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=528
+   61 func  SimpleVerifyProject(SimpleVerifyProject, lpbCallID, bstrProjectPath, bstrReportFilePath, bstrSourceHeader, bstrDestinationHeader, lpbIsIdentical, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=536
+   62 func  SetConnectionList(SetConnectionList, lpbCallID, bstrDefaultConnectionName, dwSize, lpstConnectionList, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=544
+   63 func  OpenGxw2ProjectForARConvert(OpenGxw2ProjectForARConvert, bstrProjectPath, wTimeOut, lpbCallID, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=552
+   64 func  GetUpdateTimeList(GetUpdateTimeList, lpbCallID, bstrProjectPath, wTimeOut, lpdwUpdateSize, lpstUpdateList, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=560
+   65 func  GetProgramNo(GetProgramNo, lpbCallID, bstrProgramName, lpwProgramNo, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=568
+   66 func  ExportPlcFormatDataExt(ExportPlcFormatDataExt, lpbCallID, dwPlcFileDataSize, lpstPlcFileDataList, bstrTargetFolder, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=576
+   67 func  GetPOUsLockedByBlockPassword(GetPOUsLockedByBlockPassword, lpbCallID, lPOUType, lpdwSize, lppstNames, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=584
+   68 func  UnlockPOUBlockPassword(UnlockPOUBlockPassword, lpbCallID, bstrPOUName, bstrPassword, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=592
+   69 func  AddPOUBlockPassword(AddPOUBlockPassword, lpbCallID, bstrPOUName, bstrPassword, lOptions, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=600
+   70 func  GetFileListForDownload(GetFileListForDownload, lpbCallID, lpdwFileListSize, lpstFileList, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=608
+   71 func  GetExecutingFunctions(GetExecutingFunctions, lpbCallID, ldwExecutingFunctions, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=616
+   72 func  BuildProjectExt(BuildProjectExt, lpbCallID, lpdwError, lpdwWarning, lpdwCheckWarning, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=624
+   73 func  RebuildProjectExt(RebuildProjectExt, lpbCallID, lLabelAssignmentType, bCheckProgram, lpdwError, lpdwWarning, lpdwCheckWarning, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=632
+   74 func  OpenProjectWithPasswordExt(OpenProjectWithPasswordExt, bstrProjectPath, wTimeOut, lUserInterfaceMode, bstrUserName, bstrPassword, bstrProjectPassword, lpbCallID, pbIsReadOnly, lplReturnCode)  params=9  funckind=FUNC_DISPATCH  vtable=640
+   75 func  RenameProjectExt(RenameProjectExt, bstrProjectPath, bstrNewProjectName, wTimeOut, bstrUserName, bstrPassword, bstrProjectPassword, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=648
+   76 func  SimpleVerifyProjectExt(SimpleVerifyProjectExt, lpbCallID, bstrProjectPath, bstrReportFilePath, bstrSourceHeader, bstrDestinationHeader, bstrUserName, bstrPassword, bstrProjectPassword, lpbIsIdentical, lplReturnCode)  params=10  funckind=FUNC_DISPATCH  vtable=656
+   77 func  ImportPlcFormatDataExt(ImportPlcFormatDataExt, lpbCallID, dwPlcFileDataSize, lpstPlcFileDataList, bstrTargetFolder, bstrProjectPassword, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=664
+   78 func  CreateNewProjectFromRecordingFile(CreateNewProjectFromRecordingFile, bstrRecordingFilePath, wTimeOut, lUserInterfaceMode, lpbCallID, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=672
+   79 func  GetLabelAssignmentExt(GetLabelAssignmentExt, lpbCallID, bstrLabelName, bstrObjectName, lObjectType, dwGetLabelListMaxSize, lpdwLabelDataCount, lpdwLabelDataListSize, lpstLabelDataList, lplReturnCode)  params=9  funckind=FUNC_DISPATCH  vtable=680
+   80 func  GetLabelDeviceComment(GetLabelDeviceComment, lpbCallID, bstrName, bstrObjectName, lObjectType, lRequestedProperties, lpbstrComment, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=688
+   81 func  CreateNewProjectForTypeModel(CreateNewProjectForTypeModel, bstrProjectPath, bstrTitle, lSaveType, dwPlcSeries, dwPlcTypeModel, dwPlcAxisNum, dwNetworkType, dwLanguageType, wTimeOut, lOpenInterfaceMode, bstrUserName, bstrPassword, dwMode, lpbCallID, lplReturnCode)  params=15  funckind=FUNC_DISPATCH  vtable=696
+   82 func  ExportParameterXml(ExportParameterXml, lpbCallID, bstrExportFilePath, lUnitType, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=704
+   83 func  GetSimulatorNo(GetSimulatorNo, lpbCallID, lpwSystemID, lpwCPUID, lpwSimulatorType, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=712
+   84 func  GetProjectStatusExt(GetProjectStatusExt, lpbCallID, bstrProjectPath, wTimeOut, bstrProjectPassword, lpdwStatus, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=720
+   85 func  GetOperationModeExt(GetOperationModeExt, lpbCallID, bstrProjectPath, wTimeOut, bstrProjectPassword, lpdwOperationMode, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=728
+   86 func  GetProjectSecurityVersion(GetProjectSecurityVersion, lpbCallID, bstrProjectPath, wTimeOut, lpdwSecurityVersion, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=736
+   87 func  GetEZSocketOpenParamExt2(GetEZSocketOpenParamExt2, lpbCallID, bstrProjectPath, wTimeOut, bstrProjectPassword, lpstComOpen, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=744
+   88 func  GetLabelCategory(GetLabelCategory, lpbCallID, bstrLabelName, bstrObjectName, lObjectType, lpdwLabelCategory, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=752
+   89 func  ExportUsedDeviceAndLabel(ExportUsedDeviceAndLabel, lpbCallID, bstrExportFilePath, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=760
+   90 func  ExportObjectCsv(ExportObjectCsv, lpbCallID, bstrExportFilePath, bstrObjectName, lObjectType, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=768
+   91 func  ImportObjectCsv(ImportObjectCsv, lpbCallID, bstrImportFilePath, bstrObjectName, lObjectType, dwLanguageType, dwConversionMethod, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=776
+   92 func  SimpleVerifyProjectDiff(SimpleVerifyProjectDiff, lpbCallID, bstrProjectPath, bstrReportFilePath, bstrSourceHeader, bstrDestinationHeader, lDiffMode, lpbIsIdentical, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=784
+   93 func  SimpleVerifyProjectDiffExt(SimpleVerifyProjectDiffExt, lpbCallID, bstrProjectPath, bstrReportFilePath, bstrSourceHeader, bstrDestinationHeader, bstrUserName, bstrPassword, bstrProjectPassword, lDiffMode, lpbIsIdentical, lplReturnCode)  params=11  funckind=FUNC_DISPATCH  vtable=792
+
+=== [TKIND_RECORD] _ST_CONNECTION_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=3
+
+=== [TKIND_RECORD] _ST_OBJID  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=11
+
+=== [TKIND_RECORD] _ST_CONNEC_COMMON_DATA  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=52
+
+=== [TKIND_RECORD] _ST_CONNECTION_PROPERTY  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _ST_CONNECTION_PROPERTY_BIN  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=5
+
+=== [TKIND_RECORD] _ST_UPDATETIME  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=8
+
+=== [TKIND_RECORD] _ST_ECMOPEN_W  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=32
+
+=== [TKIND_RECORD] _stSystemConfigInfo  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=1
+
+=== [TKIND_RECORD] _stSystemBaseInfo  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=4
+
+=== [TKIND_RECORD] _stSystemBaseDetail  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=3
+
+=== [TKIND_RECORD] _stSystemPowerInfo  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _stSystemSlotInfo  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=7
+
+=== [TKIND_RECORD] _ST_CONNECTION_INFO_ALL  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _stSystemConfigInfoFXV  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=1
+
+=== [TKIND_RECORD] _stSystemSlotInfoFXV  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=8
+
+=== [TKIND_RECORD] _ST_PLC_FILE_DATA  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=5
+
+=== [TKIND_RECORD] _ST_OBJNAME  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=1
+
+=== [TKIND_RECORD] _ST_LABEL_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=11
+
+=== [TKIND_RECORD] _ST_PROJECT_OBJECT  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _ST_UPDATELIBPOU_ERROR  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _ST_FILE_PASSWORD  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=3
+
+=== [TKIND_RECORD] _ST_UPDATE_TIME_DATA  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=3
+
+=== [TKIND_RECORD] _ST_UPDATE_TIME  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=8
+
+=== [TKIND_RECORD] _ST_LABEL_ASSIGNMENT_DATA  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=4
+
+=== [TKIND_DISPATCH] _IGXW3CallCommunicationEvents  guid=72028fd9-430c-4e03-b8cd-78bfe12c2f5d  funcs=0  vartypes=0
+
+=== [TKIND_COCLASS] GXW3CallCommunication  guid=59f35404-36d9-4291-92de-1e8f5f540f13  funcs=0  vartypes=0
+
+=== [TKIND_DISPATCH] IGXW3CallCommunication  guid=69f228f8-5ec3-4dc6-b870-63dc1a258aee  funcs=170  vartypes=0
+   1610612736 func  QueryInterface(QueryInterface, riid, ppvObj)  params=2  funckind=FUNC_DISPATCH  vtable=0
+   1610612737 func  AddRef(AddRef)  params=0  funckind=FUNC_DISPATCH  vtable=8
+   1610612738 func  Release(Release)  params=0  funckind=FUNC_DISPATCH  vtable=16
+   1610678272 func  GetTypeInfoCount(GetTypeInfoCount, pctinfo)  params=1  funckind=FUNC_DISPATCH  vtable=24
+   1610678273 func  GetTypeInfo(GetTypeInfo, itinfo, lcid, pptinfo)  params=3  funckind=FUNC_DISPATCH  vtable=32
+   1610678274 func  GetIDsOfNames(GetIDsOfNames, riid, rgszNames, cNames, lcid, rgdispid)  params=5  funckind=FUNC_DISPATCH  vtable=40
+   1610678275 func  Invoke(Invoke, dispidMember, riid, lcid, wFlags, pdispparams, pvarResult, pexcepinfo, puArgErr)  params=8  funckind=FUNC_DISPATCH  vtable=48
+   1 func  Initialize(Initialize, lpCommandSender)  params=1  funckind=FUNC_DISPATCH  vtable=56
+   2 func  NeoWhoAreYou(NeoWhoAreYou, lpbCallID, lEntryFlag, lSelectFlag, lRmtPassFlag, lpwCncttype, lpbstrCpuStr, lplCpuCnt, lplCpuNo, lpwCpuSystem, lplExtCpuCode, lplReturnCode)  params=11  funckind=FUNC_DISPATCH  vtable=64
+   3 func  SetPlcStatusMode(SetPlcStatusMode, lpbCallID, lPlcStatus, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=72
+   4 func  GetPlcRunStatus(GetPlcRunStatus, lpbCallID, lpwPlcStatusResult, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=80
+   5 func  GetStationType(GetStationType, lpbCallID, wIONumber, wNetworkType, lpwStationType, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=88
+   6 func  ReadUnitParameter(ReadUnitParameter, lpbCallID, lpbCreateCallID, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=96
+   7 func  ReleaseReadData(ReleaseReadData, lpbCallID, lplReturnCode)  params=2  funckind=FUNC_DISPATCH  vtable=104
+   8 func  GetCCLinkIEFieldRefreshParam(GetCCLinkIEFieldRefreshParam, lpbCallID, wIONumber, lpdwRefreshDeviceParamSize, lpstRefreshDeviceParamAry, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=112
+   9 func  GetCCLinkIEFieldRefreshDeviceSetting(GetCCLinkIEFieldRefreshDeviceSetting, lpbCallID, wIONumber, lpdwRefreshDeviceSettingSize, lpstRefreshDeviceSettingAry, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=120
+   10 func  OpenOnline(OpenOnline, lpbCallID, dwOnlineOperation, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=128
+   11 func  CloseOnline(CloseOnline, lpbCallID, dwOnlineOperation, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=136
+   12 func  CheckSLMPCommandUse(CheckSLMPCommandUse, lpbCallID, wIONumber, wStationNumber, lpbIsPossibleToUseSLMP, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=144
+   13 func  ReadCCLinkIEFieldInfo(ReadCCLinkIEFieldInfo, lpbCallID, wIONumber, wStationNumber, dwInfoType, lpdwUnitInfoSize, lpdwUnitInfoArray, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=152
+   14 func  ExecuteSLMPCommand(ExecuteSLMPCommand, lpbCallID, wIONumber, wStationNumber, wCommand, wSubCommand, dwReqDataSize, lpbyReqData, dwResDataSize, lpdwReceiveResDataSize, lpbyResData, lpwPDURetCode, lplReturnCode)  params=12  funckind=FUNC_DISPATCH  vtable=160
+   15 func  ReadCCLinkIEFieldRefreshDevice(ReadCCLinkIEFieldRefreshDevice, lpbCallID, wIONumber, wStationNumber, dwRefreshDeviceType, dwRefreshDeviceAddress, dwDataSize, lpwData, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=168
+   16 func  WriteCCLinkIEFieldRefreshDevice(WriteCCLinkIEFieldRefreshDevice, lpbCallID, wIONumber, wStationNumber, dwRefreshDeviceType, dwRefreshDeviceAddress, dwDataSize, lpwData, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=176
+   17 func  ReadDeviceRandom(ReadDeviceRandom, lpbCallID, lpbstrAddress, dwDataSize, lpwData, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=184
+   18 func  GetCCLinkIEFieldConfig(GetCCLinkIEFieldConfig, lpbCallID, wIONumber, lpdwConfigDataArraySize, lpbyConfigDataArray, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=192
+   19 func  ReadCCIEFieldSlaveUnitInfo(ReadCCIEFieldSlaveUnitInfo, lpbCallID, wIONumber, wStationNumber, lpdwSlaveUnitInfoSize, lpstSlaveUnitInfoArray, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=200
+   20 func  GetCCLinkRefreshDevice(GetCCLinkRefreshDevice, lpbCallID, wIONumber, lpdwDeviceInfoSize, lpstDeviceInfoArray, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=208
+   21 func  ReadCCLinkInfo(ReadCCLinkInfo, lpbCallID, wIONumber, wStationNumber, dwInfoType, lpdwDataSize, lpdwUnitInfoArray, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=216
+   22 func  CCLinkMessageTransmitOpen(CCLinkMessageTransmitOpen, lpbCallID, lplReturnCode)  params=2  funckind=FUNC_DISPATCH  vtable=224
+   23 func  CCLinkMessageTransmitExecuteRequest(CCLinkMessageTransmitExecuteRequest, lpbCallID, lIONumber, lStationNumber, lVersion, dwSendDataSize, lpcSendData, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=232
+   24 func  CCLinkMessageTransmitResultRead(CCLinkMessageTransmitResultRead, lpbCallID, lIONumber, lStationNumber, lVersion, lplStatoinRSTS, lpdwSendProressSize, lpdwSendDataSize, lpdwReceiveProressSize, lpdwReceiveDataSize, lpcReceiveData, lplReturnCode)  params=11  funckind=FUNC_DISPATCH  vtable=240
+   25 func  CCLinkMessageTransmitClose(CCLinkMessageTransmitClose, lpbCallID, lplReturnCode)  params=2  funckind=FUNC_DISPATCH  vtable=248
+   26 func  ReadCCLinkRefreshDevice(ReadCCLinkRefreshDevice, lpbCallID, wIONumber, wStationNumber, dwRefreshDeviceType, dwRefreshDeviceAddress, dwDataSize, lpwData, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=256
+   27 func  WriteCCLinkRefreshDevice(WriteCCLinkRefreshDevice, lpbCallID, wIONumber, wStationNumber, dwRefreshDeviceType, dwRefreshDeviceAddress, dwDataSize, lpwData, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=264
+   28 func  GetCCLinkMode(GetCCLinkMode, lpbCallID, wIONumber, lpwMode, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=272
+   29 func  GetCCLinkConfig(GetCCLinkConfig, lpbCallID, wIONumber, lpdwConfigDataArraySize, lpbyConfigDataArray, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=280
+   30 func  GetCCLinkRefreshParam(GetCCLinkRefreshParam, lpbCallID, wIONumber, lpdwRefreshDeviceParamSize, lpstRefreshDeviceParamAry, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=288
+   31 func  GetCCLinkRefreshDeviceSetting(GetCCLinkRefreshDeviceSetting, lpbCallID, wIONumber, lpdwRefreshDeviceSettingSize, lpstRefreshDeviceSettingAry, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=296
+   32 func  GetPlcFileList(GetPlcFileList, lpbCallID, lDriveNo, lpdwPlcFileSize, lpstPlcFileList, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=304
+   33 func  GetFilePasswordTargetList(GetFilePasswordTargetList, lpbCallID, lDriveNo, lpdwFilePasswordSize, lpstFilePasswordList, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=312
+   34 func  SetRemotePassword(SetRemotePassword, lpbCallID, bstrRemotePassword, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=320
+   35 func  Upload(Upload, lpbCallID, dwPlcFileDataSize, lpstPlcFileDataList, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=328
+   36 func  GetCCIEFMountData(GetCCIEFMountData, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lpstCCIEFMountInfo, lpstCCIEFUnitInfo, lpdwEXError, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=336
+   37 func  GetCCIECMountData(GetCCIECMountData, lpbCallID, wIONumber, wNetworkNumber, lpstCCIECMountInfo, lpstCCIECUnitInfo, lpdwEXError, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=344
+   38 func  GetIQRSeriesMountData(GetIQRSeriesMountData, lpbCallID, bIsCommonCheck, lpstIQRMountInfo, lpdwEXError, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=352
+   39 func  InitializeEX(InitializeEX, lpCommandSender, bstrCultureName)  params=2  funckind=FUNC_DISPATCH  vtable=360
+   40 func  RequestAutoDetectEtherNode(RequestAutoDetectEtherNode, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=368
+   41 func  GetStateAutoDetectEtherNode(GetStateAutoDetectEtherNode, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lpbStateFlg, lplNodeCount, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=376
+   42 func  AutoDetectEtherNode(AutoDetectEtherNode, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lNodeCount, lpstEtherNodeInfo, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=384
+   43 func  CheckSupportSLMPFunction(CheckSupportSLMPFunction, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lplSupport, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=392
+   44 func  GetCommunicationSettingForEthernet(GetCommunicationSettingForEthernet, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lWatchTime, bstrDestIPAddress, lDestinationPortNumber, lpwGetTarget, lpwPortNo, lpdwTimeout, lplReturnCode)  params=11  funckind=FUNC_DISPATCH  vtable=400
+   45 func  CompareDeviceInformationForEthernet(CompareDeviceInformationForEthernet, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lWatchTime, bstrDestIPAddress, lDestinationPortNumber, wVendorCode, dwModelCode, wVersion, lpwCompareTarget, lpwResult, lplReturnCode)  params=13  funckind=FUNC_DISPATCH  vtable=408
+   46 func  GetParameterForEthernet(GetParameterForEthernet, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lWatchTime, bstrDestIPAddress, lDestinationPortNumber, lpstParameter, lplReturnCode)  params=9  funckind=FUNC_DISPATCH  vtable=416
+   47 func  SetParameterForEthernet(SetParameterForEthernet, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lWatchTime, bstrDestIPAddress, lDestinationPortNumber, lpstParameter, lplReturnCode)  params=9  funckind=FUNC_DISPATCH  vtable=424
+   48 func  StartSetParameterForEthernet(StartSetParameterForEthernet, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lWatchTime, bstrDestIPAddress, lDestinationPortNumber, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=432
+   49 func  EndSetParameterForEthernet(EndSetParameterForEthernet, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lWatchTime, bstrDestIPAddress, lDestinationPortNumber, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=440
+   50 func  SLMPCommunicationOpen(SLMPCommunicationOpen, lpbCallID, lplReturnCode)  params=2  funckind=FUNC_DISPATCH  vtable=448
+   51 func  SLMPCommunicationClose(SLMPCommunicationClose, lpbCallID, lplReturnCode)  params=2  funckind=FUNC_DISPATCH  vtable=456
+   52 func  RequestSetIPAdressForEthernet(RequestSetIPAdressForEthernet, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lpstEtherReqIPAddInfo, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=464
+   53 func  GetIQFSeriesMountData(GetIQFSeriesMountData, lpbCallID, bIsCommonCheck, lpstIQFMountInfo, lpdwEXError, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=472
+   54 func  LogonToPlc(LogonToPlc, lpbCallID, lplReturnCode)  params=2  funckind=FUNC_DISPATCH  vtable=480
+   55 func  GetPlcMode(GetPlcMode, lpbCallID, lplPlcMode, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=488
+   56 func  IsPlcOnline(IsPlcOnline, lpbCallID, lpbIsOnline, lpbIsSimulation, lpbstrPlcType, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=496
+   57 func  NeoWhoAreYouExt(NeoWhoAreYouExt, lpbCallID, lEntryFlag, lSelectFlag, lRmtPassFlag, lpwCncttype, lpbstrCpuStr, lplCpuCnt, lplCpuNo, lpwCpuSystem, lplExtCpuCode, lpwExtArea2, lplReturnCode)  params=12  funckind=FUNC_DISPATCH  vtable=504
+   58 func  GetIQRSeriesMountDataExt(GetIQRSeriesMountDataExt, lpbCallID, bIsCommonCheck, lpstIQRMountInfo, lpdwEXError, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=512
+   59 func  MonitorAll(MonitorAll, lpbCallID, lMonitorAction, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=520
+   60 func  MonitorPOU(MonitorPOU, lpbCallID, bstrPOUName, bstrFBInstanceName, bstrTargetLocation, lMonitorAction, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=528
+   61 func  ReadBufferMemory(ReadBufferMemory, lpbCallID, wIONumber, lStartOffset, lReadSize, lpucData, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=536
+   62 func  SendReceiveSLMPCommand(SendReceiveSLMPCommand, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wSendDataSize, lpucSendData, lRecvDataSize, lpwRecvDataSize, lpucRecvData, lplReturnCode)  params=10  funckind=FUNC_DISPATCH  vtable=544
+   63 func  ReadCCIEFieldSLPRadioBridgeSlaveInfo(ReadCCIEFieldSLPRadioBridgeSlaveInfo, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wBridgeStationNumber, wSlaveUnitID, lppucUnitInfo, lpwBridgeErrorCode, lplReturnCode)  params=9  funckind=FUNC_DISPATCH  vtable=552
+   64 func  CheckCCIEFieldSLPRadioBridgeUnitReady(CheckCCIEFieldSLPRadioBridgeUnitReady, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wBridgeStationNumber, lpbReady, lpwBridgeErrorCode, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=560
+   65 func  ReadCCIEFieldSLPRadioBridgeSlaveParameter(ReadCCIEFieldSLPRadioBridgeSlaveParameter, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wBridgeStationNumber, wSlaveUnitID, wParameterCount, lpwTargetParameterArray, lpwReadParameterCount, lppwReadParameterArray, lppwReadParameterSizeArray, lppucReadParameterDataArray, lpwBridgeErrorCode, lplReturnCode)  params=14  funckind=FUNC_DISPATCH  vtable=568
+   66 func  WriteCCIEFieldSLPRadioBridgeSlaveParameter(WriteCCIEFieldSLPRadioBridgeSlaveParameter, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wBridgeStationNumber, wSlaveUnitID, wParameterCount, lpwTargetParameterArray, lpwWriteParameterSizeArray, lpucWriteParameterDataArray, lpwBridgeErrorCode, lplReturnCode)  params=12  funckind=FUNC_DISPATCH  vtable=576
+   67 func  ReadMonitorDataForCCLinkIEFToSLPRadio(ReadMonitorDataForCCLinkIEFToSLPRadio, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wBridgeStationNumber, wStationSubID, lpstBridgeMonData, lpstSLPRadioMonData, lplReturnCode)  params=9  funckind=FUNC_DISPATCH  vtable=584
+   68 func  CreateASLINKPack(CreateASLINKPack, lpbCallID, wIONumber, bRecognition, lpwConnectCount, lpwErrorCount, lpwArarmCount, lpstAsLinkArray, lpdwEXError, lpdwStatus, lpdwRequestAutoAddressError, lplReturnCode)  params=11  funckind=FUNC_DISPATCH  vtable=592
+   69 func  CheckASLINKMasterReady(CheckASLINKMasterReady, lpbCallID, wIONumber, lpbReady, lpwMasterErrorCode, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=600
+   70 func  ReadASLINKSlaveParameter(ReadASLINKSlaveParameter, lpbCallID, wIONumber, wUnitID, lpdwDataSize, lpwSlaveInfoArray, lpwMasterErrorCode, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=608
+   71 func  WriteASLINKSlaveParameter(WriteASLINKSlaveParameter, lpbCallID, wIONumber, wUnitID, dwDataSize, lpstWriteParamArray, lpwMasterErrorCode, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=616
+   72 func  ReadASLINKSlaveInfo(ReadASLINKSlaveInfo, lpbCallID, wIONumber, wUnitID, dwDataType, lpdwDataSize, lpdwSlaveInfoArray, lpwMasterErrorCode, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=624
+   73 func  RequestAutoDetectCCIEFBasicNode(RequestAutoDetectCCIEFBasicNode, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=632
+   74 func  SPBufferReadforCCIEFieldSlave(SPBufferReadforCCIEFieldSlave, lpbCallID, wIONumber, wUnitCode, lpstCCLinkIEFieldArray, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=640
+   75 func  GetErrorMessage(GetErrorMessage, lpbCallID, dwErrorCode, lpszErrorMessage, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=648
+   76 func  CheckSupportCCIEFBasicFunction(CheckSupportCCIEFBasicFunction, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lplSupport, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=656
+   77 func  GetAllFileListForLFN(GetAllFileListForLFN, lpbCallID, lpszDirectoryName, lpStFileList_DUMW, lplFileCount, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=664
+   78 func  SetDriveData(SetDriveData, lpbCallID, wDriveNo, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=672
+   79 func  DeviceReadOpen(DeviceReadOpen, lpbCallID, lplReturnCode)  params=2  funckind=FUNC_DISPATCH  vtable=680
+   80 func  DeviceReadRun(DeviceReadRun, lpbCallID, lErrorCheck, dwBitLength, dwWordLength, dwDWordLength, dwQWordLength, lpszBitDevice, lpszWordDevice, lpszDWordDevice, lpszQWordDevice, lpwBitValue, lpwWordValue, lpdwDWordValue, lpullQWordValue, lplReturnCode)  params=15  funckind=FUNC_DISPATCH  vtable=688
+   81 func  DeviceReadClose(DeviceReadClose, lpbCallID, lplReturnCode)  params=2  funckind=FUNC_DISPATCH  vtable=696
+   82 func  DeviceWriteOpen(DeviceWriteOpen, lpbCallID, lplReturnCode)  params=2  funckind=FUNC_DISPATCH  vtable=704
+   83 func  DeviceWriteRun(DeviceWriteRun, lpbCallID, dwBitLength, dwWordLength, dwDWordLength, dwQWordLength, lpszBitDevice, lpszWordDevice, lpszDWordDevice, lpszQWordDevice, lpwBitValue, lpwWordValue, lpdwDWordValue, lpullQWordValue, lplReturnCode)  params=14  funckind=FUNC_DISPATCH  vtable=712
+   84 func  DeviceWriteClose(DeviceWriteClose, lpbCallID, lplReturnCode)  params=2  funckind=FUNC_DISPATCH  vtable=720
+   85 func  CheckBackupRestoreForCCLinkIEF(CheckBackupRestoreForCCLinkIEF, lpbCallID, lplSupport, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=728
+   86 func  CheckBackupRestoreForCCLink(CheckBackupRestoreForCCLink, lpbCallID, lplSupport, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=736
+   87 func  CheckBackupRestoreForASLINK(CheckBackupRestoreForASLINK, lpbCallID, lplSupport, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=744
+   88 func  SPBufferReadforCCLinkSlave(SPBufferReadforCCLinkSlave, lpbCallID, wIONumber, lMasterMode, lpwConnectCount, lpstCcLinkSlaveArray, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=752
+   89 func  SPBufferReadforASLINK(SPBufferReadforASLINK, lpbCallID, wIONumber, lpwConnectCount, lpwErrorCount, lpwArarmCount, lpstAsLinkArray, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=760
+   90 func  UploadProject(UploadProject, lpbCallID, lDriveNo, dwFileTypes, bstrPassword, lplDNaviErrorCode, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=768
+   91 func  GetCCLinkMountDataFromBuffMem(GetCCLinkMountDataFromBuffMem, lpbCallID, wIONumber, lpstCCLinkMountInfo, lpstCCLinkUnitInfo, lpdwEXError, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=776
+   92 func  CheckCCLinkASLINKBridgeUnitReady(CheckCCLinkASLINKBridgeUnitReady, lpbCallID, wIONumber, wStationNumber, lpbReady, lpwBridgeErrorCode, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=784
+   93 func  ReadCCLinkASLINKBridgeSlaveInfo(ReadCCLinkASLINKBridgeSlaveInfo, lpbCallID, wIONumber, wStationNumber, wSlaveUnitID, lppwUnitInfo, lpwBridgeErrorCode, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=792
+   94 func  ReadCCLinkASLINKBridgeSlaveParameter(ReadCCLinkASLINKBridgeSlaveParameter, lpbCallID, wIONumber, wStationNumber, wSlaveUnitID, wParameterCount, lpwTargetParameterArray, lppwReadParameterArray, lpwBridgeErrorCode, lplReturnCode)  params=9  funckind=FUNC_DISPATCH  vtable=800
+   95 func  WriteCCLinkASLINKBridgeSlaveParameter(WriteCCLinkASLINKBridgeSlaveParameter, lpbCallID, wIONumber, wStationNumber, wSlaveUnitID, wParameterCount, lpwTargetParameterArray, lpwWriteParameterArray, lpwBridgeErrorCode, lplReturnCode)  params=9  funckind=FUNC_DISPATCH  vtable=808
+   96 func  CanExecuteAutoDetectForCCLinkASLINKBridge(CanExecuteAutoDetectForCCLinkASLINKBridge, lpbCallID, wIONumber, lpdwEXError, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=816
+   97 func  ReadMonitorDataForCCLinkToASLINK(ReadMonitorDataForCCLinkToASLINK, lpbCallID, wIONumber, lStationNumber, wStationSubID, lpwConnectCount, lpwErrorCount, lpwArarmCount, lpstAsLinkArray, lplReturnCode)  params=9  funckind=FUNC_DISPATCH  vtable=824
+   98 func  GetWorkDevice99Supportflags(GetWorkDevice99Supportflags, lpbCallID, wVolNo, lpwSupport, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=832
+   99 func  VerifyCheckCodeForEthernet(VerifyCheckCodeForEthernet, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lWatchTime, bstrDestIPAddress, lDestinationPortNumber, wFileSize, lpbyFileName, dwCheckCode, lplReturnCode)  params=11  funckind=FUNC_DISPATCH  vtable=840
+   100 func  GetOutputMapFileNameForEthernet(GetOutputMapFileNameForEthernet, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lWatchTime, bstrDestIPAddress, lDestinationPortNumber, lpwFileSize, lpbyFileName, lplReturnCode)  params=10  funckind=FUNC_DISPATCH  vtable=848
+   101 func  GetOutPutAddressFileForEthernet(GetOutPutAddressFileForEthernet, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lWatchTime, bstrDestIPAddress, lDestinationPortNumber, wFileNameSize, lpbyFileName, lpdwReadDataSize, lpbyReadData, lplReturnCode)  params=12  funckind=FUNC_DISPATCH  vtable=856
+   102 func  RequestReadStatus2ForEthernet(RequestReadStatus2ForEthernet, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=864
+   103 func  GetStatusForEthernet(GetStatusForEthernet, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lpstEtherStatusInfo, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=872
+   104 func  GetCCLinkIEFieldRefreshDeviceStringList(GetCCLinkIEFieldRefreshDeviceStringList, lpbCallID, wUnitCount, lpstDeviceList, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=880
+   105 func  GetCCLinkIEFieldConfigList(GetCCLinkIEFieldConfigList, lpbCallID, lpwUnitCount, lpstConfigDataList, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=888
+   106 func  ExecuteSLMPCommandEX(ExecuteSLMPCommandEX, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wSLMPStationNumber, wCommand, wSubCommand, dwReqDataSize, lpbyReqData, dwResDataSize, lpdwReceiveResDataSize, lpbyResData, lpwPDURetCode, lplReturnCode)  params=14  funckind=FUNC_DISPATCH  vtable=896
+   107 func  ReadStatusForEthernet(ReadStatusForEthernet, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lWatchTime, bstrDestIPAddress, lDestinationPortNumber, lpwStatusCode, lplReturnCode)  params=9  funckind=FUNC_DISPATCH  vtable=904
+   108 func  GetCCIENexusRefreshParam(GetCCIENexusRefreshParam, lpbCallID, wIONumber, lpdwRefreshDeviceParamSize, lpstRefreshDeviceParamAry, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=912
+   109 func  GetCCIENexusRefreshDeviceSetting(GetCCIENexusRefreshDeviceSetting, lpbCallID, wIONumber, lpdwRefreshDeviceSettingSize, lpstRefreshDeviceSettingAry, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=920
+   110 func  GetCCIENexusConfig(GetCCIENexusConfig, lpbCallID, wIONumber, lpdwConfigDataArraySize, lpbyConfigDataArray, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=928
+   111 func  ReadCCIENexusInfo(ReadCCIENexusInfo, lpbCallID, wIONumber, wStationNumber, dwInfoType, lpdwUnitInfoSize, lpdwUnitInfoArray, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=936
+   112 func  ReadCCIENexusRefreshDevice(ReadCCIENexusRefreshDevice, lpbCallID, wIONumber, wStationNumber, dwRefreshDeviceType, dwRefreshDeviceAddress, dwDataSize, lpwData, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=944
+   113 func  WriteCCIENexusRefreshDevice(WriteCCIENexusRefreshDevice, lpbCallID, wIONumber, wStationNumber, dwRefreshDeviceType, dwRefreshDeviceAddress, dwDataSize, lpwData, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=952
+   114 func  GetCCIENexusMountData(GetCCIENexusMountData, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lpstCCIENUnitInfo, lpdwEXError, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=960
+   115 func  ReadCCIENexusUnitInfo(ReadCCIENexusUnitInfo, lpbCallID, wIONumber, wStationNumber, bstrDestIPAddress, lDestinationPortNumber, lpstSlaveUnitInfo, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=968
+   116 func  GetCCIEFMountDataForNexus(GetCCIEFMountDataForNexus, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lpstCCIEFMountInfo, lpstCCIEFUnitInfo, lpdwEXError, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=976
+   117 func  ExecuteSLMPCommandForNexus(ExecuteSLMPCommandForNexus, lpbCallID, wIONumber, wStationNumber, lWatchTime, bstrDestIPAddress, lDestinationPortNumber, wCommand, wSubCommand, dwReqDataSize, lpbyReqData, dwResDataSize, lpdwReceiveResDataSize, lpbyResData, lpwPDURetCode, lplReturnCode)  params=15  funckind=FUNC_DISPATCH  vtable=984
+   118 func  ExecuteSLMPCommandEXForNexus(ExecuteSLMPCommandEXForNexus, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wSLMPStationNumber, lWatchTime, bstrDestIPAddress, lDestinationPortNumber, wCommand, wSubCommand, dwReqDataSize, lpbyReqData, dwResDataSize, lpdwReceiveResDataSize, lpbyResData, lpwPDURetCode, lplReturnCode)  params=17  funckind=FUNC_DISPATCH  vtable=992
+   119 func  SPBufferReadforASLINKExt(SPBufferReadforASLINKExt, lpbCallID, wIONumber, lpwConnectCount, lpwErrorCount, lpwArarmCount, lpstAsLinkArray, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=1000
+   120 func  CheckCCIEFieldASLINKBridgeUnitReady(CheckCCIEFieldASLINKBridgeUnitReady, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wBridgeStationNumber, lpbReady, lpwBridgeErrorCode, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=1008
+   121 func  ReadCCIEFieldASLINKBridgeSlaveInfo(ReadCCIEFieldASLINKBridgeSlaveInfo, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wBridgeStationNumber, wSlaveUnitID, lppwUnitInfo, lpwBridgeErrorCode, lplReturnCode)  params=9  funckind=FUNC_DISPATCH  vtable=1016
+   122 func  ReadCCIEFieldASLINKBridgeSlaveParameter(ReadCCIEFieldASLINKBridgeSlaveParameter, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wBridgeStationNumber, wSlaveUnitID, wParameterCount, lpwTargetParameterArray, lppwReadParameterArray, lpwBridgeErrorCode, lplReturnCode)  params=11  funckind=FUNC_DISPATCH  vtable=1024
+   123 func  WriteCCIEFieldASLINKBridgeSlaveParameter(WriteCCIEFieldASLINKBridgeSlaveParameter, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wBridgeStationNumber, wSlaveUnitID, wParameterCount, lpwTargetParameterArray, lpwWriteParameterArray, lpwBridgeErrorCode, lplReturnCode)  params=11  funckind=FUNC_DISPATCH  vtable=1032
+   124 func  ReadMonitorDataForCCLinkIEFToASLINK(ReadMonitorDataForCCLinkIEFToASLINK, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wBridgeStationNumber, wStationSubID, lpwConnectCount, lpwErrorCount, lpwArarmCount, lpstAsLinkArray, lplReturnCode)  params=11  funckind=FUNC_DISPATCH  vtable=1040
+   125 func  GetCCIENexusMountDataEx(GetCCIENexusMountDataEx, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wOption, lpstCCIENUnitInfo, lpdwEXError, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=1048
+   126 func  GetCCIENexusMountDataEx2(GetCCIENexusMountDataEx2, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wOption, lpstCCIENUnitInfo, lpdwEXError, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=1056
+   127 func  ExecuteSLMPCommand6EFrame(ExecuteSLMPCommand6EFrame, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wSLMPStationNumber, wSLMPStationExNumber, wSLMPMultiDropNumber, lWatchTime, bstrDestIPAddress, lDestinationPortNumber, wCommand, wSubCommand, dwReqDataSize, lpbyReqData, dwResDataSize, lpdwReceiveResDataSize, lpbyResData, lpwPDURetCode, lplReturnCode)  params=19  funckind=FUNC_DISPATCH  vtable=1064
+   128 func  UpdateFirmware(UpdateFirmware, lpbCallID, lpstFwupList, wFwupListCount, bIsFwupdateReset, lpstFwupStatus, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=1072
+   129 func  GetTSNUnitVersion(GetTSNUnitVersion, lpbCallID, wIONumber, lpwPort1Version, lpwPort2Version)  params=4  funckind=FUNC_DISPATCH  vtable=1080
+   130 func  CreateASLINKPackForCCIETSNToASLINK(CreateASLINKPackForCCIETSNToASLINK, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wBridgeStationNumber, bstrDestIPAddress, lDestinationPortNumber, bRecognition, lpwConnectCount, lpwErrorCount, lpwArarmCount, lpstAsLinkArray, lpdwEXError, lpdwStatus, lpdwRequestAutoAddressError, lpdwRequestAutoAddressAlarm, lplReturnCode)  params=17  funckind=FUNC_DISPATCH  vtable=1088
+   131 func  CheckCCIETSNASLINKBridgeUnitReady(CheckCCIETSNASLINKBridgeUnitReady, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wBridgeStationNumber, lpbReady, lpwBridgeAlarmCode, lpwBridgeErrorCode, lplReturnCode)  params=9  funckind=FUNC_DISPATCH  vtable=1096
+   132 func  ReadCCIETSNASLINKBridgeSlaveInfo(ReadCCIETSNASLINKBridgeSlaveInfo, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wBridgeStationNumber, bstrDestIPAddress, lDestinationPortNumber, wSlaveUnitID, lpstAslinkData, lpwBridgeAlarmCode, lpwBridgeErrorCode, lplReturnCode)  params=12  funckind=FUNC_DISPATCH  vtable=1104
+   133 func  ReadCCIETSNASLINKBridgeSlaveParameter(ReadCCIETSNASLINKBridgeSlaveParameter, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wBridgeStationNumber, wSlaveUnitID, wParameterCount, lpwTargetParameterArray, lppwReadParameterArray, lpwBridgeAlarmCode, lpwBridgeErrorCode, lplReturnCode)  params=12  funckind=FUNC_DISPATCH  vtable=1112
+   134 func  WriteCCIETSNASLINKBridgeSlaveParameter(WriteCCIETSNASLINKBridgeSlaveParameter, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wBridgeStationNumber, wSlaveUnitID, wParameterCount, lpwTargetParameterArray, lpwWriteParameterArray, lpwBridgeAlarmCode, lpwBridgeErrorCode, lplReturnCode)  params=12  funckind=FUNC_DISPATCH  vtable=1120
+   135 func  ReadMonitorDataForCCIETSNToASLINK(ReadMonitorDataForCCIETSNToASLINK, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wBridgeStationNumber, wStationSubID, lpwConnectCount, lpwErrorCount, lpwArarmCount, lpstAsLinkArray, lplReturnCode)  params=11  funckind=FUNC_DISPATCH  vtable=1128
+   136 func  Download(Download, lpbCallID, lWriteMode, dwPlcFileDataSize, lpstPlcFileDataList, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=1136
+   137 func  SetPlcRunStatus(SetPlcRunStatus, lpbCallID, wTarget, wPlcStatus, lNetNo, lGroupNo, lClearMode, lSignalMode, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=1144
+   138 func  BeforeCreateASLINKPackForCCIETSNToASLINK(BeforeCreateASLINKPackForCCIETSNToASLINK, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wBridgeStationNumber, bRecognition, lpdwEXError, lpdwStatus, lpdwRequestAutoAddressError, lpdwRequestAutoAddressAlarm, lplReturnCode)  params=11  funckind=FUNC_DISPATCH  vtable=1152
+   139 func  GetCCIENexusMountDataEx3(GetCCIENexusMountDataEx3, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wOption, lpstCCIENUnitInfo, lpdwEXError, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=1160
+   140 func  GetCCIENexusMountDataEx4(GetCCIENexusMountDataEx4, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wOption, lpstCCIENUnitInfo, lpdwEXError, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=1168
+   141 func  GetCCIETSNSupportInfo(GetCCIETSNSupportInfo, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lplSupportInfoCount, lppwSupportInfoArray, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=1176
+   142 func  GetErrorInfoList(GetErrorInfoList, lpbCallID, bstrUnitName, dwIONum, dwSlot, lpdwDataSize, lpbyData, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=1184
+   143 func  GetEventHistoryList(GetEventHistoryList, lpbCallID, dwIONum, dwSlot, lpdwDataSize, lpbyData, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=1192
+   144 func  GetUnitInfoListOnline(GetUnitInfoListOnline, lpbCallID, bstrUnitName, dwIONum, dwSlot, lpdwDataSize, lpbyData, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=1200
+   145 func  GetMountData(GetMountData, lpbCallID, lpdwDataSize, lpbyData, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=1208
+   146 func  GetCCIENexusMountDataEx5(GetCCIENexusMountDataEx5, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wSlaveStationNumber, wOption, lpstCCIENUnitInfo, lpdwEXError, lplReturnCode)  params=9  funckind=FUNC_DISPATCH  vtable=1216
+   147 func  SetIPAddressForTSN(SetIPAddressForTSN, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wSLMPStationNumber, wSLMPStationExNumber, wSLMPMultiDropNumber, lWatchTime, lpucDestMACAddress, lpstSetIPAddInfo, lplReturnCode)  params=11  funckind=FUNC_DISPATCH  vtable=1224
+   148 func  SetNodeIndicationForTSN(SetNodeIndicationForTSN, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, wSLMPStationNumber, wSLMPStationExNumber, wSLMPMultiDropNumber, lWatchTime, lpucDestMACAddress, wDisplayIndication, lplReturnCode)  params=11  funckind=FUNC_DISPATCH  vtable=1232
+   149 func  CheckSLMPCommandUseEX(CheckSLMPCommandUseEX, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lpbIsPossibleToUseSLMP, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=1240
+   150 func  ReadCCIETSNFieldBridgeInfo(ReadCCIETSNFieldBridgeInfo, lpbCallID, wTSNIONumber, wTSNNetworkNumber, wTSNStationNumber, wTSNBridgeStationNumber, lWatchTime, bstrDestIPAddress, lDestinationPortNumber, wStationNumber, dwInfoType, lpdwUnitInfoSize, lpdwUnitInfoArray, lplReturnCode)  params=13  funckind=FUNC_DISPATCH  vtable=1248
+   151 func  ReadCCIETSNFieldBridgeSlaveUnitInfo(ReadCCIETSNFieldBridgeSlaveUnitInfo, lpbCallID, wIONumber, wNetworkNumber, wStationNumber, lpdwSlaveUnitInfoSize, lpstSlaveUnitInfoArray, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=1256
+   152 func  GetCCIETSNFieldBridgeMountData(GetCCIETSNFieldBridgeMountData, lpbCallID, wTSNIONumber, wTSNNetworkNumber, wFieldNetworkNumber, wTSNStationNumber, wTSNBridgeStationNumber, wFieldBridgeStationNumber, lWatchTime, bstrDestIPAddress, lDestinationPortNumber, lpstCCIEFMountInfo, lpstCCIEFUnitInfo, lpdwEXError, lplReturnCode)  params=14  funckind=FUNC_DISPATCH  vtable=1264
+   153 func  ExecuteSLMPCommandEX2(ExecuteSLMPCommandEX2, lpbCallID, wIONumber, wSLMPIONumber, wNetworkNumber, wSLMPNetworkNumber, wStationNumber, wSLMPStationNumber, wCommand, wSubCommand, dwReqDataSize, lpbyReqData, dwResDataSize, lpdwReceiveResDataSize, lpbyResData, lpwPDURetCode, lplReturnCode)  params=16  funckind=FUNC_DISPATCH  vtable=1272
+   154 func  UploadExt(UploadExt, lpbCallID, dwPlcFileDataSize, lpstPlcFileDataList, bstrProjectPassword, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=1280
+   155 func  UploadProjectExt(UploadProjectExt, lpbCallID, lDriveNo, dwFileTypes, bstrPassword, bstrProjectPassword, lplDNaviErrorCode, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=1288
+   156 func  GetM2GSeriesMountData(GetM2GSeriesMountData, lpbCallID, bIsCommonCheck, lpstM2GMountInfo, lpdwEXError, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=1296
+   157 func  SPBufferReadforASLINKV2(SPBufferReadforASLINKV2, lpbCallID, wIONumber, lpwConnectCount, lpwErrorCount, lpwAlarmCount, lpstAsLinkArray, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=1304
+   158 func  BeforeCreateASLINKV2Pack(BeforeCreateASLINKV2Pack, lpbCallID, wIONumber, bRecognition, lpdwEXError, lpdwStatus, lpdwRequestAutoAddressError, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=1312
+   159 func  CreateASLINKV2Pack(CreateASLINKV2Pack, lpbCallID, wIONumber, bRecognition, lpwConnectCount, lpwErrorCount, lpwAlarmCount, lpstAsLinkArray, lpdwEXError, lpdwStatus, lpdwRequestAutoAddressError, lplReturnCode)  params=11  funckind=FUNC_DISPATCH  vtable=1320
+   160 func  CheckASLINKV2MasterReady(CheckASLINKV2MasterReady, lpbCallID, wIONumber, lpbReady, lpwMasterErrorCode, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=1328
+   161 func  ReadASLINKV2RemoteInfo(ReadASLINKV2RemoteInfo, lpbCallID, wIONumber, wUnitID, dwDataType, lpdwDataSize, lpdwRemoteInfoArray, lpwMasterErrorCode, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=1336
+   162 func  ReadASLINKV2RemoteParameter(ReadASLINKV2RemoteParameter, lpbCallID, wIONumber, wUnitID, lpdwDataSize, lpwRemoteInfoArray, lpwMasterErrorCode, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=1344
+   163 func  WriteASLINKV2RemoteParameter(WriteASLINKV2RemoteParameter, lpbCallID, wIONumber, wUnitID, dwDataSize, lpstWriteParamArray, lpwMasterErrorCode, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=1352
+
+=== [TKIND_RECORD] _ST_GXW3_TENSO_REF_CCIE_FIELD  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=4
+
+=== [TKIND_RECORD] _ST_GXW3_DEVNAME  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=10
+
+=== [TKIND_RECORD] _ST_GXW3_NETREF_CCIE_FIELD_CONFIG  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=13
+
+=== [TKIND_RECORD] _ST_GX3_CCIE_FIELD_SLAVE_UNIT_INFO_WRAP  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=12
+
+=== [TKIND_RECORD] _ST_DEVICE_NAME  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=4
+
+=== [TKIND_RECORD] _ST_GXW3_TENSO_REF_CCLINK  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=4
+
+=== [TKIND_RECORD] _ST_GXW3_NETREF_CCLINK_CONFIG  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=13
+
+=== [TKIND_RECORD] _ST_PLC_FILE  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=6
+
+=== [TKIND_RECORD] _STCCIEF_MOUNT_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=17
+
+=== [TKIND_RECORD] _STCCIEF_OFFSETSIZE  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _STCCIEF_NETWORKCONFIG_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=5
+
+=== [TKIND_RECORD] _STCCIEF_UNIT_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _STCCIEF_STATION_INFO_ALL  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=5
+
+=== [TKIND_RECORD] _STCCIEF_STATION_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=3
+
+=== [TKIND_RECORD] _STCCIEC_MOUNT_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _STCCIEC_STA_MOUNT_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=3
+
+=== [TKIND_RECORD] _STCCIEC_UNIT_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=6
+
+=== [TKIND_RECORD] _ST_IQR_MOUNT_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=9
+
+=== [TKIND_RECORD] _ST_IQR_BASE_DETAIL  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=14
+
+=== [TKIND_RECORD] _ST_IQR_POWERINFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=11
+
+=== [TKIND_RECORD] _ST_IQR_CPUSLOTDETAIL  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=20
+
+=== [TKIND_RECORD] _ST_IQR_SYSMON_EXRAM  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=4
+
+=== [TKIND_RECORD] _ST_IQR_SYSMON_IPADDRESS  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=4
+
+=== [TKIND_RECORD] _ST_IQR_SYSMON_IEGATEWAY  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _ST_IQR_IOSLOTDETAIL  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=24
+
+=== [TKIND_RECORD] _ST_GXW3_ETHER_NODE_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _ST_GXW3_ETHER_NODE_BASE  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=17
+
+=== [TKIND_RECORD] _ST_GXW3_ETHERNET_PARAMETER  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _ST_GXW3_ETHERNET_PARAMETER_BASE  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=3
+
+=== [TKIND_RECORD] _ST_GXW3_ETHER_REQ_IPADD_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=13
+
+=== [TKIND_RECORD] _ST_IQF_MOUNT_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=9
+
+=== [TKIND_RECORD] _ST_IQF_BASE_DETAIL  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=14
+
+=== [TKIND_RECORD] _ST_IQF_POWERINFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=11
+
+=== [TKIND_RECORD] _ST_IQF_CPUSLOTDETAIL  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=20
+
+=== [TKIND_RECORD] _ST_IQF_SYSMON_EXRAM  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=4
+
+=== [TKIND_RECORD] _ST_IQF_SYSMON_IPADDRESS  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=4
+
+=== [TKIND_RECORD] _ST_IQF_SYSMON_IEGATEWAY  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _ST_IQF_IOSLOTDETAIL  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=24
+
+=== [TKIND_RECORD] _ST_IQR_MOUNT_INFO_EX  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=9
+
+=== [TKIND_RECORD] _ST_IQR_BASE_DETAIL_EX  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=15
+
+=== [TKIND_RECORD] _ST_SLPRADIOBRIDGEMONDATA  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=5
+
+=== [TKIND_RECORD] _ST_SLPRADIOMONDATA  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=12
+
+=== [TKIND_RECORD] _ST_GXW3_ASLINKMONDATALIST_BASE  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _ST_GXW3_ASLINKMONDATA_BASE  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=54
+
+=== [TKIND_RECORD] _ST_GXW3_ASLINK_WRITE_PARAM  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _ST_GXW3_CCLINKIEFSLAVEMONLIST_BASE  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _ST_GXW3_CCLINKIEFSLAVEMONDATA_BASE  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=9
+
+=== [TKIND_RECORD] _ST_GXW3_FILELIST_LFNDUMW  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=9
+
+=== [TKIND_RECORD] _ST_GXW3_CCLINKSLAVEMONLIST_BASE2  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _ST_GXW3_CCLINKSLAVEMONDATA_BASE2  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=9
+
+=== [TKIND_RECORD] _ST_GXW3_CCLINK_MOUNT_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=7
+
+=== [TKIND_RECORD] _ST_GXW3_CCLINK_STA_MOUNT_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=17
+
+=== [TKIND_RECORD] _ST_GXW3_CCLINK_UNIT_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=6
+
+=== [TKIND_RECORD] _ST_GXW3_ETHER_STATUS_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _ST_GXW3_ETHER_STATUS_DATA  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=6
+
+=== [TKIND_RECORD] _ST_UNIT_REFRESH_DEVICE  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=3
+
+=== [TKIND_RECORD] _ST_STATION_REFRESH_DEVICE  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=3
+
+=== [TKIND_RECORD] _ST_REFRESH_DEVICE_BASE  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=3
+
+=== [TKIND_RECORD] _ST_CONFIG_DATA  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=5
+
+=== [TKIND_RECORD] _ST_GXW3_NETREF_CCIE_NEXUS_CONFIG  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=19
+
+=== [TKIND_RECORD] _STCCIEN_UNIT_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=3
+
+=== [TKIND_RECORD] _STCCIEN_STATION_INFO_ALL  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=10
+
+=== [TKIND_RECORD] _ST_GX3_CCIE_NEXUS_EXT_UNIT_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=4
+
+=== [TKIND_RECORD] _ST_GX3_CCIE_NEXUS_SLAVE_UNIT_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=10
+
+=== [TKIND_RECORD] _ST_GX3_CCIE_NEXUS_SLAVE_EXT_UNIT_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=6
+
+=== [TKIND_RECORD] _ST_GXW3_ASLINKMONDATALISTEXT_BASE  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _ST_GXW3_ASLINKMONDATAEXT_BASE  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=58
+
+=== [TKIND_RECORD] _STCCIEN_UNIT_INFO_EX  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=3
+
+=== [TKIND_RECORD] _STCCIEN_STATION_INFO_ALL_EX  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=15
+
+=== [TKIND_RECORD] _STCCIEN_UNIT_INFO_EX2  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=3
+
+=== [TKIND_RECORD] _STCCIEN_STATION_INFO_ALL_EX2  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=16
+
+=== [TKIND_RECORD] _ST_FWUP_DATA  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _ST_FWUP_STATUS  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=4
+
+=== [TKIND_RECORD] _ST_GXW3_TSNASLINKDATALIST_BASE  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=6
+
+=== [TKIND_RECORD] _ST_GXW3_TSNASLINKDATA_BASE  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=8
+
+=== [TKIND_RECORD] _STCCIEN_UNIT_INFO_EX3  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=3
+
+=== [TKIND_RECORD] _STCCIEN_STATION_INFO_ALL_EX3  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=16
+
+=== [TKIND_RECORD] _STCCIEN_UNIT_INFO_EX4  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=3
+
+=== [TKIND_RECORD] _STCCIEN_STATION_INFO_ALL_EX4  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=17
+
+=== [TKIND_RECORD] _STCCIEN_UNIT_INFO_EX5  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=3
+
+=== [TKIND_RECORD] _STCCIEN_STATION_INFO_ALL_EX5  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=19
+
+=== [TKIND_RECORD] _ST_GXW3_CCIENEXUS_SET_IPADD_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=14
+
+=== [TKIND_RECORD] _ST_M2G_MOUNT_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=9
+
+=== [TKIND_RECORD] _ST_M2G_BASE_DETAIL  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=17
+
+=== [TKIND_RECORD] _ST_M2G_POWERINFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=12
+
+=== [TKIND_RECORD] _ST_M2G_CPUSLOTDETAIL  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=21
+
+=== [TKIND_RECORD] _ST_M2G_SYSMON_EXRAM  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=4
+
+=== [TKIND_RECORD] _ST_M2G_SYSMON_IPADDRESS  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=4
+
+=== [TKIND_RECORD] _ST_M2G_SYSMON_IEGATEWAY  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _ST_M2G_IOSLOTDETAIL  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=24
+
+=== [TKIND_RECORD] _ST_GXW3_ASLINKV2MONDATALIST_BASE  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _ST_GXW3_ASLINKV2MONDATA_BASE  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=57
+
+=== [TKIND_RECORD] _ST_GXW3_ASLINKV2_WRITE_PARAM  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_DISPATCH] _IGXW3CallProductEvents  guid=08c6ebb1-6114-45ba-ba01-5018479f6552  funcs=0  vartypes=0
+
+=== [TKIND_COCLASS] GXW3CallProduct  guid=8da501e2-a5c2-48f5-9e18-b396fe88c5dc  funcs=0  vartypes=0
+
+=== [TKIND_DISPATCH] IGXW3CallProduct  guid=7ad9a457-0428-4b0d-9bb0-7dd3267821f6  funcs=21  vartypes=0
+   1610612736 func  QueryInterface(QueryInterface, riid, ppvObj)  params=2  funckind=FUNC_DISPATCH  vtable=0
+   1610612737 func  AddRef(AddRef)  params=0  funckind=FUNC_DISPATCH  vtable=8
+   1610612738 func  Release(Release)  params=0  funckind=FUNC_DISPATCH  vtable=16
+   1610678272 func  GetTypeInfoCount(GetTypeInfoCount, pctinfo)  params=1  funckind=FUNC_DISPATCH  vtable=24
+   1610678273 func  GetTypeInfo(GetTypeInfo, itinfo, lcid, pptinfo)  params=3  funckind=FUNC_DISPATCH  vtable=32
+   1610678274 func  GetIDsOfNames(GetIDsOfNames, riid, rgszNames, cNames, lcid, rgdispid)  params=5  funckind=FUNC_DISPATCH  vtable=40
+   1610678275 func  Invoke(Invoke, dispidMember, riid, lcid, wFlags, pdispparams, pvarResult, pexcepinfo, puArgErr)  params=8  funckind=FUNC_DISPATCH  vtable=48
+   1 func  Initialize(Initialize, lpCommandSender)  params=1  funckind=FUNC_DISPATCH  vtable=56
+   2 func  GetODeviceKind(GetODeviceKind, lpstDeviceName, lpsKind, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=64
+   3 func  GetPlcSeriesList(GetPlcSeriesList, lpbCallID, wTimeOut, lpdwPlcSeriesSize, lpstPlcSeriesArray, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=72
+   4 func  GetPlcTypeList(GetPlcTypeList, lpbCallID, dwPlcSeries, wTimeOut, lpdwPlcTypeSize, lpstPlcTypeArray, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=80
+   5 func  GetLanguageTypeList(GetLanguageTypeList, lpbCallID, dwPlcType, wTimeOut, lpdwLanguageTypeSize, lpstLanguageTypeArray, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=88
+   6 func  GetCulture(GetCulture, lpbCallID, wTimeOut, lpbstrCultureName, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=96
+   7 func  SetCulture(SetCulture, lpbCallID, wTimeOut, bstrCultureName, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=104
+   8 func  InitializeEX(InitializeEX, lpCommandSender, bstrCultureName)  params=2  funckind=FUNC_DISPATCH  vtable=112
+   9 func  GetOpenIFVersion(GetOpenIFVersion, lplVersion)  params=1  funckind=FUNC_DISPATCH  vtable=120
+   10 func  DispHelpID(DispHelpID, lpbCallID, wTimeOut, bstrHelpID, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=128
+   11 func  GetUnitDataList(GetUnitDataList, lpbCallID, wTimeOut, lpdwUnitSize, lpstUnitDataList, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=136
+   12 func  GetOperationModeList(GetOperationModeList, lpbCallID, dwPlcType, wTimeOut, lpdwOperationModeSize, lpstOperationModeList, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=144
+   13 func  GetOperationModeListExt(GetOperationModeListExt, lpbCallID, dwPlcType, wTimeOut, lpdwOperationModeSize, lpstOperationModeList, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=152
+   14 func  GetUnitDataListAll(GetUnitDataListAll, lpbCallID, wTimeOut, lpdwUnitSize, lpstUnitDataList, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=160
+
+=== [TKIND_RECORD] ST_PRODUCT_INFO  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_RECORD] _ST_UNIT_DATA  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=8
+
+=== [TKIND_RECORD] ST_PRODUCT_INFO_EX  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=2
+
+=== [TKIND_DISPATCH] _IGXW3CallTransmitterEvents  guid=2b58bb93-2710-4fbb-b2cb-92968a0f0f38  funcs=0  vartypes=0
+
+=== [TKIND_COCLASS] GXW3CallTransmitter  guid=538f4ca5-cc9d-4e21-aa5e-ae293cdeaf9a  funcs=0  vartypes=0
+
+=== [TKIND_DISPATCH] IGXW3CallTransmitter  guid=30ad5d25-deae-48e2-8959-d0a25e54170d  funcs=8  vartypes=0
+   1610612736 func  QueryInterface(QueryInterface, riid, ppvObj)  params=2  funckind=FUNC_DISPATCH  vtable=0
+   1610612737 func  AddRef(AddRef)  params=0  funckind=FUNC_DISPATCH  vtable=8
+   1610612738 func  Release(Release)  params=0  funckind=FUNC_DISPATCH  vtable=16
+   1610678272 func  GetTypeInfoCount(GetTypeInfoCount, pctinfo)  params=1  funckind=FUNC_DISPATCH  vtable=24
+   1610678273 func  GetTypeInfo(GetTypeInfo, itinfo, lcid, pptinfo)  params=3  funckind=FUNC_DISPATCH  vtable=32
+   1610678274 func  GetIDsOfNames(GetIDsOfNames, riid, rgszNames, cNames, lcid, rgdispid)  params=5  funckind=FUNC_DISPATCH  vtable=40
+   1610678275 func  Invoke(Invoke, dispidMember, riid, lcid, wFlags, pdispparams, pvarResult, pexcepinfo, puArgErr)  params=8  funckind=FUNC_DISPATCH  vtable=48
+   1 func  BroadcastSendData(BroadcastSendData, ulCommandID, dwSize, lpData)  params=3  funckind=FUNC_DISPATCH  vtable=56
+
+=== [TKIND_ALIAS] ULONG_PTR  guid=00000000-0000-0000-0000-000000000000  funcs=0  vartypes=0
+
+=== [TKIND_DISPATCH] IGXW3CallTransmitterEvent  guid=8d6c1c04-cda2-47c9-9f4f-558e797d24dc  funcs=8  vartypes=0
+   1610612736 func  QueryInterface(QueryInterface, riid, ppvObj)  params=2  funckind=FUNC_DISPATCH  vtable=0
+   1610612737 func  AddRef(AddRef)  params=0  funckind=FUNC_DISPATCH  vtable=8
+   1610612738 func  Release(Release)  params=0  funckind=FUNC_DISPATCH  vtable=16
+   1610678272 func  GetTypeInfoCount(GetTypeInfoCount, pctinfo)  params=1  funckind=FUNC_DISPATCH  vtable=24
+   1610678273 func  GetTypeInfo(GetTypeInfo, itinfo, lcid, pptinfo)  params=3  funckind=FUNC_DISPATCH  vtable=32
+   1610678274 func  GetIDsOfNames(GetIDsOfNames, riid, rgszNames, cNames, lcid, rgdispid)  params=5  funckind=FUNC_DISPATCH  vtable=40
+   1610678275 func  Invoke(Invoke, dispidMember, riid, lcid, wFlags, pdispparams, pvarResult, pexcepinfo, puArgErr)  params=8  funckind=FUNC_DISPATCH  vtable=48
+   1 func  SendData(SendData, ulCommandID, dwSize, lpData)  params=3  funckind=FUNC_DISPATCH  vtable=56
+
+=== [TKIND_DISPATCH] _IGXW3CallSessionEvents  guid=f7c3386c-7cc6-4148-a443-7ff1a1c26700  funcs=0  vartypes=0
+
+=== [TKIND_COCLASS] GXW3CallSession  guid=6896a2ff-5f4e-4540-a167-00e220c5a521  funcs=0  vartypes=0
+
+=== [TKIND_DISPATCH] IGXW3CallSession  guid=7ecae380-ec16-4562-a71b-3046455b5a7c  funcs=16  vartypes=0
+   1610612736 func  QueryInterface(QueryInterface, riid, ppvObj)  params=2  funckind=FUNC_DISPATCH  vtable=0
+   1610612737 func  AddRef(AddRef)  params=0  funckind=FUNC_DISPATCH  vtable=8
+   1610612738 func  Release(Release)  params=0  funckind=FUNC_DISPATCH  vtable=16
+   1610678272 func  GetTypeInfoCount(GetTypeInfoCount, pctinfo)  params=1  funckind=FUNC_DISPATCH  vtable=24
+   1610678273 func  GetTypeInfo(GetTypeInfo, itinfo, lcid, pptinfo)  params=3  funckind=FUNC_DISPATCH  vtable=32
+   1610678274 func  GetIDsOfNames(GetIDsOfNames, riid, rgszNames, cNames, lcid, rgdispid)  params=5  funckind=FUNC_DISPATCH  vtable=40
+   1610678275 func  Invoke(Invoke, dispidMember, riid, lcid, wFlags, pdispparams, pvarResult, pexcepinfo, puArgErr)  params=8  funckind=FUNC_DISPATCH  vtable=48
+   1 func  Initialize(Initialize, lpCommandSender)  params=1  funckind=FUNC_DISPATCH  vtable=56
+   2 func  CheckSupport(CheckSupport, dwApiId)  params=1  funckind=FUNC_DISPATCH  vtable=64
+   3 func  ProjectOpen(ProjectOpen, bstrProjectPath, wTimeOut, lUserInterfaceMode, lpbCallID, pbIsReadOnly, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=72
+   4 func  ProjectClose(ProjectClose, lpbCallID, lOption, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=80
+   5 func  IsSimulation(IsSimulation, lpbCallID, lpdwStatus, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=88
+   6 func  Connect(Connect, wTimeOut, lpbCallID, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=96
+   7 func  Disconnect(Disconnect, lpbCallID, lplReturnCode)  params=2  funckind=FUNC_DISPATCH  vtable=104
+   8 func  InitializeEX(InitializeEX, lpCommandSender, bstrCultureName)  params=2  funckind=FUNC_DISPATCH  vtable=112
+   9 func  Preload(Preload, lpbCallID, lplReturnCode)  params=2  funckind=FUNC_DISPATCH  vtable=120
+
+=== [TKIND_DISPATCH] _IGXW3CallViewEvents  guid=1bd4c909-99f8-4edb-a618-2143b5810e80  funcs=0  vartypes=0
+
+=== [TKIND_COCLASS] GXW3CallView  guid=9b637eca-ad0c-44a8-a8dc-8d84aa631894  funcs=0  vartypes=0
+
+=== [TKIND_DISPATCH] IGXW3CallView  guid=8bc7e5ad-7b5d-443d-8bd7-08a098327080  funcs=33  vartypes=0
+   1610612736 func  QueryInterface(QueryInterface, riid, ppvObj)  params=2  funckind=FUNC_DISPATCH  vtable=0
+   1610612737 func  AddRef(AddRef)  params=0  funckind=FUNC_DISPATCH  vtable=8
+   1610612738 func  Release(Release)  params=0  funckind=FUNC_DISPATCH  vtable=16
+   1610678272 func  GetTypeInfoCount(GetTypeInfoCount, pctinfo)  params=1  funckind=FUNC_DISPATCH  vtable=24
+   1610678273 func  GetTypeInfo(GetTypeInfo, itinfo, lcid, pptinfo)  params=3  funckind=FUNC_DISPATCH  vtable=32
+   1610678274 func  GetIDsOfNames(GetIDsOfNames, riid, rgszNames, cNames, lcid, rgdispid)  params=5  funckind=FUNC_DISPATCH  vtable=40
+   1610678275 func  Invoke(Invoke, dispidMember, riid, lcid, wFlags, pdispparams, pvarResult, pexcepinfo, puArgErr)  params=8  funckind=FUNC_DISPATCH  vtable=48
+   1 func  Initialize(Initialize, lpCommandSender)  params=1  funckind=FUNC_DISPATCH  vtable=56
+   2 func  InitializeEX(InitializeEX, lpCommandSender, bstrCultureName)  params=2  funckind=FUNC_DISPATCH  vtable=64
+   3 func  CreateNewProjectWithPasswordDialog(CreateNewProjectWithPasswordDialog, bstrProjectPath, bstrDlgTitle, bstrTitle, lSaveType, dwPlcSeries, dwPlcType, dwLanguageType, wTimeOut, lUserInterfaceMode, lpbCallID, lplReturnCode)  params=11  funckind=FUNC_DISPATCH  vtable=72
+   4 func  OpenProjectWithPasswordDialog(OpenProjectWithPasswordDialog, bstrProjectPath, bstrDlgTitle, wTimeOut, lUserInterfaceMode, lpbCallID, pbIsReadOnly, lplReturnCode)  params=7  funckind=FUNC_DISPATCH  vtable=80
+   5 func  RenameProjectWithPasswordDialog(RenameProjectWithPasswordDialog, bstrProjectPath, bstrDlgTitle, bstrNewProjectName, wTimeOut, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=88
+   6 func  OpenConnectionSettingDialog(OpenConnectionSettingDialog, lpbCallID, lDialogKind, lRouteCount, plPcSideIF, lpwChangeResult, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=96
+   7 func  OpenNewConnectionSettingDialog(OpenNewConnectionSettingDialog, lpbCallID, dwPlcSeries, dwPlcType, lDialogKind, lRouteCount, plPcSideIF, lpwChangeResult, lplReturnCode)  params=8  funckind=FUNC_DISPATCH  vtable=104
+   8 func  ShowPOUBody(ShowPOUBody, lpbCallID, bstrPOUName, bstrFBInstanceName, bstrTargetLocation, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=112
+   9 func  ShowPOULabelList(ShowPOULabelList, lpbCallID, bstrPOUName, bstrLabelName, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=120
+   10 func  ShowSFCActionBody(ShowSFCActionBody, lpbCallID, bstrPOUName, bstrActionName, bstrTargetLocation, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=128
+   11 func  ShowSFCTransitionBody(ShowSFCTransitionBody, lpbCallID, bstrPOUName, bstrTransitionName, bstrTargetLocation, lplReturnCode)  params=5  funckind=FUNC_DISPATCH  vtable=136
+   12 func  ShowGlobalLabelList(ShowGlobalLabelList, lpbCallID, bstrLabelListName, bstrLabelName, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=144
+   13 func  ShowSDT(ShowSDT, lpbCallID, bstrSDTName, bstrMemberName, lplReturnCode)  params=4  funckind=FUNC_DISPATCH  vtable=152
+   14 func  ShowProjectExt(ShowProjectExt, lpbCallID, lShow, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=160
+   15 func  CreateNewProjectWithPasswordDialogExt(CreateNewProjectWithPasswordDialogExt, bstrProjectPath, bstrDlgTitle, bstrTitle, lSaveType, dwPlcSeries, dwPlcType, dwLanguageType, wTimeOut, lUserInterfaceMode, dwOperationMode, lpbCallID, lplReturnCode)  params=12  funckind=FUNC_DISPATCH  vtable=168
+   16 func  ShowVerifyProjectDialog(ShowVerifyProjectDialog, lpbCallID, bstrProjectPath, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=176
+   17 func  ShowCPUParameter(ShowCPUParameter, lpbCallID, lplReturnCode)  params=2  funckind=FUNC_DISPATCH  vtable=184
+   18 func  ShowDiagnosticsDialog(ShowDiagnosticsDialog, lpbCallID, lDiagnosticsDialog, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=192
+   19 func  RegisterLibrary(RegisterLibrary, lpbCallID, bstrFilePath, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=200
+   20 func  UpdateLibrary(UpdateLibrary, lpbCallID, bstrFilePath, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=208
+   21 func  DeleteLibrary(DeleteLibrary, lpbCallID, bstrFilePath, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=216
+   22 func  ShowPOUBodyExt(ShowPOUBodyExt, lpbCallID, bstrPOUName, bstrWorksheetName, bstrFBInstanceName, bstrTargetLocation, lplReturnCode)  params=6  funckind=FUNC_DISPATCH  vtable=224
+   23 func  StartSimulator(StartSimulator, lpbCallID, lStartUpMode, lplReturnCode)  params=3  funckind=FUNC_DISPATCH  vtable=232
+   24 func  StopSimulator(StopSimulator, lpbCallID, lplReturnCode)  params=2  funckind=FUNC_DISPATCH  vtable=240
+   25 func  CreateNewProjectForTypeModelWithPasswordDialog(CreateNewProjectForTypeModelWithPasswordDialog, bstrProjectPath, bstrDlgTitle, bstrTitle, lSaveType, dwPlcSeries, dwPlcTypeModel, dwPlcAxisNum, dwNetworkType, dwLanguageType, wTimeOut, lOpenInterfaceMode, dwMode, lpbCallID, lplReturnCode)  params=14  funckind=FUNC_DISPATCH  vtable=248
+   26 func  OpenNewConnectionSettingDialogForTypeModel(OpenNewConnectionSettingDialogForTypeModel, lpbCallID, dwPlcSeries, dwPlcTypeModel, dwPlcAxisNum, lDialogKind, lRouteCount, plPcSideIF, lpwChangeResult, lplReturnCode)  params=9  funckind=FUNC_DISPATCH  vtable=256
+
