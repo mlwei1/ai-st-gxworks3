@@ -1,0 +1,56 @@
+{
+    "name":  "b_motor_reverse",
+    "title":  "基准：正反转互锁",
+    "cpu":  {
+                "series":  "FX5U",
+                "model":  "FX5U-32MT/ES"
+            },
+    "template":  {
+                     "name":  "motor_reverse_interlock",
+                     "params":  {
+                                    "deadTimeSec":  1
+                                }
+                 },
+    "io":  [
+               {
+                   "device":  "X0",
+                   "name":  "bFwd",
+                   "type":  "BOOL",
+                   "comment":  "正转按钮"
+               },
+               {
+                   "device":  "X1",
+                   "name":  "bRev",
+                   "type":  "BOOL",
+                   "comment":  "反转按钮"
+               },
+               {
+                   "device":  "X2",
+                   "name":  "bStop",
+                   "type":  "BOOL",
+                   "comment":  "停止"
+               },
+               {
+                   "device":  "Y0",
+                   "name":  "bFwdOut",
+                   "type":  "BOOL",
+                   "comment":  "正转输出"
+               },
+               {
+                   "device":  "Y1",
+                   "name":  "bRevOut",
+                   "type":  "BOOL",
+                   "comment":  "反转输出"
+               }
+           ],
+    "requirements":  [
+                         {
+                             "id":  "R1",
+                             "text":  "正反转互锁，换向需 1 秒死区"
+                         }
+                     ],
+    "meta":  {
+                 "version":  "0.1.0",
+                 "createdAt":  "2026-11-10"
+             }
+}

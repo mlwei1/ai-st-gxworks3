@@ -1,0 +1,50 @@
+{
+    "name":  "b_motor_auto_stop",
+    "title":  "基准：延时自动停",
+    "cpu":  {
+                "series":  "FX5U",
+                "model":  "FX5U-32MT/ES"
+            },
+    "template":  {
+                     "name":  "motor_auto_stop",
+                     "params":  {
+                                    "autoStopSec":  5
+                                }
+                 },
+    "io":  [
+               {
+                   "device":  "X0",
+                   "name":  "bStart",
+                   "type":  "BOOL",
+                   "comment":  "启动"
+               },
+               {
+                   "device":  "X1",
+                   "name":  "bStop",
+                   "type":  "BOOL",
+                   "comment":  "停止"
+               },
+               {
+                   "device":  "X2",
+                   "name":  "bFault",
+                   "type":  "BOOL",
+                   "comment":  "故障"
+               },
+               {
+                   "device":  "Y0",
+                   "name":  "bMotor",
+                   "type":  "BOOL",
+                   "comment":  "电机输出"
+               }
+           ],
+    "requirements":  [
+                         {
+                             "id":  "R1",
+                             "text":  "启动后运行 5 秒自动停止"
+                         }
+                     ],
+    "meta":  {
+                 "version":  "0.1.0",
+                 "createdAt":  "2026-11-10"
+             }
+}

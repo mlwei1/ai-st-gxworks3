@@ -1,0 +1,50 @@
+{
+    "name":  "b_state_machine",
+    "title":  "基准：状态机",
+    "cpu":  {
+                "series":  "FX5U",
+                "model":  "FX5U-32MT/ES"
+            },
+    "template":  {
+                     "name":  "state_machine",
+                     "params":  {
+
+                                }
+                 },
+    "io":  [
+               {
+                   "device":  "X0",
+                   "name":  "bStart",
+                   "type":  "BOOL",
+                   "comment":  "启动"
+               },
+               {
+                   "device":  "X1",
+                   "name":  "bStop",
+                   "type":  "BOOL",
+                   "comment":  "停止"
+               },
+               {
+                   "device":  "X2",
+                   "name":  "bFault",
+                   "type":  "BOOL",
+                   "comment":  "故障"
+               },
+               {
+                   "device":  "Y0",
+                   "name":  "bRun",
+                   "type":  "BOOL",
+                   "comment":  "运行"
+               }
+           ],
+    "requirements":  [
+                         {
+                             "id":  "R1",
+                             "text":  "待机→运行→停止三态，非法状态回待机"
+                         }
+                     ],
+    "meta":  {
+                 "version":  "0.1.0",
+                 "createdAt":  "2026-11-10"
+             }
+}

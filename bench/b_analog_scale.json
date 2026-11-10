@@ -1,0 +1,41 @@
+{
+    "name":  "b_analog_scale",
+    "title":  "基准：模拟量标定",
+    "cpu":  {
+                "series":  "FX5U",
+                "model":  "FX5U-32MT/ES"
+            },
+    "template":  {
+                     "name":  "analog_scale",
+                     "params":  {
+                                    "rawMin":  400,
+                                    "rawMax":  2000,
+                                    "engMin":  0,
+                                    "engMax":  100
+                                }
+                 },
+    "io":  [
+               {
+                   "device":  "D100",
+                   "name":  "nRaw",
+                   "type":  "INT",
+                   "comment":  "原始值"
+               },
+               {
+                   "device":  "D101",
+                   "name":  "nEng",
+                   "type":  "INT",
+                   "comment":  "工程量"
+               }
+           ],
+    "requirements":  [
+                         {
+                             "id":  "R1",
+                             "text":  "400..2000 线性映射到 0..100%"
+                         }
+                     ],
+    "meta":  {
+                 "version":  "0.1.0",
+                 "createdAt":  "2026-11-10"
+             }
+}

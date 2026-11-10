@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ST 模板库测试（M1-2）。
  *
  * 覆盖：
@@ -198,6 +198,26 @@ test('timer_sequence：3 个 TON + 参数化每步时间', () => {
   assert.ok(custom.includes('PT := T#1000ms') && custom.includes('PT := T#2000ms') && custom.includes('PT := T#3000ms'));
 });
 
+test('timer_sequence：步数可配置（3→5 步 / 1 步），非法步数抛错', () => {
+  const t = requireTemplate('timer_sequence');
+  const five = t.instantiate(
+    makeCtx('timer_sequence', BASE_IO, {
+      stepCount: 5,
+      step4Sec: 1,
+      step5Sec: 2,
+    }),
+  );
+  assert.ok(five.includes('tStep5 : TON;'), '5 步应有第 5 个定时器');
+  assert.ok(five.includes('nSeq = 5;'), '第 5 步输出');
+  assert.ok(five.includes('PT := T#1000ms') && five.includes('PT := T#2000ms'), 'step4/5 秒参数生效');
+  // 第 5 步完成后返回 0
+  assert.ok(five.includes('nSeq := 0;'));
+
+  const one = t.instantiate(makeCtx('timer_sequence', BASE_IO, { stepCount: 1 }));
+  assert.ok(one.includes('tStep1 : TON;') && !one.includes('tStep2'));
+  assert.throws(() => t.instantiate(makeCtx('timer_sequence', BASE_IO, { stepCount: 9 })), /1\.\.8/);
+});
+
 test('counter_batch：R_TRIG + CTU + 批量复位', () => {
   const t = requireTemplate('counter_batch');
   const src = t.instantiate(makeCtx('counter_batch'));
@@ -213,7 +233,23 @@ test('alarm_first_out：3 路首出 + 确认 + 复位；非法 alarmCount 抛错
   const src = t.instantiate(makeCtx('alarm_first_out'));
   assert.ok(src.includes('bFirst1 : BOOL') && src.includes('bFirstLatched : BOOL'));
   assert.ok(src.includes('(bFirst1 OR bFirst2 OR bFirst3) AND NOT bAck'), '确认后首出指示熄灭');
-  assert.throws(() => t.instantiate(makeCtx('alarm_first_out', BASE_IO, { alarmCount: 4 })), /alarmCount=3/);
+  assert.throws(() => t.instantiate(makeCtx('alarm_first_out', BASE_IO, { alarmCount: 0 })), /1\.\.16/);
+  assert.throws(() => t.instantiate(makeCtx('alarm_first_out', BASE_IO, { alarmCount: 17 })), /1\.\.16/);
+});
+
+test('alarm_first_out：路数可配置（2 路 / 4 路）', () => {
+  const t = requireTemplate('alarm_first_out');
+  const two = t.instantiate(makeCtx('alarm_first_out', BASE_IO, { alarmCount: 2 }));
+  assert.ok(two.includes('bAlarm2 : BOOL') && !two.includes('bAlarm3 : BOOL'), '2 路不应生成第 3 路');
+  assert.ok(two.includes('(bFirst1 OR bFirst2) AND NOT bAck'));
+  // 确认/复位设备顺延：2 路时确认=X2、复位=X3
+  assert.ok(two.includes('IF X2 THEN'), '确认按钮应为 X2');
+  assert.ok(two.includes('IF X3 THEN'), '复位按钮应为 X3');
+
+  const four = t.instantiate(makeCtx('alarm_first_out', BASE_IO, { alarmCount: 4 }));
+  assert.ok(four.includes('bAlarm4 : BOOL') && four.includes('bFirst4 : BOOL'));
+  assert.ok(four.includes('(bFirst1 OR bFirst2 OR bFirst3 OR bFirst4) AND NOT bAck'));
+  assert.ok(four.includes('IF X4 THEN') && four.includes('IF X5 THEN'), '4 路时确认/复位顺延');
 });
 
 test('motor_start_stop：manual / auto 两种故障复位分支', () => {

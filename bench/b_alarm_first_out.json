@@ -1,0 +1,62 @@
+{
+    "name":  "b_alarm_first_out",
+    "title":  "基准：报警首出",
+    "cpu":  {
+                "series":  "FX5U",
+                "model":  "FX5U-32MT/ES"
+            },
+    "template":  {
+                     "name":  "alarm_first_out",
+                     "params":  {
+                                    "alarmCount":  2
+                                }
+                 },
+    "io":  [
+               {
+                   "device":  "X0",
+                   "name":  "bAlarm1",
+                   "type":  "BOOL",
+                   "comment":  "报警1"
+               },
+               {
+                   "device":  "X1",
+                   "name":  "bAlarm2",
+                   "type":  "BOOL",
+                   "comment":  "报警2"
+               },
+               {
+                   "device":  "X2",
+                   "name":  "bAck",
+                   "type":  "BOOL",
+                   "comment":  "确认"
+               },
+               {
+                   "device":  "X3",
+                   "name":  "bReset",
+                   "type":  "BOOL",
+                   "comment":  "复位"
+               },
+               {
+                   "device":  "Y0",
+                   "name":  "bAlarmLamp",
+                   "type":  "BOOL",
+                   "comment":  "报警灯"
+               },
+               {
+                   "device":  "Y1",
+                   "name":  "bFirstLamp",
+                   "type":  "BOOL",
+                   "comment":  "首出灯"
+               }
+           ],
+    "requirements":  [
+                         {
+                             "id":  "R1",
+                             "text":  "首出报警记忆，确认后首出灯灭，复位清除"
+                         }
+                     ],
+    "meta":  {
+                 "version":  "0.1.0",
+                 "createdAt":  "2026-11-10"
+             }
+}

@@ -1,0 +1,44 @@
+{
+    "name":  "b_counter_batch",
+    "title":  "基准：计数批量",
+    "cpu":  {
+                "series":  "FX5U",
+                "model":  "FX5U-32MT/ES"
+            },
+    "template":  {
+                     "name":  "counter_batch",
+                     "params":  {
+                                    "batchSize":  20
+                                }
+                 },
+    "io":  [
+               {
+                   "device":  "X0",
+                   "name":  "bPulse",
+                   "type":  "BOOL",
+                   "comment":  "计数脉冲"
+               },
+               {
+                   "device":  "X1",
+                   "name":  "bReset",
+                   "type":  "BOOL",
+                   "comment":  "复位"
+               },
+               {
+                   "device":  "Y0",
+                   "name":  "bDone",
+                   "type":  "BOOL",
+                   "comment":  "批量完成"
+               }
+           ],
+    "requirements":  [
+                         {
+                             "id":  "R1",
+                             "text":  "计数到 20 置完成并复位计数"
+                         }
+                     ],
+    "meta":  {
+                 "version":  "0.1.0",
+                 "createdAt":  "2026-11-10"
+             }
+}

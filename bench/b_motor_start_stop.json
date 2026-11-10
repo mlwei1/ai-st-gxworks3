@@ -1,0 +1,56 @@
+{
+    "name":  "b_motor_start_stop",
+    "title":  "基准：电机启停",
+    "cpu":  {
+                "series":  "FX5U",
+                "model":  "FX5U-32MT/ES"
+            },
+    "template":  {
+                     "name":  "motor_start_stop",
+                     "params":  {
+                                    "faultReset":  "manual"
+                                }
+                 },
+    "io":  [
+               {
+                   "device":  "X0",
+                   "name":  "bStart",
+                   "type":  "BOOL",
+                   "comment":  "启动"
+               },
+               {
+                   "device":  "X1",
+                   "name":  "bStop",
+                   "type":  "BOOL",
+                   "comment":  "停止"
+               },
+               {
+                   "device":  "X2",
+                   "name":  "bFault",
+                   "type":  "BOOL",
+                   "comment":  "故障"
+               },
+               {
+                   "device":  "X3",
+                   "name":  "bReset",
+                   "type":  "BOOL",
+                   "comment":  "复位"
+               },
+               {
+                   "device":  "Y0",
+                   "name":  "bMotor",
+                   "type":  "BOOL",
+                   "comment":  "电机输出"
+               }
+           ],
+    "requirements":  [
+                         {
+                             "id":  "R1",
+                             "text":  "X0 启动后 Y0 保持输出，X1 停止；X2 故障时断开输出并要求复位"
+                         }
+                     ],
+    "meta":  {
+                 "version":  "0.1.0",
+                 "createdAt":  "2026-11-10"
+             }
+}
