@@ -1,0 +1,263 @@
+/**
+ * Spec → ST → IEC XML 生成管线（M1）。
+ *
+ * 主流程（模板优先）：
+ *   1. 加载并校验 spec（src/spec）
+ *   2. 选择模板并合并参数（src/templates）
+ *   3. 模板实例化 → 完整 ST 源码
+ *   4. 解析 + 三菱方言检查（src/dialect）
+ *   5. AST → IEC 61131-10 XML（src/emit）
+ *   6. 写出工程包：ST / XML / 标签 CSV / manifest / diagnostics
+ *
+ * 说明：当前是确定性模板路径（同一 spec 同一产物）；LLM 兜底与
+ * 编译诊断修复循环（src/gen/repair.ts）在后续迭代接入。
+ */
+
+import { mkdir, writeFile } from 'node:fs/promises';
+import { basename, dirname, resolve } from 'node:path';
+
+import {
+  loadSpecFile,
+  type RequirementSpec,
+  type SpecDiagnostic,
+} from '../spec/index.ts';
+import { mergeParams, requireTemplate } from '../templates/index.ts';
+import { parseWithRecovery } from '../dialect/recovery.ts';
+import { analyzeST, type Diagnostic } from '../dialect/analyzer.ts';
+import { astToIecProject } from '../emit/iec-project.ts';
+import { emitIecXml } from '../emit/iecxml.ts';
+import { generateLabelCsvFiles } from '../emit/label-csv.ts';
+import type { DiagnosticLike } from './repair.ts';
+
+export interface GenerateOptions {
+  /** 输出目录；默认 `<spec 所在目录>/../out/<spec.name>` 或 `out/<spec.name>`。 */
+  outDir?: string;
+  /** 目标 CPU 覆盖（默认取 spec.cpu.series）。 */
+  target?: 'FX5U' | 'FX5UJ' | 'iQ-R';
+}
+
+export interface GenerateResult {
+  ok: boolean;
+  specPath: string;
+  spec: RequirementSpec | null;
+  /** spec 校验诊断（加载/字段/设备/模板名等）。 */
+  specDiagnostics: SpecDiagnostic[];
+  /** 解析/方言诊断。 */
+  diagnostics: DiagnosticLike[];
+  /** 模板/生成告警（非阻断）。 */
+  warnings: string[];
+  templateName?: string;
+  outDir: string;
+  stPath?: string;
+  xmlPath?: string;
+  labelFiles?: string[];
+  manifestPath?: string;
+  diagnosticsPath?: string;
+  stSource: string;
+  attempts: number;
+}
+
+function toDiagnosticLike(d: Diagnostic): DiagnosticLike {
+  const out: DiagnosticLike = {
+    severity: d.severity,
+    code: d.code,
+    message: d.message,
+  };
+  if (typeof d.line === 'number') out.line = d.line;
+  if (typeof d.column === 'number') out.column = d.column;
+  if (d.pou) out.pou = d.pou;
+  if (d.hint) out.hint = d.hint;
+  return out;
+}
+
+/** 默认输出目录：`<cwd>/out/<spec.name>`（相对路径由调用方决定 cwd）。 */
+export function defaultOutDir(spec: RequirementSpec): string {
+  return resolve('out', spec.name);
+}
+
+/**
+ * 从 spec 文件生成工程包。
+ *
+ * 不抛异常：所有失败都以 `ok: false` + diagnostics 返回，便于 CLI/CI 处理。
+ */
+export async function generateFromSpec(
+  specPath: string,
+  options: GenerateOptions = {},
+): Promise<GenerateResult> {
+  const loaded = await loadSpecFile(specPath);
+  const result: GenerateResult = {
+    ok: false,
+    specPath,
+    spec: loaded.spec,
+    specDiagnostics: loaded.diagnostics,
+    diagnostics: [],
+    warnings: [],
+    outDir: options.outDir ? resolve(options.outDir) : '',
+    stSource: '',
+    attempts: 0,
+  };
+
+  if (!loaded.ok || !loaded.spec) {
+    result.outDir = options.outDir
+      ? resolve(options.outDir)
+      : resolve('out', basename(specPath).replace(/\.json$/i, ''));
+    return result;
+  }
+
+  const spec = loaded.spec;
+  result.templateName = spec.template.name;
+  result.outDir = options.outDir ? resolve(options.outDir) : defaultOutDir(spec);
+  await mkdir(result.outDir, { recursive: true });
+
+  // ---- 1) 模板实例化 ----
+  let stSource: string;
+  try {
+    const template = requireTemplate(spec.template.name);
+    const params = mergeParams(template, spec.template.params ?? {});
+    stSource = template.instantiate({
+      spec: {
+        name: spec.name,
+        cpu: spec.cpu,
+        io: spec.io,
+        vars: spec.vars,
+        requirements: spec.requirements,
+      },
+      params,
+    });
+    result.stSource = stSource;
+    result.attempts = 1;
+  } catch (e) {
+    result.diagnostics.push({
+      severity: 'error',
+      code: 'GEN_E_TEMPLATE',
+      message: e instanceof Error ? e.message : String(e),
+    });
+    await writeArtifacts(result, null);
+    return result;
+  }
+
+  // ---- 2) 解析 + 方言检查 ----
+  const { ast, errors } = parseWithRecovery(stSource);
+  for (const e of errors) {
+    result.diagnostics.push({
+      severity: 'error',
+      code: 'PARSE',
+      message: e.message,
+      line: e.line,
+      column: e.column,
+    });
+  }
+
+  let target = options.target ?? spec.cpu.series;
+  if (target === 'iQ-R') {
+    result.warnings.push('当前 profile 只实现 FX5U/FX5UJ；iQ-R 目标未验证，按 FX5U 检查。');
+    target = 'FX5U';
+  }
+  const dialectTarget = target as 'FX5U' | 'FX5UJ';
+  const dialectDiags = analyzeST(ast, { target: dialectTarget });
+  for (const d of dialectDiags) result.diagnostics.push(toDiagnosticLike(d));
+
+  // ---- 3) 通过则生成 XML / 标签 CSV ----
+  const hasError = result.diagnostics.some((d) => d.severity === 'error');
+  let xml: string | null = null;
+  if (!hasError) {
+    try {
+      const mapped = astToIecProject(ast, { contentName: spec.name, createdAt: new Date().toISOString() });
+      result.warnings.push(...mapped.warnings);
+      xml = emitIecXml(mapped.project);
+      result.ok = true;
+    } catch (e) {
+      result.diagnostics.push({
+        severity: 'error',
+        code: 'GEN_E_EMIT',
+        message: e instanceof Error ? e.message : String(e),
+      });
+    }
+  }
+
+  // ---- 4) 写工程包 ----
+  await writeArtifacts(result, xml, ast);
+
+  return result;
+}
+
+/** 写出 ST / XML / 标签 CSV / manifest / diagnostics。 */
+async function writeArtifacts(
+  result: GenerateResult,
+  xml: string | null,
+  ast?: ReturnType<typeof parseWithRecovery>['ast'],
+): Promise<void> {
+  const spec = result.spec;
+  const baseName = spec ? spec.name : basename(result.specPath).replace(/\.json$/i, '');
+  await mkdir(result.outDir, { recursive: true });
+
+  if (result.stSource) {
+    const stPath = resolve(result.outDir, `${baseName}.st`);
+    await writeFile(stPath, result.stSource, 'utf8');
+    result.stPath = stPath;
+  }
+
+  if (xml) {
+    const xmlPath = resolve(result.outDir, `${baseName}.xml`);
+    await writeFile(xmlPath, xml, 'utf8');
+    result.xmlPath = xmlPath;
+
+    if (ast) {
+      try {
+        const labels = generateLabelCsvFiles(ast, { projectName: baseName });
+        const files: string[] = [];
+        for (const f of labels) {
+          const p = resolve(result.outDir, f.name);
+          await writeFile(p, f.content);
+          files.push(p);
+        }
+        result.labelFiles = files;
+      } catch (e) {
+        result.warnings.push(
+          `标签 CSV 生成失败（不影响 XML）：${e instanceof Error ? e.message : String(e)}`,
+        );
+      }
+    }
+  }
+
+  const manifest = {
+    tool: 'ai-st-gxworks3',
+    format: 'IEC61131-10',
+    spec: spec
+      ? {
+          name: spec.name,
+          cpu: spec.cpu,
+          template: spec.template,
+          io: spec.io,
+          requirements: spec.requirements,
+        }
+      : { source: result.specPath },
+    templateName: result.templateName ?? null,
+    generatedAt: new Date().toISOString(),
+    ok: result.ok,
+    attempts: result.attempts,
+    diagnostics: result.diagnostics,
+    warnings: result.warnings,
+    specDiagnostics: result.specDiagnostics,
+  };
+  const manifestPath = resolve(result.outDir, 'manifest.json');
+  await writeFile(manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
+  result.manifestPath = manifestPath;
+
+  const diagnosticsPath = resolve(result.outDir, 'diagnostics.json');
+  await writeFile(
+    diagnosticsPath,
+    JSON.stringify(
+      {
+        spec: result.specDiagnostics,
+        code: result.diagnostics,
+        warnings: result.warnings,
+      },
+      null,
+      2,
+    ),
+    'utf8',
+  );
+  result.diagnosticsPath = diagnosticsPath;
+
+}

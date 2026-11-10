@@ -24,6 +24,9 @@ import {
 } from './emit/text.ts';
 import { astToIecProject } from './emit/iec-project.ts';
 import { emitIecXml } from './emit/iecxml.ts';
+import { generateFromSpec } from './gen/generate.ts';
+import { listTemplates } from './templates/index.ts';
+import { formatSpecDiagnostics } from './spec/index.ts';
 import { convertAIGenerated, type AIGeneratedProject } from './ai/convert.ts';
 import { generateST, loadLLMConfig } from './ai/client.ts';
 import { buildSystemPrompt } from './ai/prompt.ts';
@@ -320,6 +323,72 @@ async function cmdBuildXml(args: Args): Promise<number> {
   return 0;
 }
 
+/**
+ * `gen <spec.json>`：Spec → 模板实例化 → 解析/方言检查 → IEC XML 工程包。
+ *
+ * 当前为确定性模板路径；LLM 兜底与编译诊断修复循环在后续迭代接入。
+ */
+async function cmdGen(args: Args): Promise<number> {
+  if (args['list-templates']) {
+    const templates = listTemplates();
+    console.log(`可用模板（${templates.length}）：\n`);
+    for (const t of templates) {
+      const params = t.params
+        .map((p) => `${p.name}=${p.default ?? ''}`)
+        .join(', ');
+      console.log(`  ${t.name.padEnd(24)} ${t.description}`);
+      if (params) console.log(`     参数: ${params}`);
+    }
+    return 0;
+  }
+
+  const specPath = args._[0];
+  if (!specPath) {
+    console.error('用法: ai-st-gxworks3 gen <spec.json> [-o outdir] [--list-templates]');
+    return 2;
+  }
+
+  const outDir = typeof args.out === 'string' ? args.out : undefined;
+  const result = await generateFromSpec(resolve(specPath), { outDir });
+
+  if (result.specDiagnostics.length > 0) {
+    console.error(formatSpecDiagnostics(result.specDiagnostics));
+  }
+  const codeDiags = result.diagnostics;
+  if (codeDiags.length > 0) {
+    printDiagnostics(
+      codeDiags.map((d) => ({
+        severity: d.severity,
+        code: d.code,
+        message: d.message,
+        line: d.line ?? 0,
+        column: d.column ?? 0,
+        pou: d.pou,
+        hint: d.hint,
+      })) as Diagnostic[],
+      result.spec?.name ?? specPath,
+    );
+  }
+  for (const w of result.warnings) console.log(`▲ ${w}`);
+
+  if (!result.ok) {
+    console.error(`\n✖ 生成失败（spec 校验或代码检查未通过），产物已写入: ${result.outDir}`);
+    return 1;
+  }
+
+  console.log(`\n✓ 生成成功: ${result.spec?.name}（模板 ${result.templateName}）`);
+  if (result.stPath) console.log(`  ST       : ${result.stPath}`);
+  if (result.xmlPath) console.log(`  IEC XML  : ${result.xmlPath}`);
+  if (result.labelFiles?.length) console.log(`  标签 CSV : ${result.labelFiles.length} 个`);
+  if (result.manifestPath) console.log(`  manifest : ${result.manifestPath}`);
+  console.log('');
+  console.log('导入步骤：');
+  console.log('  1) 复制纯 ST 模板：copy templates\\FX5U_ST_Template.gx3 %TEMP%\\run.gx3');
+  console.log('  2) GX Works3 打开副本 → 工程 → 导入 → IEC61131-10 XML格式 → 选上面的 XML');
+  console.log('  3) 转换 → 全部转换，检查 Error/Warning');
+  return 0;
+}
+
 async function cmdGenerate(args: Args): Promise<number> {
   const requirement = args._.join(' ') || (args.req as string);
   if (!requirement) {
@@ -428,9 +497,10 @@ function usage(): void {
 
 用法:
   ai-st-gxworks3 check <file.st> [...]        校验 ST（语法 + 三菱方言检查）
-  ai-st-gxworks3 build-xml <file.st>           ★ 生成 IEC 61131-10 XML（可直接导入 GX Works3）
+  ai-st-gxworks3 gen <spec.json>              ★ Spec → 模板生成 ST + IEC XML 工程包
+  ai-st-gxworks3 build-xml <file.st>          生成 IEC 61131-10 XML（可直接导入 GX Works3）
   ai-st-gxworks3 build-text <file.st>          生成 ST 文本 + 标签 CSV（备选通道）
-  ai-st-gxworks3 generate "<需求>"             AI 生成 ST + 文本 + 标签 CSV
+  ai-st-gxworks3 generate "<需求>"             AI 生成 ST（LLM，旧流程）
   ai-st-gxworks3 prompt                       打印系统提示词
 
 通用选项:
@@ -478,6 +548,9 @@ async function main(): Promise<void> {
       break;
     case 'build-xml':
       code = await cmdBuildXml(cmdArgs);
+      break;
+    case 'gen':
+      code = await cmdGen(cmdArgs);
       break;
     case 'generate':
       code = await cmdGenerate(cmdArgs);

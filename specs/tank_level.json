@@ -1,0 +1,41 @@
+{
+  "name": "tank_level",
+  "title": "水箱液位双位控制（低启高停 + 高低限报警）",
+  "cpu": {
+    "series": "FX5U",
+    "model": "FX5U-32MT/ES"
+  },
+  "template": {
+    "name": "state_machine",
+    "params": {
+      "lowThreshold": 10,
+      "highThreshold": 90,
+      "hysteresis": true
+    }
+  },
+  "io": [
+    { "device": "X0", "name": "bLowLevel", "type": "BOOL", "comment": "低液位开关（液位低于 10% 时 ON）" },
+    { "device": "X1", "name": "bHighLevel", "type": "BOOL", "comment": "高液位开关（液位高于 90% 时 ON）" },
+    { "device": "Y0", "name": "bPump", "type": "BOOL", "comment": "水泵输出" },
+    { "device": "Y1", "name": "bAlarm", "type": "BOOL", "comment": "液位异常报警" },
+    { "device": "D100", "name": "nLevelPct", "type": "INT", "comment": "液位百分比（0~100，来自模拟量换算）" }
+  ],
+  "vars": [
+    { "name": "nState", "type": "INT", "scope": "local", "initial": "0", "comment": "0=待机 1=注水 2=满水停止" },
+    { "name": "bPumpCmd", "type": "BOOL", "scope": "local", "initial": "FALSE", "comment": "水泵命令" }
+  ],
+  "requirements": [
+    { "id": "R1", "text": "液位低于低限（X0=ON 或 nLevelPct < 10）时启动水泵 Y0" },
+    { "id": "R2", "text": "液位高于高限（X1=ON 或 nLevelPct > 90）时停止水泵 Y0" },
+    { "id": "R3", "text": "低限启动与高限停止之间保持当前泵状态（双位滞回控制）" },
+    { "id": "R4", "text": "液位越限（低于 5% 或高于 95%）时输出报警 Y1" }
+  ],
+  "safety": {
+    "interlocks": ["水泵 Y0 与报警 Y1 不得同时为 ON 超过 1 个扫描周期", "nLevelPct 超出 0~100 时 Y0 强制 OFF"]
+  },
+  "tests": [],
+  "meta": {
+    "version": "0.1.0",
+    "createdAt": "2026-11-10"
+  }
+}

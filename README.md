@@ -24,6 +24,9 @@ copy templates\FX5U_ST_Template.gx3 %TEMP%\run.gx3
 # 4. 转换 → 全部转换（Shift+Alt+F4），检查 Error/Warning
 ```
 
+> **Spec 驱动生成（M1）**：`gen specs/motor_start_stop.json -o out` 会按模板生成 ST + IEC XML 工程包
+> （`specs/` 下有 3 个示例；`gen --list-templates` 查看 8 个标准模板）。
+>
 > 备用通道（v0.1，标签 CSV + 粘贴 ST 正文）：`build-text`，见 [docs/快速上手.md](docs/快速上手.md)；
 > 该文档中「标签 XML 导入」的说法已过时（标签编辑器只支持 CSV 导入）。
 

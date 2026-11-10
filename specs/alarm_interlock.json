@@ -1,0 +1,41 @@
+{
+  "name": "alarm_interlock",
+  "title": "报警首出记忆与互锁示例",
+  "cpu": {
+    "series": "FX5U",
+    "model": "FX5U-32MT/ES"
+  },
+  "template": {
+    "name": "alarm_first_out",
+    "params": {
+      "alarmCount": 3
+    }
+  },
+  "io": [
+    { "device": "X0", "name": "bAlarm1", "type": "BOOL", "comment": "报警 1：过载" },
+    { "device": "X1", "name": "bAlarm2", "type": "BOOL", "comment": "报警 2：超温" },
+    { "device": "X2", "name": "bReset", "type": "BOOL", "comment": "报警复位按钮" },
+    { "device": "Y0", "name": "bAlarmLamp", "type": "BOOL", "comment": "报警指示灯" },
+    { "device": "Y1", "name": "bBuzzer", "type": "BOOL", "comment": "报警蜂鸣器" }
+  ],
+  "vars": [
+    { "name": "nFirstOut", "type": "INT", "scope": "local", "initial": "0", "comment": "首出报警编号（0=无，1=过载，2=超温）" },
+    { "name": "bAlarmActive", "type": "BOOL", "scope": "local", "initial": "FALSE", "comment": "任一报警存在" },
+    { "name": "nAlarmCode", "type": "WORD", "scope": "global", "device": "D200", "comment": "供 HMI 读取的首出报警码" }
+  ],
+  "requirements": [
+    { "id": "R1", "text": "X0 或 X1 任一报警出现时，Y0 报警灯与 Y1 蜂鸣器置 ON" },
+    { "id": "R2", "text": "首个出现的报警编号被记忆到 nFirstOut 与 nAlarmCode，后续报警不覆盖首出" },
+    { "id": "R3", "text": "按下复位 X2 后清除首出记忆；若报警仍存在，则继续报警但重新记录首出" },
+    { "id": "R4", "text": "报警存在期间禁止相关设备启动（互锁由生成程序保证）" }
+  ],
+  "safety": {
+    "estop": "bReset",
+    "interlocks": ["报警未复位时禁止启动设备", "Y1 蜂鸣器必须可由复位按钮静音"]
+  },
+  "tests": [],
+  "meta": {
+    "version": "0.1.0",
+    "createdAt": "2026-11-10"
+  }
+}

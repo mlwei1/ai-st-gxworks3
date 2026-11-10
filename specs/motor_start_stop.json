@@ -1,0 +1,41 @@
+{
+  "name": "motor_start_stop",
+  "title": "电机启停控制（启动/停止/故障联锁）",
+  "cpu": {
+    "series": "FX5U",
+    "model": "FX5U-32MT/ES"
+  },
+  "template": {
+    "name": "motor_start_stop",
+    "params": {
+      "autoStopSeconds": 10,
+      "faultReset": true
+    }
+  },
+  "io": [
+    { "device": "X0", "name": "bStart", "type": "BOOL", "comment": "启动按钮（常开）" },
+    { "device": "X1", "name": "bStop", "type": "BOOL", "comment": "停止按钮（常闭）" },
+    { "device": "X2", "name": "bFault", "type": "BOOL", "comment": "故障信号" },
+    { "device": "Y0", "name": "bMotor", "type": "BOOL", "comment": "电机接触器输出" }
+  ],
+  "vars": [
+    { "name": "bRunning", "type": "BOOL", "scope": "local", "initial": "FALSE", "comment": "运行状态" },
+    { "name": "tAutoStop", "type": "TON", "scope": "local", "comment": "自动停止定时器" }
+  ],
+  "requirements": [
+    { "id": "R1", "text": "按下启动按钮 X0 后，电机输出 Y0 置 ON 并自保持" },
+    { "id": "R2", "text": "按下停止按钮 X1 时，电机输出 Y0 立即 OFF" },
+    { "id": "R3", "text": "故障信号 X2 为 ON 时，Y0 立即 OFF 且不允许再启动" },
+    { "id": "R4", "text": "故障消失后需重新按下启动按钮方可再次运行" },
+    { "id": "R5", "text": "连续运行达到 autoStopSeconds 秒后自动停止（模板参数）" }
+  ],
+  "safety": {
+    "estop": "X1",
+    "interlocks": ["bFault 为 ON 时禁止 Y0 输出", "Y0 输出必须串联 bRunning 与 NOT bFault"]
+  },
+  "tests": [],
+  "meta": {
+    "version": "0.1.0",
+    "createdAt": "2026-11-10"
+  }
+}
