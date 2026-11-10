@@ -22,6 +22,8 @@ import {
   renderProjectAsText,
   renderVarSheetTable,
 } from './emit/text.ts';
+import { astToIecProject } from './emit/iec-project.ts';
+import { emitIecXml } from './emit/iecxml.ts';
 import { convertAIGenerated, type AIGeneratedProject } from './ai/convert.ts';
 import { generateST, loadLLMConfig } from './ai/client.ts';
 import { buildSystemPrompt } from './ai/prompt.ts';
@@ -234,6 +236,90 @@ async function cmdBuildText(args: Args): Promise<number> {
   return 0;
 }
 
+/**
+ * 生成 GX Works3 可导入的 IEC 61131-10 XML。
+ *
+ * 这是「落地通道 A」的核心产物：一次导入即可带上
+ * Program + 局部/全局标签 + 结构体 + ST 正文。
+ *
+ * 注意：本期只导出 Program；FB/Function 会在告警中说明并跳过。
+ */
+async function cmdBuildXml(args: Args): Promise<number> {
+  const input = args._[0];
+  if (!input) {
+    console.error('用法: ai-st-gxworks3 build-xml <file.st> [-o outdir]');
+    return 2;
+  }
+  const src = await readFile(resolve(input), 'utf8');
+  const { ast, errors } = parseWithRecovery(src);
+  if (errors.length > 0) {
+    console.log(`\n${basename(input)} —— ${errors.length} 个语法错误\n`);
+    for (const e of errors) {
+      console.log(`✖ ${basename(input)}:${e.line}:${e.column} 语法错误: ${e.message}`);
+    }
+    console.log('');
+    console.error('存在语法错误，未生成 XML。');
+    return 1;
+  }
+
+  const target = (args.target as 'FX5U' | 'iQ-R') ?? 'FX5U';
+  const diags = analyzeST(ast, { target });
+  const errorCount = diags.filter((d) => d.severity === 'error').length;
+  printDiagnostics(diags, basename(input));
+  if (errorCount > 0) {
+    console.error('存在错误，未生成 XML。修复后再试。');
+    return 1;
+  }
+  if (target !== 'FX5U') {
+    console.log(`▲ 注意：当前 profile 只实现 FX5U；--target ${target} 暂未生效。`);
+  }
+
+  const projectName =
+    (args.name as string) ?? basename(input).replace(/\.st$/i, '');
+  const outDir = resolve((args.out as string) ?? `${projectName}-iecxml`);
+  await mkdir(outDir, { recursive: true });
+
+  const mapped = astToIecProject(ast, {
+    contentName: projectName,
+    createdAt: new Date().toISOString(),
+  });
+  for (const w of mapped.warnings) console.log(`▲ ${w}`);
+
+  const xml = emitIecXml(mapped.project);
+  const xmlPath = resolve(outDir, `${projectName}.xml`);
+  await writeFile(xmlPath, xml, 'utf8');
+  console.log(`\n✓ ${projectName}.xml  → GX Works3：工程 → 导入 → IEC61131-10 XML格式`);
+
+  // 标签 CSV 作为备份通道（IEC XML 导入失败时仍可走「标签 CSV + 粘贴 ST」）
+  const labelFiles = generateLabelCsvFiles(ast, { projectName });
+  for (const f of labelFiles) {
+    await writeFile(resolve(outDir, f.name), f.content);
+  }
+  console.log(`✓ 标签 CSV 备份: ${outDir}\\*.csv`);
+
+  const manifest = {
+    tool: 'ai-st-gxworks3',
+    format: 'IEC61131-10',
+    target,
+    source: basename(input),
+    generatedAt: new Date().toISOString(),
+    programs: mapped.project.programs.map((p) => p.name),
+    structs: (mapped.project.types ?? []).map((t) => t.name),
+    globalVars: (mapped.project.globalVars ?? []).map((g) => g.name),
+    warnings: mapped.warnings,
+  };
+  await writeFile(resolve(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2), 'utf8');
+  console.log(`✓ manifest.json（程序/结构体/全局变量/告警清单）`);
+
+  console.log('');
+  console.log('导入步骤：');
+  console.log('  1) 打开已配置 FX5U CPU 参数/任务的 GX Works3 工程（建议用模板工程）');
+  console.log('  2) 工程 → 导入 → IEC61131-10 XML格式 → 选本 XML');
+  console.log('  3) 转换 → 全部转换，检查编译结果');
+  console.log('  备选：标签 CSV 导入 + 程序本体粘贴 ST（见 build-text）');
+  return 0;
+}
+
 async function cmdGenerate(args: Args): Promise<number> {
   const requirement = args._.join(' ') || (args.req as string);
   if (!requirement) {
@@ -342,7 +428,8 @@ function usage(): void {
 
 用法:
   ai-st-gxworks3 check <file.st> [...]        校验 ST（语法 + 三菱方言检查）
-  ai-st-gxworks3 build-text <file.st>          ★ 生成 ST 文本 + 标签 CSV（推荐）
+  ai-st-gxworks3 build-xml <file.st>           ★ 生成 IEC 61131-10 XML（可直接导入 GX Works3）
+  ai-st-gxworks3 build-text <file.st>          生成 ST 文本 + 标签 CSV（备选通道）
   ai-st-gxworks3 generate "<需求>"             AI 生成 ST + 文本 + 标签 CSV
   ai-st-gxworks3 prompt                       打印系统提示词
 
@@ -388,6 +475,9 @@ async function main(): Promise<void> {
       break;
     case 'build-text':
       code = await cmdBuildText(cmdArgs);
+      break;
+    case 'build-xml':
+      code = await cmdBuildXml(cmdArgs);
       break;
     case 'generate':
       code = await cmdGenerate(cmdArgs);

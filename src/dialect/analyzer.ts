@@ -15,8 +15,14 @@ import {
   type VarDeclaration,
 } from './ast.ts';
 import {
-  AUTO_ALLOCATE_GUARD,
-  DEVICE_RANGES,
+  baseLabel,
+  checkDeviceNumber,
+  getCpuProfile,
+  isIqROnlyType,
+  isSupportedFx5Type,
+  type CpuModel,
+} from '../profile/index.ts';
+import {
   FOREIGN_BRANDS_FUNCTIONS,
   KNOWN_TRAPS,
   MITSUBISHI_FUNCTIONS,
@@ -52,8 +58,8 @@ export interface Diagnostic {
 }
 
 export interface AnalysisOptions {
-  /** 目标 CPU 系列，影响可用指令与地址范围。 */
-  target?: 'FX5U' | 'iQ-R';
+  /** 目标 CPU 机型，影响可用指令与地址范围。 */
+  target?: 'FX5U' | 'FX5UJ' | 'iQ-R';
   /** 是否检查跨品牌写法等 warning 项。 */
   includeWarnings?: boolean;
 }
@@ -97,13 +103,16 @@ export class Analyzer {
   };
   /** 工程中自定义的功能块定义（按大写名索引），用于校验实例调用参数。 */
   private pouDefinitions = new Map<string, POU>();
-  private options: Required<AnalysisOptions>;
+  private options: Required<AnalysisOptions> & { target: 'FX5U' | 'FX5UJ' | 'iQ-R' };
+  /** 设备/类型检查使用的 CPU 机型（iQ-R 未实现，按 FX5U 检查）。 */
+  private cpuModel: CpuModel;
 
   constructor(options: AnalysisOptions = {}) {
     this.options = {
       target: options.target ?? 'FX5U',
       includeWarnings: options.includeWarnings ?? true,
     };
+    this.cpuModel = this.options.target === 'FX5UJ' ? 'FX5UJ' : 'FX5U';
   }
 
   private add(
@@ -130,6 +139,16 @@ export class Analyzer {
 
   analyze(ast: AST): Diagnostic[] {
     this.diagnostics = [];
+
+    // iQ-R 目标尚未实现：明确告知，避免把 FX5U 检查结果当成 iQ-R 结论
+    if (this.options.target === 'iQ-R') {
+      this.add(
+        'info',
+        'I001',
+        'iQ-R 目标尚未实现：当前按 FX5U 规则检查（设备范围/指令集可能不适用）',
+        { line: 1, column: 1 },
+      );
+    }
 
     // 全局变量与全局类型
     for (const gv of ast.globalVars) {
@@ -197,6 +216,7 @@ export class Analyzer {
       }
       this.scope.vars.set(v.name, v);
       this.checkVarDeclaration(v.name, v.typeName, v.address, v.constant, v.loc, pou.name);
+      this.checkInitializer(v, pou);
     }
 
     // 函数返回类型
@@ -253,10 +273,8 @@ export class Analyzer {
       userFbType ||
       this.scope.types.has(base) ||
       this.globalScope.types.has(base) ||
-      [
-        'BOOL', 'BYTE', 'WORD', 'DWORD', 'INT', 'UINT', 'DINT', 'UDINT',
-        'LINT', 'ULINT', 'REAL', 'LREAL', 'TIME', 'STRING', 'WSTRING',
-      ].includes(builtin);
+      // v2：类型表来自 FX5 profile（JY997D58901 text/03001）
+      isSupportedFx5Type(builtin);
     if (!isKnownType) {
       this.add(
         'error',
@@ -264,7 +282,9 @@ export class Analyzer {
         `未知数据类型 '${typeName}'`,
         loc,
         pou,
-        'FX5U 支持 BOOL/INT/DINT/REAL/LREAL/WORD/DWORD/STRING/TIME 等基础类型，以及自定义 STRUCT',
+        isIqROnlyType(builtin)
+          ? `FX5U 不支持类型 '${builtin}'（仅 iQ-R 支持，且本工具尚未验证 iQ-R）；可用类型见 profile`
+          : `${this.cpuModel} 支持 BOOL/WORD/DWORD/INT/DINT/REAL/TIME/STRING/WSTRING/TIMER/RETENTIVETIMER/COUNTER/LCOUNTER/POINTER，以及自定义 STRUCT/FB`,
       );
     }
 
@@ -273,26 +293,38 @@ export class Analyzer {
       if (!dev) {
         this.add('error', 'E005', `设备地址 '${address}' 格式无效`, loc, pou, '应形如 X10 / D100 / M800');
       } else {
-        const range = DEVICE_RANGES[dev.prefix];
-        if (!range) {
+        const check = checkDeviceNumber(dev.prefix, dev.number, this.cpuModel);
+        if (check === 'unknown-prefix') {
           this.add(
             'warning',
             'W001',
-            `设备前缀 '${dev.prefix}' 不是 FX5U 软元件`,
+            `设备前缀 '${dev.prefix}' 不是 FX5 软元件`,
             loc,
             pou,
             '常见前缀：X/Y/M/L/B/S/T/C/D/W/R/Z/SM/SD',
           );
-        } else if (dev.number < range.min || dev.number > range.max) {
+        } else if (!dev.validDigits) {
           this.add(
             'error',
-            'E006',
-            `设备地址 '${address}' 超出 FX5U ${dev.prefix} 的有效范围 (${range.min}..${range.max})`,
+            'E009',
+            `设备地址 '${address}' 含非法${baseLabel(dev.base)}数字`,
+            loc,
+            pou,
+            `${dev.prefix} 的编号为${baseLabel(dev.base)}（如 X/Y 只能用 0~7）`,
+          );
+        } else if (check === 'out-of-range') {
+          const profile = getCpuProfile(this.cpuModel);
+          const fact = profile.devices[dev.prefix];
+          const range = fact?.range;
+          this.add(
+            'error',
+            'E009',
+            `设备地址 '${address}' 超出 ${this.cpuModel} ${dev.prefix} 的有效范围 (${range?.[0]}..${range?.[1]}，${baseLabel(dev.base)})`,
             loc,
             pou,
           );
         }
-        this.checkAddressCollision(dev.prefix, dev.number, loc, pou);
+        // range-unverified（SM/SD）：只校验进制，不做范围检查
       }
     }
 
@@ -301,20 +333,18 @@ export class Analyzer {
     }
   }
 
-  /** 检测是否落在编译期自动分配区间内。 */
+  /**
+   * @deprecated v0.1 的空实现；「自动分配区间冲突」无手册依据（见 02 审计）。
+   * 新语义：未分配软元件的标签进入标签存储器；显式分配的软元件只需查重。
+   * 保留方法签名以防后续接入“分配软元件重复检查”。
+   */
   private checkAddressCollision(
-    prefix: string,
-    number: number,
-    loc: { line: number; column: number },
-    pou: string,
+    _prefix: string,
+    _number: number,
+    _loc: { line: number; column: number },
+    _pou: string,
   ): void {
-    if (prefix === 'M' && number >= AUTO_ALLOCATE_GUARD.bitBelow) {
-      // M8000 以上通常是系统/自动分配区，属于安全区，不报错
-      return;
-    }
-    if (prefix === 'D' && number >= AUTO_ALLOCATE_GUARD.wordBelow) {
-      return;
-    }
+    // 手册（SH081271 text/0A023）未定义 M8000/D512 自动分配边界 → 不做判断。
   }
 
   /* -------------------- 语句遍历 -------------------- */
@@ -426,20 +456,32 @@ export class Analyzer {
         break;
       }
       case 'device': {
-        const range = DEVICE_RANGES[expr.prefix];
-        if (!range) {
+        // v2：以原文重新解析，才能拿到进制信息（parser 的 number 是十进制字面量）。
+        const parsed = parseDeviceAddress(expr.text);
+        const check = parsed ? checkDeviceNumber(parsed.prefix, parsed.number, this.cpuModel) : 'unknown-prefix';
+        if (check === 'unknown-prefix') {
           this.add(
             'warning',
             'W003',
-            `设备前缀 '${expr.prefix}' 不是 FX5U 软元件`,
+            `设备前缀 '${expr.prefix}' 不是 FX5 软元件`,
             expr.loc,
             pou.name,
           );
-        } else if (expr.number < range.min || expr.number > range.max) {
+        } else if (parsed && !parsed.validDigits) {
           this.add(
             'error',
             'E009',
-            `设备地址 '${expr.text}' 超出 FX5U ${expr.prefix} 的有效范围 (${range.min}..${range.max})`,
+            `设备地址 '${expr.text}' 含非法${baseLabel(parsed.base)}数字`,
+            expr.loc,
+            pou.name,
+            `${parsed.prefix} 的编号为${baseLabel(parsed.base)}（如 X/Y 只能用 0~7）`,
+          );
+        } else if (check === 'out-of-range' && parsed) {
+          const range = getCpuProfile(this.cpuModel).devices[parsed.prefix]?.range;
+          this.add(
+            'error',
+            'E009',
+            `设备地址 '${expr.text}' 超出 ${this.cpuModel} ${parsed.prefix} 的有效范围 (${range?.[0]}..${range?.[1]}，${baseLabel(parsed.base)})`,
             expr.loc,
             pou.name,
           );
@@ -503,10 +545,9 @@ export class Analyzer {
       return;
     }
 
-    // 算术运算要求数值
+    // 算术运算要求数值（FX5 数值类型：INT/DINT/REAL/WORD/DWORD/TIME）
     const numeric = new Set([
-      'INT', 'UINT', 'DINT', 'UDINT', 'LINT', 'ULINT', 'REAL', 'LREAL',
-      'BYTE', 'WORD', 'DWORD', 'TIME',
+      'INT', 'DINT', 'REAL', 'WORD', 'DWORD', 'TIME',
     ]);
     if (!numeric.has(lb) || !numeric.has(rb)) {
       this.add(
@@ -853,11 +894,35 @@ export class Analyzer {
       return;
     }
 
+    // 字符串常数引号规则（JY997D58901 text/03001）：
+    //   ST 中 STRING 用单引号、WSTRING 用双引号；写反在 GX Works3 是类型不匹配。
+    if (tb === 'STRING' && vb === 'WSTRING') {
+      this.add(
+        'error',
+        'E019',
+        `字符串常数引号错误：STRING 类型必须用单引号（双引号是 WSTRING）`,
+        loc,
+        pou.name,
+        `改为单引号，例如 'abc'；或用 WSTRING 类型接收 "abc"`,
+      );
+      return;
+    }
+    if (tb === 'WSTRING' && vb === 'STRING') {
+      this.add(
+        'error',
+        'E019',
+        `字符串常数引号错误：WSTRING 类型必须用双引号（单引号是 STRING）`,
+        loc,
+        pou.name,
+        `改为双引号，例如 "abc"`,
+      );
+      return;
+    }
+
     if (!isAssignable(tt, vt)) {
       const numericMix =
-        (['INT', 'UINT', 'DINT', 'UDINT', 'LINT', 'ULINT'].includes(tb) &&
-          ['REAL', 'LREAL'].includes(vb)) ||
-        (['REAL', 'LREAL'].includes(tb) && ['INT', 'UINT', 'DINT', 'UDINT', 'LINT', 'ULINT'].includes(vb));
+        (['INT', 'DINT'].includes(tb) && ['REAL'].includes(vb)) ||
+        (['REAL'].includes(tb) && ['INT', 'DINT'].includes(vb));
       if (numericMix) {
         this.add(
           'error',
@@ -879,28 +944,53 @@ export class Analyzer {
       }
     }
   }
+
+  /**
+   * 变量声明初始值检查（v2 仅覆盖字符串引号；其余类型检查待后续任务）。
+   */
+  private checkInitializer(v: VarDeclaration, pou: POU): void {
+    const init = v.initialValue;
+    if (!init || init.kind !== 'literal') return;
+    const target = builtinTypeName(v.typeName);
+    if (target === 'STRING' && init.literalType === 'wstring') {
+      this.add(
+        'error',
+        'E019',
+        `字符串常数引号错误：STRING 类型必须用单引号（双引号是 WSTRING）`,
+        v.loc,
+        pou.name,
+        `改为单引号，例如 '${init.value}'`,
+      );
+    } else if (target === 'WSTRING' && init.literalType === 'string') {
+      this.add(
+        'error',
+        'E019',
+        `字符串常数引号错误：WSTRING 类型必须用双引号（单引号是 STRING）`,
+        v.loc,
+        pou.name,
+        `改为双引号，例如 "${init.value}"`,
+      );
+    }
+  }
 }
 
-/** 类型加宽。 */
+/** 类型加宽（FX5：整数只有 INT/DINT，浮点只有 REAL）。 */
 function widen(a: string, b: string): string {
   const ta = baseTypeName(a);
   const tb = baseTypeName(b);
   if (ta === tb) return ta;
-  const isFloat = (t: string) => t === 'REAL' || t === 'LREAL';
+  const isFloat = (t: string) => t === 'REAL';
   if (isFloat(ta) || isFloat(tb)) {
-    return ta === 'LREAL' || tb === 'LREAL' ? 'LREAL' : 'REAL';
+    return 'REAL';
   }
   const width: Record<string, number> = {
-    INT: 1, UINT: 1, BYTE: 1, WORD: 1,
-    DINT: 2, UDINT: 2, DWORD: 2,
-    LINT: 4, ULINT: 4,
+    INT: 1, WORD: 1,
+    DINT: 2, DWORD: 2,
   };
   const w = Math.max(width[ta] ?? 1, width[tb] ?? 1);
-  const signed = !['UINT', 'UDINT', 'ULINT', 'BYTE', 'WORD', 'DWORD'].includes(ta) ||
-    !['UINT', 'UDINT', 'ULINT', 'BYTE', 'WORD', 'DWORD'].includes(tb);
-  if (w === 1) return signed ? 'INT' : 'UINT';
-  if (w === 2) return signed ? 'DINT' : 'UDINT';
-  return signed ? 'LINT' : 'ULINT';
+  const signed = !['WORD', 'DWORD'].includes(ta) || !['WORD', 'DWORD'].includes(tb);
+  if (w === 1) return signed ? 'INT' : 'WORD';
+  return signed ? 'DINT' : 'DWORD';
 }
 
 /** 目标表达式的可读描述。 */

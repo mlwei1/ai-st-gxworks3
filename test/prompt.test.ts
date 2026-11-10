@@ -11,18 +11,20 @@ import { extractJson } from '../src/ai/client.ts';
 test('提示词：包含 FX5U 指令白名单与关键方言规则', () => {
   const p = buildSystemPrompt('FX5U');
   assert.ok(p.includes('TON'), '应包含 TON');
-  assert.ok(p.includes('MC_MOVE_ABSOLUTE'), '应包含运动控制指令');
+  assert.ok(p.includes('COUNTER_FB_M'), '应包含真实存在的 FX5 通用 FB 名');
   assert.ok(p.includes('IREF'), '应列出禁止的跨品牌函数');
-  assert.ok(p.includes('RAMP_REAL'), '应提示 RAMP_REAL 陷阱');
+  assert.ok(p.includes('RAMP_REAL'), '应提示 RAMP/RAMP_REAL 不存在');
   assert.ok(p.includes('REAL_TO_INT'), '应提示显式类型转换');
-  assert.ok(p.includes('X0-X511'), '应包含 FX5U 设备范围');
+  assert.ok(p.includes('X1777'), '应包含修正后的 FX5U X 范围（八进制）');
+  assert.ok(p.includes('八进制'), '应说明 X/Y 为八进制');
+  assert.ok(p.includes('单引号'), '应包含字符串引号规则');
 });
 
 test('提示词：iQ-R 与 FX5U 的设备范围不同', () => {
   const fx5u = buildSystemPrompt('FX5U');
   const iqr = buildSystemPrompt('iQ-R');
   assert.notEqual(fx5u, iqr);
-  assert.ok(iqr.includes('M0-M32767'), 'iQ-R 的 M 范围更大');
+  assert.ok(iqr.includes('未验证') || iqr.includes('尚未验证'), 'iQ-R 应明确标注未验证，而不是给出错误范围');
 });
 
 test('提示词：包含标准功能块形参表（防止 AI 写成 SET/RESET1）', () => {

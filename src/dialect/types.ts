@@ -1,72 +1,65 @@
 /**
  * GX Works3 / FX5U (iQ-F) ST 方言类型系统。
  *
- * 与标准 IEC 61131-3 的差异集中在：
- *  - 基础类型命名（INT/WORD 并存，ANY 泛型不开放给用户代码）
- *  - 字符串为 STRING[32] 形式，长度是类型的一部分
- *  - 双精度 REAL/LREAL 存在，但 LREAL 占用 4 个字寄存器
+ * v2（M0-1）：类型表来自 `src/profile/fx5u.ts`（FX5 手册 JY997D58901 text/03001）。
+ * 与 v0.1 的差异：
+ *  - FX5 **不支持** LINT / ULINT / UINT / UDINT / LREAL（iQ-R 才有）；
+ *  - 新增 TIMER / RETENTIVETIMER / COUNTER / LCOUNTER / POINTER 定时器/计数器/指针型；
+ *  - STRING 与 STRING[Unicode](WSTRING) 都按 1 字起算（实际按字节数换算，见手册），
+ *    这里保留“基础宽度”仅供可赋值性判断，不能用于地址占用计算。
  */
 
-/** FX5U 可用基础数据类型。 */
-export const PRIMITIVE_TYPES = [
-  'BOOL',
-  'BYTE',
-  'WORD',
-  'DWORD',
-  'INT',
-  'UINT',
-  'DINT',
-  'UDINT',
-  'LINT',
-  'ULINT',
-  'REAL',
-  'LREAL',
-  'TIME',
-  'STRING',
-  'WSTRING',
-] as const;
+import { FX5_TYPE_FACTS, FX5_TYPE_NAMES, IQ_R_ONLY_TYPES } from '../profile/index.ts';
 
-export type PrimitiveType = (typeof PRIMITIVE_TYPES)[number];
+/** FX5 可用基础数据类型（顺序与手册一致）。 */
+export const PRIMITIVE_TYPES = FX5_TYPE_FACTS.map((t) => t.name) as readonly string[];
+
+export type PrimitiveType = string;
+
+/** 是否为合法的基础类型名（FX5 口径）。 */
+export function isPrimitiveType(name: string): boolean {
+  return FX5_TYPE_NAMES.has(name.trim().toUpperCase());
+}
+
+/** 是否为「仅 iQ-R 支持、FX5 不支持」的类型名（LI/UL/LREAL、UINT/UDINT）。 */
+export function isIqROnlyPrimitiveType(name: string): boolean {
+  return IQ_R_ONLY_TYPES.includes(name.trim().toUpperCase());
+}
 
 /**
- * 数据类型在软元件上的字节宽度（以 16 位字为单位）。
- * GX Works3 的 D 寄存器是 16 位，多字类型占用连续的多个 D。
+ * 数据类型的基础宽度（以 16 位字为单位）。
+ * 仅用于可赋值性/加宽判断；TIMER 等的实际占用以手册为准（未逐项核实）。
  */
 export const TYPE_WORD_WIDTH: Record<string, number> = {
   BOOL: 1,
-  BYTE: 1,
   WORD: 1,
   DWORD: 2,
   INT: 1,
-  UINT: 1,
   DINT: 2,
-  UDINT: 2,
-  LINT: 4,
-  ULINT: 4,
   REAL: 2,
-  LREAL: 4,
   TIME: 2,
   STRING: 1,
   WSTRING: 1,
+  TIMER: 2,
+  RETENTIVETIMER: 2,
+  COUNTER: 2,
+  LCOUNTER: 2,
+  POINTER: 1,
 };
 
-/** 有符号整型集合。 */
-export const SIGNED_INT_TYPES = new Set(['INT', 'DINT', 'LINT']);
-/** 无符号整型集合。 */
-export const UNSIGNED_INT_TYPES = new Set(['BYTE', 'WORD', 'DWORD', 'UINT', 'UDINT', 'ULINT']);
-/** 浮点型集合。 */
-export const FLOAT_TYPES = new Set(['REAL', 'LREAL']);
+/** 有符号整型集合（FX5）。 */
+export const SIGNED_INT_TYPES = new Set(['INT', 'DINT']);
+/** 无符号整型集合（FX5）。 */
+export const UNSIGNED_INT_TYPES = new Set(['WORD', 'DWORD']);
+/** 浮点型集合（FX5 只有单精度 REAL）。 */
+export const FLOAT_TYPES = new Set(['REAL']);
 /** 整数型集合（signed + unsigned）。 */
 export const INT_TYPES = new Set([...SIGNED_INT_TYPES, ...UNSIGNED_INT_TYPES]);
-/** 数值型集合（整数 + 浮点）。 */
-export const NUMERIC_TYPES = new Set([...INT_TYPES, ...FLOAT_TYPES]);
+/** 数值型集合（整数 + 浮点 + 时间）。 */
+export const NUMERIC_TYPES = new Set([...INT_TYPES, ...FLOAT_TYPES, 'TIME']);
 
-export type DataType = PrimitiveType | string;
-
-/** 是否为合法的基础类型名。 */
-export function isPrimitiveType(name: string): name is PrimitiveType {
-  return (PRIMITIVE_TYPES as readonly string[]).includes(name);
-}
+/** 数据类型（内置基础类型或用户自定义类型名）。 */
+export type DataType = string;
 
 /**
  * 规范化类型名。GX Works3 允许 STRING[32] / STRING[64] 等带长度声明，
@@ -142,13 +135,15 @@ export function isAssignable(target: string, source: string): boolean {
   return false;
 }
 
-/** 隐式数值转换（用于表达式中的字面量折叠与运算结果推断）。 */
+/**
+ * 隐式数值转换（用于表达式中的字面量折叠与运算结果推断）。
+ * FX5 只有单精度 REAL；整数加宽在 INT(1字) / DINT(2字) 之间。
+ */
 export function widenType(a: string, b: string): string {
   const ta = baseTypeName(a);
   const tb = baseTypeName(b);
   if (ta === tb) return ta;
   if (FLOAT_TYPES.has(ta) || FLOAT_TYPES.has(tb)) {
-    if (ta === 'LREAL' || tb === 'LREAL') return 'LREAL';
     return 'REAL';
   }
   const wa = TYPE_WORD_WIDTH[ta] ?? 1;
@@ -156,9 +151,9 @@ export function widenType(a: string, b: string): string {
   const w = Math.max(wa, wb);
   const signed = SIGNED_INT_TYPES.has(ta) || SIGNED_INT_TYPES.has(tb);
   const map: Record<number, string> = signed
-    ? { 1: 'INT', 2: 'DINT', 4: 'LINT' }
-    : { 1: 'UINT', 2: 'UDINT', 4: 'ULINT' };
-  return map[w] ?? (signed ? 'LINT' : 'ULINT');
+    ? { 1: 'INT', 2: 'DINT' }
+    : { 1: 'WORD', 2: 'DWORD' };
+  return map[w] ?? (signed ? 'DINT' : 'DWORD');
 }
 
 /**

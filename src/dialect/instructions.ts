@@ -4,49 +4,34 @@
  * 这是「三菱方言检查」的核心知识库：AI 生成 ST 时最常见的错误就是
  * 混入西门子(S7)、CODESYS/Twincat 或 IEC 通用但三菱不支持的写法。
  * 校验器依据此表拦截这些代码。
+ *
+ * v2（M0-1）：三菱事实统一来自 `src/profile/`（带 source/verified），
+ * 本文件只保留兼容导出；不要再往本文件里硬编码新事实。
  */
 
-/** 三菱 FX5U 支持的标准功能块（IEC 61131-3 通用部分，语法一致）。 */
-export const STANDARD_FUNCTION_BLOCKS: Record<string, string> = {
-  TON: 'TON',
-  TOF: 'TOF',
-  TP: 'TP',
-  CTU: 'CTU',
-  CTD: 'CTD',
-  CTUD: 'CTUD',
-  R_TRIG: 'R_TRIG',
-  F_TRIG: 'F_TRIG',
-  RS: 'RS',
-  SR: 'SR',
-};
+import {
+  FX5_STANDARD_FBS,
+  FX5_NATIVE_FBS,
+  FX5U_PROFILE,
+  getDeviceFact,
+  type DeviceBase,
+} from '../profile/index.ts';
 
-/** 三菱专用功能块（标准 IEC 中没有对应物）。 */
-export const MITSUBISHI_FUNCTION_BLOCKS: Record<string, string> = {
-  // 边沿输出型
-  OUT_M: 'OUT_M 上升沿触发输出',
-  OUT_H: 'OUT_H 高电平输出',
-  OUT_L: 'OUT_L 低电平输出',
-  // 定时/计数
-  TIMER_T: 'TIMER_T 定时器',
-  COUNTER_FB: 'COUNTER_FB 计数器',
-  // 运算类
-  RAMPF: 'RAMPF 整数型斜坡',
-  RAMP: 'RAMP 浮点型斜坡',
-  // 通信/模块
-  MC_HOM: 'MC_HOM 原点回归',
-  MC_MOVE_ABSOLUTE: 'MC_MOVE_ABSOLUTE 绝对定位',
-  MC_MOVE_RELATIVE: 'MC_MOVE_RELATIVE 相对定位',
-  MC_MOVE_VELOCITY: 'MC_MOVE_VELOCITY 速度定位',
-  MC_STOP: 'MC_STOP 停止',
-  MC_SET_POSITION: 'MC_SET_POSITION 坐标设定',
-  MC_GET_POSITION: 'MC_GET_POSITION 坐标读取',
-  MC_DUTY: 'MC_DUTY 扭矩',
-  // 高速计数/脉冲
-  HIOEN: 'HIOEN 高速计数使能',
-  HIOTRK: 'HIOTRK 高速计数跟踪',
-  DHIOEN: 'DHIOEN 高速计数使能(双字)',
-  DHIO_TRK: 'DHIO_TRK 高速计数跟踪(双字)',
-};
+/** 三菱 FX5U 支持的标准功能块（IEC 61131-3 通用部分，语法一致）。 */
+export const STANDARD_FUNCTION_BLOCKS: Record<string, string> = Object.fromEntries(
+  FX5_STANDARD_FBS.map((f) => [f.name, f.name]),
+);
+
+/**
+ * 三菱专用功能块（标准 IEC 中没有对应物）。
+ *
+ * v0.1 曾在此列出 OUT_M/OUT_H/OUT_L/TIMER_T/COUNTER_FB/RAMP/HIOTRK/
+ * DHIO_TRK/MC_*，经本机 6 本手册全文检索**均不存在**（见 02 审计）。
+ * 现仅保留已确认存在的 FX5 通用 FB。
+ */
+export const MITSUBISHI_FUNCTION_BLOCKS: Record<string, string> = Object.fromEntries(
+  FX5_NATIVE_FBS.map((f) => [f.name, f.name]),
+);
 
 /**
  * 三菱 ST 支持的标准函数（按参数个数分类）。
@@ -87,11 +72,9 @@ export const STANDARD_FUNCTIONS: Record<string, { min: number; max: number; ret:
   MOV: { min: 2, max: 2, ret: null },
   SMOV: { min: 4, max: 4, ret: null },
   BLKMOV: { min: 4, max: 4, ret: null },
-  // 转换
+  // 转换（v2：FX5 无 LREAL，DINT_TO_LREAL/LREAL_TO_DINT 已移除；见 profile）
   INT_TO_REAL: { min: 1, max: 1, ret: 'REAL' },
   REAL_TO_INT: { min: 1, max: 1, ret: 'INT' },
-  DINT_TO_LREAL: { min: 1, max: 1, ret: 'LREAL' },
-  LREAL_TO_DINT: { min: 1, max: 1, ret: 'DINT' },
   BOOL_TO_INT: { min: 1, max: 1, ret: 'INT' },
   INT_TO_BOOL: { min: 1, max: 1, ret: 'BOOL' },
   // 字符串
@@ -151,30 +134,25 @@ export const FOREIGN_BRANDS_FUNCTIONS: Record<string, string> = {
 };
 
 /**
- * 标准功能块的形参表（IEC 61131-3 / GX Works3 一致）。
+ * 标准功能块的形参表（来自 profile）。
  *
  * 用于校验功能块实例调用的参数名是否正确。
- * required 为必填输入参数。
+ * required 为必填输入参数；形参是否已核实见 profile 的 `paramsVerified`。
  */
 export const STANDARD_FB_SIGNATURES: Record<
   string,
   { inputs: string[]; outputs: string[]; required: string[] }
-> = {
-  TON: { inputs: ['IN', 'PT'], outputs: ['Q', 'ET'], required: ['IN', 'PT'] },
-  TOF: { inputs: ['IN', 'PT'], outputs: ['Q', 'ET'], required: ['IN', 'PT'] },
-  TP: { inputs: ['IN', 'PT'], outputs: ['Q', 'ET'], required: ['IN', 'PT'] },
-  CTU: { inputs: ['CU', 'R', 'PV'], outputs: ['Q', 'CV'], required: ['CU', 'PV'] },
-  CTD: { inputs: ['CD', 'LD', 'PV'], outputs: ['Q', 'CV'], required: ['CD', 'PV'] },
-  CTUD: {
-    inputs: ['CU', 'CD', 'R', 'LD', 'PV'],
-    outputs: ['QU', 'QD', 'CV'],
-    required: ['CU', 'CD', 'PV'],
-  },
-  R_TRIG: { inputs: ['CLK'], outputs: ['Q'], required: ['CLK'] },
-  F_TRIG: { inputs: ['CLK'], outputs: ['Q'], required: ['CLK'] },
-  RS: { inputs: ['S', 'R1'], outputs: ['Q1'], required: ['S', 'R1'] },
-  SR: { inputs: ['S1', 'R'], outputs: ['Q1'], required: ['S1', 'R'] },
-};
+> = Object.fromEntries(
+  FX5_STANDARD_FBS.map((f) => [
+    f.name,
+    {
+      inputs: [...f.inputs],
+      outputs: [...f.outputs],
+      // TON/RS 的必填输入已核实；其余 FB 暂按“全部输入必填”保守处理（仅 W009 警告）
+      required: [...f.inputs],
+    },
+  ]),
+);
 
 /** 保留字：不能作为变量名。 */
 export const RESERVED_WORDS = new Set([
@@ -197,67 +175,68 @@ export const RESERVED_WORDS = new Set([
 ]);
 
 /**
- * 设备地址（软元件）前缀。
- * 值表示该前缀是否支持直接寻址。
+ * 设备地址（软元件）前缀（来自 FX5U profile）。
+ * `base` 为软元件编号进制：X/Y 八进制、B/W/SB/SW 十六进制、其余十进制。
  */
-export const DEVICE_PREFIXES: Record<string, { width: number; kind: 'bit' | 'word'; description: string }> = {
-  X: { width: 1, kind: 'bit', description: '输入继电器' },
-  Y: { width: 1, kind: 'bit', description: '输出继电器' },
-  M: { width: 1, kind: 'bit', description: '辅助继电器' },
-  L: { width: 1, kind: 'bit', description: '锁存继电器' },
-  B: { width: 1, kind: 'bit', description: '链接继电器' },
-  S: { width: 1, kind: 'bit', description: '状态继电器' },
-  T: { width: 1, kind: 'bit', description: '定时器触点' },
-  C: { width: 1, kind: 'bit', description: '计数器触点' },
-  D: { width: 1, kind: 'word', description: '数据寄存器' },
-  W: { width: 1, kind: 'word', description: '链接寄存器' },
-  R: { width: 1, kind: 'word', description: '文件寄存器' },
-  Z: { width: 1, kind: 'word', description: '变址寄存器' },
-  SM: { width: 1, kind: 'bit', description: '特殊辅助继电器' },
-  SD: { width: 1, kind: 'word', description: '特殊数据寄存器' },
-};
+export const DEVICE_PREFIXES: Record<
+  string,
+  { width: number; kind: 'bit' | 'word'; description: string; base: DeviceBase }
+> = Object.fromEntries(
+  Object.values(FX5U_PROFILE.devices).map((d) => [
+    d.symbol,
+    { width: 1, kind: d.kind, description: d.label, base: d.base },
+  ]),
+);
 
 /**
- * 设备号范围的合法区间（FX5U）。
- * 用于拦截越界地址，例如 X2048 在 FX5U 上不存在。
+ * 设备号范围的合法区间（FX5U，十进制等价数值）。
+ *
+ * 由 `src/profile/fx5u.ts` 派生；带进制的解析请用 `parseDeviceAddress`，
+ * 范围校验请用 `checkDeviceNumber`（会区分 X/Y 的八进制与 B/W 的十六进制）。
+ * SM/SD 范围未核实，故不出现在本表。
  */
-export const DEVICE_RANGES: Record<string, { min: number; max: number }> = {
-  X: { min: 0, max: 511 },
-  Y: { min: 0, max: 511 },
-  M: { min: 0, max: 767 },
-  L: { min: 0, max: 767 },
-  B: { min: 0, max: 63 },
-  S: { min: 0, max: 127 },
-  T: { min: 0, max: 511 },
-  C: { min: 0, max: 255 },
-  D: { min: 0, max: 7999 },
-  W: { min: 0, max: 511 },
-  R: { min: 0, max: 32767 },
-  Z: { min: 0, max: 19 },
-};
+export const DEVICE_RANGES: Record<string, { min: number; max: number }> = Object.fromEntries(
+  Object.values(FX5U_PROFILE.devices)
+    .filter((d) => d.range !== null)
+    .map((d) => [d.symbol, { min: d.range![0], max: d.range![1] }]),
+);
+
+/** 各软元件编号的进制（来自 profile）。 */
+export const DEVICE_BASES: Record<string, DeviceBase> = Object.fromEntries(
+  Object.values(FX5U_PROFILE.devices).map((d) => [d.symbol, d.base]),
+);
 
 /**
- * 编译期自动分配区间的下界。显式地址落在这些区间内会与自动分配冲突。
- * FX5U 常见约定：M8000 以下、D512 以下为用户显式分配区。
+ * @deprecated 无手册依据（见 02 审计 §3.10）。GX Works3 中未分配软元件的标签
+ * 进入“标签存储器/锁存标签区域”，而不是自动分配设备地址；显式分配只需避免
+ * 与其他标签重复软元件。仅保留导出以免破坏旧代码，**新检查不要再使用**。
  */
 export const AUTO_ALLOCATE_GUARD = {
   bitBelow: 8000,
   wordBelow: 512,
 };
 
-/** 常用系统位（FX5U），用于校验时识别特殊继电器。 */
+/**
+ * 常用系统位（FX5U），用于校验时识别特殊继电器。
+ * 已按 JY997D58701 text/15002、text/2C003 修正（v0.1 的 SM400/SM410 等描述是错的）。
+ */
 export const SYSTEM_BITS: Record<string, string> = {
-  SM400: 'RUN 状态(ON)',
-  SM401: 'STOP 状态(ON)',
-  SM402: 'RUN 初始脉冲(1扫)',
-  SM403: 'STOP 初始脉冲(1扫)',
-  SM404: '保持(HOLD)',
-  SM410: '1秒时钟',
-  SM411: '2秒时钟',
-  SM412: '1秒时钟(可用作闪烁)',
-  SM420: '用户闪烁(1s)',
-  SM421: '用户闪烁(2s)',
-  SM424: '用户闪烁(0.5s)',
+  SM400: '始终 ON',
+  SM401: '始终 OFF',
+  SM402: 'RUN 后仅 1 个扫描 ON',
+  SM403: 'RUN 后仅 1 个扫描 OFF',
+  SM409: '0.01 秒时钟',
+  SM410: '0.1 秒时钟',
+  SM411: '0.2 秒时钟',
+  SM412: '1 秒时钟',
+  SM413: '2 秒时钟',
+  SM414: '2n 秒时钟',
+  SM415: '2nms 时钟',
+  SM420: '用户定时时钟 No.0',
+  SM421: '用户定时时钟 No.1',
+  SM422: '用户定时时钟 No.2',
+  SM423: '用户定时时钟 No.3',
+  SM424: '用户定时时钟 No.4',
 };
 
 /** 判断标识符是否合法（GX Works3 区分大小写，不允许全角字符）。 */
@@ -273,9 +252,37 @@ export function isValidIdentifier(name: string): boolean {
   return true;
 }
 
-/** 解析设备地址，返回 { prefix, number } 或 null。 */
-export function parseDeviceAddress(text: string): { prefix: string; number: number } | null {
-  const m = /^([A-Za-z]+)([0-9]+)$/.exec(text.trim());
+/** 解析后的设备地址（含进制信息）。 */
+export interface ParsedDeviceAddress {
+  prefix: string;
+  /** 按 base 解析出的数值；编号含非法数字时为 NaN。 */
+  number: number;
+  base: DeviceBase;
+  /** 编号部分原文。 */
+  digits: string;
+  /** 编号是否只由该进制的合法数字组成（如 X198 对八进制非法）。 */
+  validDigits: boolean;
+}
+
+/**
+ * 解析设备地址，返回 `{ prefix, number, base, digits, validDigits }` 或 null。
+ *
+ * v2：支持进制——X/Y 八进制，B/W/SB/SW 十六进制，其余十进制（来自 profile）。
+ * 范围校验请用 profile 的 `checkDeviceNumber`，不要直接比较数值。
+ */
+export function parseDeviceAddress(text: string): ParsedDeviceAddress | null {
+  const m = /^([A-Za-z]+)([0-9A-Za-z]+)$/.exec(text.trim());
   if (!m) return null;
-  return { prefix: m[1].toUpperCase(), number: Number(m[2]) };
+  const prefix = m[1].toUpperCase();
+  const digits = m[2];
+  const fact = getDeviceFact(prefix);
+  const base: DeviceBase = fact?.base ?? 10;
+  const validDigits =
+    base === 8
+      ? /^[0-7]+$/.test(digits)
+      : base === 16
+        ? /^[0-9A-Fa-f]+$/.test(digits)
+        : /^[0-9]+$/.test(digits);
+  const number = validDigits ? Number.parseInt(digits, base) : Number.NaN;
+  return { prefix, number, base, digits, validDigits };
 }

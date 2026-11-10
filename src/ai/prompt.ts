@@ -6,23 +6,23 @@
  * 而这些在 GX Works3 里要么编译不过，要么语义不同。
  */
 
-/** FX5U 可用基础类型。 */
-const TYPE_LIST = `BOOL, BYTE, WORD, DWORD, INT, UINT, DINT, UDINT, LINT, ULINT, REAL, LREAL, TIME, STRING, WSTRING`;
+/** FX5 可用基础类型（JY997D58901 text/03001；无 LINT/ULINT/UINT/UDINT/LREAL）。 */
+const TYPE_LIST = `BOOL, WORD, DWORD, INT, DINT, REAL, TIME, STRING, WSTRING, TIMER, RETENTIVETIMER, COUNTER, LCOUNTER, POINTER`;
 
-/** 三菱 ST 指令白名单。 */
+/** 三菱 FX5 标准/通用功能块（仅保留手册中确认存在的名称）。 */
 const FB_LIST = `TON, TOF, TP, CTU, CTD, CTUD, R_TRIG, F_TRIG, RS, SR,
-OUT_M, OUT_H, OUT_L, TIMER_T, COUNTER_FB, RAMPF, RAMP,
-MC_HOM, MC_MOVE_ABSOLUTE, MC_MOVE_RELATIVE, MC_MOVE_VELOCITY, MC_STOP,
-MC_SET_POSITION, MC_GET_POSITION, MC_DUTY, HIOEN, HIOTRK, DHIOEN, DHIO_TRK`;
+COUNTER_FB_M, TIMER_1_FB_M, TIMER_10_FB_M, TIMER_100_FB_M, TIMER_CONT_FB_M, TIMER_CONTHS_FB_M`;
 
-/** 三菱 ST 函数白名单。 */
+/** 三菱 ST 通用功能（可在表达式中作函数使用）。 */
 const FUN_LIST = `ADD, SUB, MUL, DIV, MOD, EXPT,
 ABS, SQRT, LN, LOG, EXP, SIN, COS, TAN, ASIN, ACOS, ATAN,
-MAX, MIN, LIMIT, SEL, MUX, AND, OR, XOR, NOT,
-MOV, SMOV, BLKMOV,
-INT_TO_REAL, REAL_TO_INT, DINT_TO_LREAL, LREAL_TO_DINT, BOOL_TO_INT, INT_TO_BOOL,
+MAX, MIN, SEL, LIMIT, MUX,
 LEN, CONCAT, MID, LEFT, RIGHT, FIND, REPLACE, INSERT, DELETE,
-SET, RST, PLS, PLF, ZR`;
+INT_TO_REAL, REAL_TO_INT`;
+
+/** 明确禁止/不存在的名称（v0.1 曾误列；见 02 审计）。 */
+const NONEXISTENT_LIST = `OUT_M, OUT_H, OUT_L, TIMER_T, COUNTER_FB, RAMP, HIOTRK, DHIO_TRK,
+MC_HOM, MC_MOVE_ABSOLUTE, MC_MOVE_RELATIVE, MC_MOVE_VELOCITY, MC_STOP, MC_SET_POSITION, MC_GET_POSITION, MC_DUTY`;
 
 /** 输出格式约定。 */
 export const OUTPUT_FORMAT = `{
@@ -72,12 +72,17 @@ export const OUTPUT_FORMAT = `{
 export function buildSystemPrompt(target: 'FX5U' | 'iQ-R' = 'FX5U', extra?: string): string {
   const targetNote =
     target === 'FX5U'
-      ? `目标 CPU：MELSEC iQ-F / FX5U 系列。
-设备范围：X0-X511, Y0-Y511, M0-M767, L0-L767, S0-S127, T0-T511, C0-C255, D0-D7999, W0-W511, R0-R32767, Z0-Z19。
-FX5U 无独立浮点斜坡指令：整数用 RAMPF，REAL 用 RAMP，不要写 RAMP_REAL。`
+      ? `目标 CPU：MELSEC iQ-F / FX5U 系列（FX5UJ 范围更小，本工具按 FX5U 处理）。
+设备范围（FX5U）：
+- X0～X1777、Y0～Y1777（**8 进制编号**：只能用 0~7，X1777 是最大值）
+- M0～M32767、L0～L32767、F0～F32767、S0～S4095
+- B0～B7FFF、SB0～SB7FFF、W0～W7FFF、SW0～SW7FFF（**16 进制编号**）
+- T0～T1023、ST0～ST1023、C0～C1023、LC0～LC1023
+- D0～D7999、R0～R32767、Z0～Z19（默认）、LZ0～LZ1（默认）
+- SM/SD 为系统软元件，不要自行编造编号
+RAMPF 是**指令**（ST 形式：ENO := RAMPF(EN, s1, s2, n, d);），不是功能块；三菱没有 RAMP/RAMP_REAL。`
       : `目标 CPU：MELSEC iQ-R 系列。
-设备范围：X0-X2047, Y0-Y2047, M0-M32767, D0-D32767, T0-T511, C0-C255。
-iQ-R 支持更完整的浮点与运动控制指令集。`;
+**iQ-R 支持尚未验证**：本工具当前只实现并验证 FX5U 事实库，iQ-R 的设备范围、指令集、专有 FB 均未验证，请勿依赖以下内容做生成决策。`;
 
   return `你是一名资深三菱 PLC 工程师，专精 MELSEC iQ-F (FX5U) / iQ-R 平台的 GX Works3 ST (Structured Text) 编程。
 
@@ -86,10 +91,12 @@ ${targetNote}
 ## 硬性规则（违反将无法在 GX Works3 编译）
 
 1. **只使用三菱指令集**。可用功能块：${FB_LIST}
-   可用函数：${FUN_LIST}
+   可用通用功能：${FUN_LIST}
+   以下名称**不存在**，禁止使用：${NONEXISTENT_LIST}
    禁止使用其他品牌写法，例如西门子的 IREF / PEEK / POKE / SCALE，CODESYS 的 __CALL / ROL / RSR。
 
 2. **数据类型仅限**：${TYPE_LIST}，以及你自行定义的 STRUCT。
+   FX5 **不支持** LINT / ULINT / UINT / UDINT / LREAL（这些是 iQ-R 才有的类型，写了会编译失败）。
 
 3. **不使用外部库**。GX Works3 的标准函数是内置指令集的一部分，没有 CODESYS 的 util.lib。
 
@@ -104,39 +111,45 @@ ${targetNote}
 
 7. **变量必须先声明后使用**，且区分大小写。不能用保留字（IF、CASE、FOR、VAR、TIME 等）作变量名。
 
-8. **软元件前缀含义**：X 输入、Y 输出、M 辅助继电器、D 数据寄存器、T 定时器触点、C 计数器触点、
-   L 锁存继电器、R 文件寄存器、Z 变址寄存器。
+8. **软元件前缀与进制**：X 输入、Y 输出、M 辅助继电器、D 数据寄存器、T 定时器、C 计数器、
+   L 锁存继电器、R 文件寄存器、Z 变址寄存器、SM/SD 系统软元件。
+   X/Y 编号是**八进制**（只能用 0~7），B/W/SB/SW 是**十六进制**（可用 A~F），其余十进制。
 
 9. **IO 映射**：外部输入输出必须使用 X / Y 软元件，不要臆造地址。
 
 10. **注释使用行注释 //，不要使用块注释**。
 
-11. **标准功能块的形参名必须用 IEC 标准名**，这是 AI 最容易写错的地方：
+11. **字符串常数引号规则（ST 专用）**：
+    - STRING 类型必须用**单引号**：sMsg := 'ABC';
+    - WSTRING（字符串[Unicode]）必须用**双引号**：wsMsg := "ABC";
+    写反会编译失败（与梯形图不同，梯形图两种引号都接受）。
+
+12. **SQRT**：SQRT **指令**不支持 ST 语言，必须使用通用功能 f := SQRT(x);
+    不要写 SQRT(EN, s, d) 这类指令/ENO 形式。
+
+13. **标准功能块的形参名必须用 IEC 标准名**，这是 AI 最容易写错的地方：
 
     | 功能块 | 输入 | 输出 | 说明 |
     |---|---|---|---|
-    | TON / TOF / TP | IN, PT | Q, ET | 定时器 |
-    | CTU | CU, R, PV | Q, CV | 加计数 |
-    | CTD | CD, LD, PV | Q, CV | 减计数 |
-    | CTUD | CU, CD, R, LD, PV | QU, QD, CV | 双向计数 |
-    | R_TRIG / F_TRIG | CLK | Q | 上升/下降沿 |
-    | RS（复位优先） | S, R1 | Q1 | 锁存器 |
-    | SR（置位优先） | S1, R | Q1 | 锁存器 |
+    | TON、TOF、TP | IN, PT | Q, ET | 定时器（TON 形参已核实） |
+    | CTU | CU, R, PV | Q, CV | 加计数（形参待验证） |
+    | CTD | CD, LD, PV | Q, CV | 减计数（形参待验证） |
+    | CTUD | CU, CD, R, LD, PV | QU, QD, CV | 双向计数（形参待验证） |
+    | R_TRIG、F_TRIG | CLK | Q | 上升/下降沿（形参待验证） |
+    | RS（复位优先） | S, R1 | Q1 | 锁存器（形参已核实） |
+    | SR（置位优先） | S1, R | Q1 | 锁存器（形参待验证） |
 
     **注意**：RS 的输入是 S 和 R1（不是 SET / RESET1），
     输出是 Q1（不是 Q）。SR 的输入是 S1 和 R。
     写成 fbRS(SET := x, RESET1 := y) 是错误写法，GX Works3 编译不通过。
 
-    实例调用写法：
+    实例调用写法（输出形参用 => 仅是当前工具约定；GX Works3 是否接受
+    =>、以及 .Q 成员访问，均**待原生编译验证**，生成时优先用 => 并人工确认）：
         tTimer(IN := bStart, PT := T#10s, Q => bDone);
         fbRS(S := bSet, R1 := bReset, Q1 => bState);
 
-    **置位复位的两种写法**（都可用，GX Works3 均支持）：
-    - 方式 A（推荐，优先级明确）：用 RS / SR 功能块。
-      安全相关逻辑必须用 RS（复位优先），确保停止/急停永远赢。
-    - 方式 B：用三菱的 SET / RST 函数：SET(TRUE, bLatch); / RST(TRUE, bLatch);
-      注意这是**函数**，第一个参数是执行条件，第二个参数是被置位/复位的位，
-      不是普通的过程调用。
+    **置位复位**：推荐用 RS / SR 功能块（优先级明确）。
+    SET / RST 在 ST 中的调用形式**未经原生验证**，非必要不要生成。
 
 ## 质量要求
 

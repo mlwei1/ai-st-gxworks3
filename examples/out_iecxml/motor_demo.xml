@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="www.iec.ch/public/TC65SC65BWG7TF10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.000" xsi:schemaLocation="www.iec.ch/public/TC65SC65BWG7TF10 GXW3_IEC61131_10_Ed1_0_ForGXW3.xsd">
+  <FileHeader companyName="MITSUBISHI ELECTRIC CORPORATION" companyURL="http://www.mitsubishielectric.com" productName="GX Works3" productVersion="ver.1.0"/>
+  <ContentHeader name="motor_demo" creationDateTime="1970-01-01T00:00:00+00:00" modificationDateTime="1970-01-01T00:00:00+00:00"/>
+  <Types>
+    <GlobalNamespace>
+      <DataTypeDecl name="ST_Motor">
+        <Documentation xsi:type="SimpleText">电机状态结构体</Documentation>
+        <UserDefinedTypeSpec xsi:type="StructTypeSpec">
+          <Member name="bRunning">
+            <AddData>
+              <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+                <VariableComments>
+                  <Comment number="6"><CommentText>运行中</CommentText></Comment>
+                </VariableComments>
+              </Data>
+            </AddData>
+            <Type><TypeName>BOOL</TypeName></Type>
+          </Member>
+          <Member name="bFault">
+            <AddData>
+              <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+                <VariableComments>
+                  <Comment number="6"><CommentText>故障</CommentText></Comment>
+                </VariableComments>
+              </Data>
+            </AddData>
+            <Type><TypeName>BOOL</TypeName></Type>
+          </Member>
+          <Member name="nSpeed">
+            <AddData>
+              <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+                <VariableComments>
+                  <Comment number="6"><CommentText>转速</CommentText></Comment>
+                </VariableComments>
+              </Data>
+            </AddData>
+            <Type><TypeName>INT</TypeName></Type>
+          </Member>
+        </UserDefinedTypeSpec>
+      </DataTypeDecl>
+      <Program name="Main">
+        <Documentation xsi:type="SimpleText">三相电机启停控制（来自 examples/motor_demo.st）</Documentation>
+        <Vars accessSpecifier="private">
+          <Variable name="bStart">
+            <AddData>
+              <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+                <VariableComments>
+                  <Comment number="6"><CommentText>启动按钮</CommentText></Comment>
+                </VariableComments>
+              </Data>
+            </AddData>
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bStop">
+            <AddData>
+              <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+                <VariableComments>
+                  <Comment number="6"><CommentText>停止按钮</CommentText></Comment>
+                </VariableComments>
+              </Data>
+            </AddData>
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bReset">
+            <AddData>
+              <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+                <VariableComments>
+                  <Comment number="6"><CommentText>复位按钮</CommentText></Comment>
+                </VariableComments>
+              </Data>
+            </AddData>
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bFault">
+            <AddData>
+              <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+                <VariableComments>
+                  <Comment number="6"><CommentText>故障标志</CommentText></Comment>
+                </VariableComments>
+              </Data>
+            </AddData>
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bAutoStop">
+            <AddData>
+              <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+                <VariableComments>
+                  <Comment number="6"><CommentText>自动停止</CommentText></Comment>
+                </VariableComments>
+              </Data>
+            </AddData>
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="tRunTimer">
+            <AddData>
+              <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+                <VariableComments>
+                  <Comment number="6"><CommentText>运行定时器</CommentText></Comment>
+                </VariableComments>
+              </Data>
+            </AddData>
+            <Type>
+              <TypeName>TON</TypeName>
+            </Type>
+          </Variable>
+          <Variable name="stMotor">
+            <AddData>
+              <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+                <VariableComments>
+                  <Comment number="6"><CommentText>电机状态</CommentText></Comment>
+                </VariableComments>
+              </Data>
+            </AddData>
+            <Type>
+              <TypeName>ST_Motor</TypeName>
+            </Type>
+          </Variable>
+          <Variable name="nStep">
+            <AddData>
+              <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+                <VariableComments>
+                  <Comment number="6"><CommentText>状态机步进</CommentText></Comment>
+                </VariableComments>
+              </Data>
+            </AddData>
+            <Type>
+              <TypeName>INT</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="0"/>
+            </InitialValue>
+          </Variable>
+        </Vars>
+        <MainBody>
+          <BodyContent xsi:type="ST">
+            <ST>    (* 故障优先处理：任何故障都立即停机 *)
+    IF bFault THEN
+        Y0 := FALSE;
+        nStep := 0;
+        RETURN;
+    END_IF;
+
+    CASE nStep OF
+        0: (* 待机 *)
+            IF bStart THEN
+                nStep := 1;
+            END_IF;
+
+        1: (* 运行 *)
+            tRunTimer(IN := TRUE, PT := T#10s);
+            IF tRunTimer.Q OR bStop THEN
+                nStep := 2;
+            END_IF;
+
+        2: (* 停机 *)
+            tRunTimer(IN := FALSE, PT := T#10s);
+            nStep := 0;
+    END_CASE;
+
+    (* 输出驱动 *)
+    CASE nStep OF
+        1: Y0 := TRUE;
+        ELSE Y0 := FALSE;
+    END_CASE;</ST>
+          </BodyContent>
+        </MainBody>
+      </Program>
+    </GlobalNamespace>
+  </Types>
+  <Instances>
+    <Configuration name="config1">
+      <Resource name="Main" resourceTypeName="prgFile">
+        <AddData>
+          <Data name="http://www.mitsubishielectric.com/xml/ResourceExecutionType" handleUnknown="implementation">
+            <ResourceExecutionType type="initial"/>
+          </Data>
+        </AddData>
+        <ProgramInstance name="Main" typeName="pou" evaluationOrder="1"/>
+      </Resource>
+      <GlobalVars constant="false" retain="false">
+        <Variable name="nSpeedSet">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>速度设定</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>INT</TypeName>
+          </Type>
+          <InitialValue>
+            <SimpleValue value="100"/>
+          </InitialValue>
+          <Address address="D200"/>
+        </Variable>
+        <Variable name="nActualSpeed">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>实际速度</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>INT</TypeName>
+          </Type>
+          <InitialValue>
+            <SimpleValue value="0"/>
+          </InitialValue>
+          <Address address="D201"/>
+        </Variable>
+      </GlobalVars>
+    </Configuration>
+  </Instances>
+</Project>

@@ -82,6 +82,8 @@ function isTimeLiteralStart(src: string, i: number): boolean {
 }
 
 export function tokenize(src: string): Token[] {
+  // 容忍 Windows 编辑器常见的 UTF-8 BOM（否则首字符被报“无法识别”）
+  if (src.charCodeAt(0) === 0xfeff) src = src.slice(1);
   const tokens: Token[] = [];
   let i = 0;
   let line = 1;

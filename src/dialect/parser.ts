@@ -25,6 +25,8 @@ import {
   type WhileStatement,
 } from './ast.ts';
 import { type Token, tokenize } from './lexer.ts';
+import { parseDeviceAddress } from './instructions.ts';
+import { getDeviceFact } from '../profile/index.ts';
 
 export class ParseError extends Error {
   readonly line: number;
@@ -1060,18 +1062,17 @@ export class Parser {
     throw new ParseError(`表达式中意外的 '${t.value || 'EOF'}'`, t.line, t.column);
   }
 
-  /** 尝试把形如 X10 的标识符解析为软元件地址。 */
+  /** 尝试把形如 X10 / B7FFF / W7FFF 的标识符解析为软元件地址。 */
   private tryParseDevice(): Expression | null {
     const t = this.peek();
     if (t.type !== 'identifier') return null;
-    const m = /^([A-Za-z]+)([0-9]+)$/.exec(t.value);
-    if (!m) return null;
+    // 已知软元件前缀才认定为软元件；避免把普通变量名（如 bStart）误判为软元件。
+    const parsed = parseDeviceAddress(t.value);
+    if (!parsed || !getDeviceFact(parsed.prefix)) return null;
     // 后面不能紧跟 '(' —— 那是函数调用
     const after = this.peek(1);
     if (after.type === 'operator' && after.value === '(') return null;
 
-    const prefix = m[1].toUpperCase();
-    const number = Number(m[2]);
     this.next();
 
     // 位偏移：X10.3
@@ -1083,8 +1084,8 @@ export class Parser {
     }
     return {
       kind: 'device',
-      prefix,
-      number,
+      prefix: parsed.prefix,
+      number: parsed.number,
       bitIndex,
       text: t.value,
       loc: this.loc(t),
