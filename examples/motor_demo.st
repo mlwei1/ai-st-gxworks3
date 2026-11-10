@@ -12,8 +12,8 @@ END_STRUCT
 END_TYPE
 
 VAR_GLOBAL
-    nSpeedSet : INT AT D200 := 100; // 速度设定
-    nActualSpeed : INT AT D201 := 0; // 实际速度
+    nSpeedSet : INT AT D200 RETAIN := 100; // 速度设定
+    nActualSpeed : INT AT D201 RETAIN := 0; // 实际速度
 END_VAR
 
 PROGRAM Main

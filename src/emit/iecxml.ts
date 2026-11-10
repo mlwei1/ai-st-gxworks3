@@ -38,6 +38,14 @@ export interface IecVar {
   address?: string;
   /** 标签注释（写入 AddData/VariableComments） */
   comment?: string;
+  /**
+   * 是否保持（对应 GX Works3 的 VAR_GLOBAL_RETAIN / VAR_RETAIN）。
+   * 注意：分配在锁存区（如 FX5U 的 D200 以上）的全局标签必须为 retain=true，
+   * 否则编译报 0x11021040。
+   */
+  retain?: boolean;
+  /** 是否常数（对应 GX Works3 的 VAR_GLOBAL_CONSTANT / VAR_CONSTANT）。 */
+  constant?: boolean;
 }
 
 /** 结构体成员。 */
@@ -124,8 +132,7 @@ function validateVar(kind: string, v: IecVar, allowSection: boolean): void {
   }
 }
 
-function varLines(v: IecVar, indent: number): string[] {
-  const pad = INDENT.repeat(indent);
+function varLines(v: IecVar, indent: number): string[] {  const pad = INDENT.repeat(indent);
   const pad2 = INDENT.repeat(indent + 1);
   const pad3 = INDENT.repeat(indent + 2);
   const pad4 = INDENT.repeat(indent + 3);
@@ -223,6 +230,32 @@ function structLines(t: IecStruct): string[] {
 }
 
 /**
+ * 按 (constant, retain) 把全局标签分组，生成多个 <GlobalVars> 块。
+ * 顺序：普通 → retain → constant → constant+retain。
+ */
+interface GlobalVarsGroup {
+  constant: boolean;
+  retain: boolean;
+  vars: IecVar[];
+}
+
+function groupGlobalVars(vars: IecVar[]): GlobalVarsGroup[] {
+  const groups: GlobalVarsGroup[] = [];
+  for (const v of vars) {
+    const constant = v.constant === true;
+    const retain = v.retain === true;
+    let group = groups.find((g) => g.constant === constant && g.retain === retain);
+    if (!group) {
+      group = { constant, retain, vars: [] };
+      groups.push(group);
+    }
+    group.vars.push(v);
+  }
+  const order = (g: GlobalVarsGroup) => (g.constant ? 2 : 0) + (g.retain ? 1 : 0);
+  return groups.sort((a, b) => order(a) - order(b));
+}
+
+/**
  * 生成完整的 GX Works3 可导入 IEC 61131-10 XML 字符串。
  * 输出：UTF-8 语义、2 空格缩进、`<?xml?>` 声明、确定性（不读系统时钟）。
  */
@@ -305,9 +338,20 @@ export function emitIecXml(project: IecXmlProject): string {
   });
   L.push(`${INDENT.repeat(3)}</Resource>`);
   // 全局标签：官方样例确认位于 Configuration 下、Resource 之后（不在 Resource 内）。
-  L.push(`${INDENT.repeat(3)}<GlobalVars constant="false" retain="false">`);
-  for (const g of project.globalVars ?? []) L.push(...varLines(g, 4));
-  L.push(`${INDENT.repeat(3)}</GlobalVars>`);
+  // 按 (constant, retain) 分组：锁存区地址（如 FX5U 的 D200 以上）必须用 retain=true 的 VAR_GLOBAL_RETAIN 组，
+  // 否则 GX Works3 编译报 0x11021040。
+  const globalGroups = groupGlobalVars(project.globalVars ?? []);
+  if (globalGroups.length === 0) {
+    // 没有任何全局变量时仍保留一个空的普通组，保持输出骨架稳定（与官方样例的工程结构一致）。
+    globalGroups.push({ constant: false, retain: false, vars: [] });
+  }
+  for (const group of globalGroups) {
+    L.push(
+      `${INDENT.repeat(3)}<GlobalVars constant="${group.constant}" retain="${group.retain}">`,
+    );
+    for (const g of group.vars) L.push(...varLines(g, 4));
+    L.push(`${INDENT.repeat(3)}</GlobalVars>`);
+  }
   L.push(`${INDENT}${INDENT}</Configuration>`);
   L.push(`${INDENT}</Instances>`);
   L.push('</Project>');

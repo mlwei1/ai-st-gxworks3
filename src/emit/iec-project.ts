@@ -35,6 +35,8 @@ function mapVar(v: VarDeclaration, owner: string, warnings: string[]): IecVar | 
   if (v.initialValue) out.initial = renderExpression(v.initialValue);
   if (v.address) out.address = v.address;
   if (v.comment) out.comment = v.comment;
+  if (v.retain) out.retain = true;
+  if (v.constant) out.constant = true;
   return out;
 }
 
@@ -96,6 +98,8 @@ export function astToIecProject(ast: AST, options: AstToIecOptions = {}): AstToI
     if (g.initialValue) out.initial = renderExpression(g.initialValue);
     if (g.address) out.address = g.address;
     if (g.comment) out.comment = g.comment;
+    if (g.retain) out.retain = true;
+    if (g.constant) out.constant = true;
     return out;
   });
 
