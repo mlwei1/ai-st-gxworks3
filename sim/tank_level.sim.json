@@ -1,0 +1,46 @@
+{
+  "name": "tank_level_sim",
+  "title": "水箱液位双位控制仿真场景（state_machine 模板）",
+  "spec": "specs/tank_level.json",
+  "cpu": "FX5U",
+  "program": { "resource": "MAIN", "name": "Main" },
+  "initial": {
+    "X0": 0,
+    "X1": 0,
+    "Y0": 0
+  },
+  "steps": [
+    {
+      "name": "低液位触发 X0=1（开始注水）",
+      "set": { "X0": 1 },
+      "waitMs": 500,
+      "expect": { "Y0": 1 },
+      "note": "状态机 待机→运行，水泵 Y0 启动"
+    },
+    {
+      "name": "低液位恢复 X0=0（继续注水）",
+      "set": { "X0": 0 },
+      "waitMs": 500,
+      "expect": { "Y0": 1 },
+      "note": "运行态未收到停止条件，保持注水（双位控制滞回）"
+    },
+    {
+      "name": "高液位触发 X1=1（停止注水）",
+      "set": { "X1": 1 },
+      "waitMs": 500,
+      "expect": { "Y0": 0 },
+      "note": "运行→停止，水泵 Y0 关闭"
+    },
+    {
+      "name": "高液位恢复 X1=0（回到待机）",
+      "set": { "X1": 0 },
+      "waitMs": 300,
+      "expect": { "Y0": 0 },
+      "note": "停止→待机，保持停泵"
+    }
+  ],
+  "meta": {
+    "version": "0.1.0",
+    "source": "gen specs/tank_level.json（state_machine 模板）"
+  }
+}

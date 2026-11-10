@@ -41,6 +41,9 @@ GX Simulator3 没有公开的读写 API，当前采用**半自动**方式：
 - `motor_start_stop.sim.json` + `motor_start_stop.obs.json`：4 步全部 PASS
   （启动 → 自锁 → 停止 → 保持停机），证据见
   `docs/evidence/M2/02-sim-scenario/`。
+- `tank_level.sim.json` + `tank_level.obs.json`：4 步全部 PASS
+  （低液位启动 → 保持注水 → 高液位停泵 → 待机），证据见
+  `docs/evidence/M2/03-sim-tank/`。
 
 ## GX Works3 仿真操作要点（批监视）
 

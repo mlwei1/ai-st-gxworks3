@@ -1,0 +1,51 @@
+{
+  "scenario": "tank_level_sim",
+  "scenarioFile": "C:\\Users\\52900\\Documents\\项目\\ai_st_gxworks3\\sim\\tank_level.sim.json",
+  "observedFile": "C:\\Users\\52900\\Documents\\项目\\ai_st_gxworks3\\sim\\tank_level.obs.json",
+  "ok": true,
+  "mismatchCount": 0,
+  "steps": [
+    {
+      "step": 1,
+      "name": "低液位触发 X0=1（开始注水）",
+      "status": "pass",
+      "mismatches": [],
+      "observed": {
+        "Y0": 1
+      },
+      "note": "状态机 待机→运行，水泵 Y0 启动"
+    },
+    {
+      "step": 2,
+      "name": "低液位恢复 X0=0（继续注水）",
+      "status": "pass",
+      "mismatches": [],
+      "observed": {
+        "Y0": 1
+      },
+      "note": "运行态未收到停止条件，保持注水（双位控制滞回）"
+    },
+    {
+      "step": 3,
+      "name": "高液位触发 X1=1（停止注水）",
+      "status": "pass",
+      "mismatches": [],
+      "observed": {
+        "Y0": 0
+      },
+      "note": "运行→停止，水泵 Y0 关闭"
+    },
+    {
+      "step": 4,
+      "name": "高液位恢复 X1=0（回到待机）",
+      "status": "pass",
+      "mismatches": [],
+      "observed": {
+        "Y0": 0
+      },
+      "note": "停止→待机，保持停泵"
+    }
+  ],
+  "diagnostics": [],
+  "generatedAt": "2026-11-10T13:40:13.382Z"
+}
