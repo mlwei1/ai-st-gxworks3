@@ -1,0 +1,35 @@
+{
+  "name": "demo_fan_auto_stop",
+  "title": "冷却风扇：启动后自动运行 10 秒，可手动停止、故障停机",
+  "cpu": {
+    "series": "FX5U",
+    "model": "FX5U-32MT/ES"
+  },
+  "template": {
+    "name": "motor_auto_stop",
+    "params": {
+      "autoStopSec": 10
+    }
+  },
+  "io": [
+    { "device": "X0", "name": "bStart", "type": "BOOL", "comment": "启动按钮" },
+    { "device": "X1", "name": "bStop", "type": "BOOL", "comment": "停止按钮" },
+    { "device": "X2", "name": "bFault", "type": "BOOL", "comment": "风扇故障信号" },
+    { "device": "Y0", "name": "bFan", "type": "BOOL", "comment": "风扇接触器输出" }
+  ],
+  "vars": [],
+  "requirements": [
+    { "id": "R1", "text": "按下启动 X0 后风扇 Y0 运行" },
+    { "id": "R2", "text": "运行满 10 秒自动停止" },
+    { "id": "R3", "text": "按下停止 X1 立即停止" },
+    { "id": "R4", "text": "故障 X2 时立即停止，故障消失后需重新启动" }
+  ],
+  "safety": {
+    "interlocks": ["bFault 为 ON 时禁止 Y0 输出"]
+  },
+  "tests": [],
+  "meta": {
+    "version": "0.1.0",
+    "createdAt": "2026-11-10"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "tool": "ai-st-gxworks3",
+  "format": "IEC61131-10",
+  "spec": {
+    "name": "demo_fan_auto_stop",
+    "cpu": {
+      "series": "FX5U",
+      "model": "FX5U-32MT/ES"
+    },
+    "template": {
+      "name": "motor_auto_stop",
+      "params": {
+        "autoStopSec": 10
+      }
+    },
+    "io": [
+      {
+        "device": "X0",
+        "name": "bStart",
+        "type": "BOOL",
+        "comment": "启动按钮"
+      },
+      {
+        "device": "X1",
+        "name": "bStop",
+        "type": "BOOL",
+        "comment": "停止按钮"
+      },
+      {
+        "device": "X2",
+        "name": "bFault",
+        "type": "BOOL",
+        "comment": "风扇故障信号"
+      },
+      {
+        "device": "Y0",
+        "name": "bFan",
+        "type": "BOOL",
+        "comment": "风扇接触器输出"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "R1",
+        "text": "按下启动 X0 后风扇 Y0 运行"
+      },
+      {
+        "id": "R2",
+        "text": "运行满 10 秒自动停止"
+      },
+      {
+        "id": "R3",
+        "text": "按下停止 X1 立即停止"
+      },
+      {
+        "id": "R4",
+        "text": "故障 X2 时立即停止，故障消失后需重新启动"
+      }
+    ]
+  },
+  "templateName": "motor_auto_stop",
+  "generator": "template",
+  "generatedAt": "2026-11-10T13:52:56.667Z",
+  "ok": true,
+  "attempts": 1,
+  "diagnostics": [],
+  "compilerDiagnostics": [],
+  "warnings": [],
+  "specDiagnostics": []
+}
