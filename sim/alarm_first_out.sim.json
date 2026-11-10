@@ -1,0 +1,49 @@
+{
+  "name": "alarm_first_out_sim",
+  "title": "报警首出/确认/复位仿真场景（alarm_first_out 模板，2 路）",
+  "spec": "specs/alarm_first_out_demo.json",
+  "cpu": "FX5U",
+  "program": { "resource": "MAIN", "name": "Main" },
+  "initial": {
+    "X0": 0,
+    "X1": 0,
+    "X2": 0,
+    "X3": 0,
+    "Y0": 0,
+    "Y1": 0
+  },
+  "steps": [
+    {
+      "name": "报警 1 出现 X0=1（锁存并首出）",
+      "set": { "X0": 1 },
+      "waitMs": 300,
+      "expect": { "Y0": 1, "Y1": 1 },
+      "note": "汇总 Y0=ON，首出指示 Y1=ON"
+    },
+    {
+      "name": "报警 2 出现 X1=1（首出保持为报警 1）",
+      "set": { "X1": 1 },
+      "waitMs": 300,
+      "expect": { "Y0": 1, "Y1": 1 },
+      "note": "两路报警均锁存，首出仍指向报警 1"
+    },
+    {
+      "name": "按下确认 X2=1（首出熄灭，报警保持）",
+      "set": { "X2": 1 },
+      "waitMs": 300,
+      "expect": { "Y0": 1, "Y1": 0 },
+      "note": "Y0 保持 ON（报警未消失），Y1 熄灭（已确认）"
+    },
+    {
+      "name": "按下复位 X3=1（全部清除）",
+      "set": { "X3": 1 },
+      "waitMs": 300,
+      "expect": { "Y0": 0, "Y1": 0 },
+      "note": "报警锁存与首出全部清除"
+    }
+  ],
+  "meta": {
+    "version": "0.1.0",
+    "source": "gen specs/alarm_first_out_demo.json（alarm_first_out 模板）"
+  }
+}

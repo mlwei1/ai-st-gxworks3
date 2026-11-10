@@ -1,0 +1,37 @@
+{
+  "name": "alarm_first_out_demo",
+  "title": "报警首出/确认/复位（2 路报警）",
+  "cpu": {
+    "series": "FX5U",
+    "model": "FX5U-32MT/ES"
+  },
+  "template": {
+    "name": "alarm_first_out",
+    "params": {
+      "alarmCount": 2
+    }
+  },
+  "io": [
+    { "device": "X0", "name": "bAlarm1", "type": "BOOL", "comment": "报警 1（如过载）" },
+    { "device": "X1", "name": "bAlarm2", "type": "BOOL", "comment": "报警 2（如超温）" },
+    { "device": "X2", "name": "bAck", "type": "BOOL", "comment": "报警确认" },
+    { "device": "X3", "name": "bReset", "type": "BOOL", "comment": "报警复位" },
+    { "device": "Y0", "name": "bAlarmSum", "type": "BOOL", "comment": "报警汇总输出" },
+    { "device": "Y1", "name": "bFirstOut", "type": "BOOL", "comment": "首出报警指示" }
+  ],
+  "vars": [],
+  "requirements": [
+    { "id": "R1", "text": "任一路报警出现时锁存，报警汇总 Y0 保持 ON" },
+    { "id": "R2", "text": "第一个出现的报警被记录为首出，首出指示 Y1 点亮" },
+    { "id": "R3", "text": "确认（X2）后首出指示 Y1 熄灭，但报警锁存与汇总 Y0 保持" },
+    { "id": "R4", "text": "复位（X3）清除全部报警锁存与首出状态，Y0/Y1 熄灭" }
+  ],
+  "safety": {
+    "interlocks": []
+  },
+  "tests": [],
+  "meta": {
+    "version": "0.1.0",
+    "createdAt": "2026-11-10"
+  }
+}

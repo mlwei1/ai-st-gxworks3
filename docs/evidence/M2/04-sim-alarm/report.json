@@ -1,0 +1,55 @@
+{
+  "scenario": "alarm_first_out_sim",
+  "scenarioFile": "C:\\Users\\52900\\Documents\\项目\\ai_st_gxworks3\\sim\\alarm_first_out.sim.json",
+  "observedFile": "C:\\Users\\52900\\Documents\\项目\\ai_st_gxworks3\\sim\\alarm_first_out.obs.json",
+  "ok": true,
+  "mismatchCount": 0,
+  "steps": [
+    {
+      "step": 1,
+      "name": "报警 1 出现 X0=1（锁存并首出）",
+      "status": "pass",
+      "mismatches": [],
+      "observed": {
+        "Y0": 1,
+        "Y1": 1
+      },
+      "note": "汇总 Y0=ON，首出指示 Y1=ON"
+    },
+    {
+      "step": 2,
+      "name": "报警 2 出现 X1=1（首出保持为报警 1）",
+      "status": "pass",
+      "mismatches": [],
+      "observed": {
+        "Y0": 1,
+        "Y1": 1
+      },
+      "note": "两路报警均锁存，首出仍指向报警 1"
+    },
+    {
+      "step": 3,
+      "name": "按下确认 X2=1（首出熄灭，报警保持）",
+      "status": "pass",
+      "mismatches": [],
+      "observed": {
+        "Y0": 1,
+        "Y1": 0
+      },
+      "note": "Y0 保持 ON（报警未消失），Y1 熄灭（已确认）"
+    },
+    {
+      "step": 4,
+      "name": "按下复位 X3=1（全部清除）",
+      "status": "pass",
+      "mismatches": [],
+      "observed": {
+        "Y0": 0,
+        "Y1": 0
+      },
+      "note": "报警锁存与首出全部清除"
+    }
+  ],
+  "diagnostics": [],
+  "generatedAt": "2026-11-10T13:45:40.771Z"
+}

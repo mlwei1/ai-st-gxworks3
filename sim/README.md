@@ -44,6 +44,9 @@ GX Simulator3 没有公开的读写 API，当前采用**半自动**方式：
 - `tank_level.sim.json` + `tank_level.obs.json`：4 步全部 PASS
   （低液位启动 → 保持注水 → 高液位停泵 → 待机），证据见
   `docs/evidence/M2/03-sim-tank/`。
+- `alarm_first_out.sim.json` + `alarm_first_out.obs.json`：4 步全部 PASS
+  （报警锁存 → 双报警首出保持 → 确认熄灭但报警保持 → 复位清除），证据见
+  `docs/evidence/M2/04-sim-alarm/`。
 
 ## GX Works3 仿真操作要点（批监视）
 
