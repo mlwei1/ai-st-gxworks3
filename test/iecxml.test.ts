@@ -39,6 +39,8 @@ test('根元素/命名空间/schemaLocation/xsi:type 正确', () => {
   assert.ok(xml.includes('<Vars accessSpecifier="private">'));
   assert.ok(xml.includes('<BodyContent xsi:type="ST">'));
   assert.ok(xml.includes('<UserDefinedTypeSpec xsi:type="StructTypeSpec">'));
+  // 程序文件必须循环执行：scan（真机仿真验证发现 initial 只执行一次）
+  assert.ok(xml.includes('<ResourceExecutionType type="scan"/>'));
 });
 
 test('ST 正文转义 < > &，且不产生未转义标记', () => {

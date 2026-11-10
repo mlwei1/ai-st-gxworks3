@@ -489,12 +489,13 @@ export function emitIecXml(project: IecXmlProject): string {
     `${INDENT.repeat(3)}<Resource name="Main" resourceTypeName="prgFile">`,
   );
   const resPad = INDENT.repeat(4);
-  // 执行类型：initial（与官方样例的 Main 程序文件一致）；导入器缺省时也会用默认值。
+  // 执行类型：scan（循环执行）。官方样例中 "Main" 用 initial、"MainScan" 用 scan；
+  // 实际项目程序必须循环执行，否则仿真/运行只执行一次（M2 仿真验证发现的真问题）。
   L.push(`${resPad}<AddData>`);
   L.push(
     `${resPad}${INDENT}<Data name="http://www.mitsubishielectric.com/xml/ResourceExecutionType" handleUnknown="implementation">`,
   );
-  L.push(`${resPad}${INDENT}${INDENT}<ResourceExecutionType type="initial"/>`);
+  L.push(`${resPad}${INDENT}${INDENT}<ResourceExecutionType type="scan"/>`);
   L.push(`${resPad}${INDENT}</Data>`);
   L.push(`${resPad}</AddData>`);
   project.programs.forEach((p, i) => {
