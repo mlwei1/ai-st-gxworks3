@@ -21,12 +21,17 @@ function parse(source: string) {
   return ast;
 }
 
-test('映射：motor_demo 只保留 Program，FB 给出 warning', () => {
+test('映射：motor_demo 同时导出 Program 与 FunctionBlock', () => {
   const ast = parse(motorDemo);
   const { project, warnings } = astToIecProject(ast, { contentName: 'motor_demo' });
   assert.equal(project.programs.length, 1);
   assert.equal(project.programs[0].name, 'Main');
-  assert.ok(warnings.some((w) => w.includes('FB_Motor') && w.includes('暂不支持')));
+  assert.equal(project.functionBlocks?.length, 1);
+  const fb = project.functionBlocks?.[0];
+  assert.equal(fb?.name, 'FB_Motor');
+  assert.deepEqual(fb?.inputs?.map((v) => v.name), ['bEnable', 'nTarget']);
+  assert.deepEqual(fb?.outputs?.map((v) => v.name), ['bRunning', 'nSpeed']);
+  assert.ok(!warnings.some((w) => w.includes('暂不支持')), `不应再有跳过告警: ${warnings.join('; ')}`);
 });
 
 test('映射：结构体与全局变量完整保留', () => {
@@ -75,12 +80,12 @@ END_PROGRAM
     section: 'VAR_INPUT',
     loc: pou.loc,
   });
-  const { project, warnings } = astToIecProject(ast);
+  const { project } = astToIecProject(ast);
   assert.equal(project.programs[0].vars.length, 1);
-  assert.ok(warnings.some((w) => w.includes('VAR_INPUT')));
+  assert.ok(!project.programs[0].vars.some((v) => v.name === 'bIn'), 'VAR_INPUT 不应进入 Program 的局部标签');
 });
 
-test('映射：只有 FB、没有 Program 时发射器报错', () => {
+test('映射：只有 FB、没有 Program 时仍可导出 FunctionBlock', () => {
   const ast = parse(`FUNCTION_BLOCK FB_Only
 VAR
     a : INT;
@@ -88,8 +93,36 @@ END_VAR
     a := 1;
 END_FUNCTION_BLOCK
 `);
-  const { project, warnings } = astToIecProject(ast);
+  const { project } = astToIecProject(ast);
   assert.equal(project.programs.length, 0);
-  assert.ok(warnings.length > 0);
-  assert.throws(() => emitIecXml(project), /programs 不能为空/);
+  assert.equal(project.functionBlocks?.length, 1);
+  const xml = emitIecXml(project);
+  assert.ok(xml.includes('<FunctionBlock name="FB_Only">'));
+  assert.ok(xml.includes('<MainBody>'));
+});
+
+test('映射：Function 导出 ResultType 与 TempVars', () => {
+  const ast = parse(`FUNCTION F_Add : INT
+VAR_INPUT
+    a : INT;
+    b : INT;
+END_VAR
+VAR_TEMP
+    t : INT;
+END_VAR
+    t := a + b;
+    F_Add := t;
+END_FUNCTION
+`);
+  const { project } = astToIecProject(ast);
+  assert.equal(project.functions?.length, 1);
+  const fn = project.functions?.[0];
+  assert.equal(fn?.name, 'F_Add');
+  assert.equal(fn?.returnType, 'INT');
+  assert.deepEqual(fn?.inputs?.map((v) => v.name), ['a', 'b']);
+  assert.deepEqual(fn?.temps?.map((v) => v.name), ['t']);
+  const xml = emitIecXml(project);
+  assert.ok(xml.includes('<Function name="F_Add">'));
+  assert.ok(xml.includes('<ResultType>'));
+  assert.ok(xml.includes('<TempVars>'));
 });

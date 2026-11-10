@@ -124,11 +124,11 @@ test('拒绝 VAR_INPUT/VAR_OUTPUT（本期只支持 VAR）', () => {
   assert.throws(() => emitIecXml(project), /VAR_INPUT/);
 });
 
-test('拒绝空程序列表 / 重复 Program / 空结构体', () => {
-  assert.throws(() => emitIecXml({ programs: [] }), /programs 不能为空/);
+test('拒绝空 POU 列表 / 重复 POU / 空结构体', () => {
+  assert.throws(() => emitIecXml({ programs: [] }), /至少需要一个/);
   const dup = baseProject();
   dup.programs.push({ name: 'Main', vars: [], bodySt: '' });
-  assert.throws(() => emitIecXml(dup), /Program 名称重复/);
+  assert.throws(() => emitIecXml(dup), /POU 名称重复/);
   const emptyStruct: IecXmlProject = { programs: [{ name: 'P', vars: [], bodySt: '' }], types: [{ name: 'S', members: [] }] };
   assert.throws(() => emitIecXml(emptyStruct), /至少需要一个成员/);
 });
@@ -139,4 +139,55 @@ test('注释走 AddData/VariableComments（官方样例 number=6）并正确转�
   const xml = emitIecXml(project);
   assert.ok(xml.includes('<Comment number="6">'));
   assert.ok(xml.includes('<CommentText>a &amp; b &lt; c</CommentText>'));
+});
+
+test('FunctionBlock：Parameters 三分组 + orderWithinParamSet + Vars + MainBody', () => {
+  const project: IecXmlProject = {
+    programs: [{ name: 'Main', vars: [], bodySt: '' }],
+    functionBlocks: [
+      {
+        name: 'FB_Motor',
+        comment: '电机',
+        inouts: [{ name: 'nTarget', type: 'INT' }],
+        inputs: [{ name: 'bEnable', type: 'BOOL' }],
+        outputs: [{ name: 'bRunning', type: 'BOOL' }],
+        vars: [{ name: 'tRamp', type: 'TON' }],
+        bodySt: 'bRunning := bEnable;',
+      },
+    ],
+  };
+  const xml = emitIecXml(project);
+  assert.ok(xml.includes('<FunctionBlock name="FB_Motor">'));
+  assert.ok(xml.includes('<InoutVars>'));
+  assert.ok(xml.includes('<InputVars>'));
+  assert.ok(xml.includes('<OutputVars retain="false">'));
+  assert.ok(xml.includes('<Variable name="bEnable" orderWithinParamSet="2">'));
+  assert.ok(xml.includes('<Variable name="bRunning" orderWithinParamSet="3">'));
+  assert.ok(xml.includes('<Vars accessSpecifier="private">'));
+  assert.ok(xml.includes('<ST>bRunning := bEnable;</ST>'));
+  // FB 不进入 ProgramInstance
+  assert.ok(!xml.includes('<ProgramInstance name="FB_Motor"'));
+});
+
+test('Function：ResultType + Parameters + TempVars', () => {
+  const project: IecXmlProject = {
+    programs: [{ name: 'Main', vars: [], bodySt: '' }],
+    functions: [
+      {
+        name: 'F_Add',
+        returnType: 'INT',
+        inputs: [{ name: 'a', type: 'INT' }],
+        outputs: [{ name: 'b', type: 'INT' }],
+        temps: [{ name: 't', type: 'INT' }],
+        bodySt: 't := a + b;',
+      },
+    ],
+  };
+  const xml = emitIecXml(project);
+  assert.ok(xml.includes('<Function name="F_Add">'));
+  assert.ok(xml.includes('<ResultType>'));
+  assert.ok(xml.includes('<TypeName>INT</TypeName>'));
+  assert.ok(xml.includes('<TempVars>'));
+  assert.ok(xml.includes('<Variable name="t">'));
+  assert.ok(xml.includes('<ST>t := a + b;</ST>'));
 });

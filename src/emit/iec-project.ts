@@ -3,13 +3,22 @@
  *
  * 职责边界：
  *  - 本模块只做「解析后的 AST → 发射器 DTO」的映射，不做 XML 生成（见 iecxml.ts）；
- *  - 本期只支持 Program（FB / Function 会在 warnings 中显式说明并跳过）；
- *  - 局部标签只接受 VAR 段；VAR_INPUT/OUTPUT 属于 FB 形参，本期不支持。
+ *  - 支持 Program / FunctionBlock / Function 三类 POU；
+ *  - FB 形参按段拆分：VAR_IN_OUT → InoutVars、VAR_INPUT → InputVars、VAR_OUTPUT → OutputVars；
+ *  - Function 的 VAR_TEMP → TempVars，返回类型 → ResultType；
+ *  - 数组暂按标量导出并给出 warning（数组类型在 GX Works3 XML 中尚未验证）。
  */
 
-import type { AST, POU, VarDeclaration, TypeDeclaration } from '../dialect/ast.ts';
+import type { AST, POU, VarDeclaration, TypeDeclaration, VarSectionKind } from '../dialect/ast.ts';
 import { renderExpression, unparse } from './unparser.ts';
-import type { IecProgram, IecStruct, IecVar, IecXmlProject } from './iecxml.ts';
+import type {
+  IecFunction,
+  IecFunctionBlock,
+  IecProgram,
+  IecStruct,
+  IecVar,
+  IecXmlProject,
+} from './iecxml.ts';
 
 export interface AstToIecOptions {
   /** 写入 ContentHeader@name / 工程标识；默认用第一个 POU 名。 */
@@ -23,9 +32,14 @@ export interface AstToIecResult {
   warnings: string[];
 }
 
-function mapVar(v: VarDeclaration, owner: string, warnings: string[]): IecVar | null {
-  if (v.section !== 'VAR') {
-    warnings.push(`'${owner}' 的变量 '${v.name}' 属于 ${v.section}，IEC 导入只支持局部 VAR，已跳过`);
+function mapVar(
+  v: VarDeclaration,
+  owner: string,
+  warnings: string[],
+  allowAnySection = false,
+): IecVar | null {
+  if (!allowAnySection && v.section !== 'VAR') {
+    warnings.push(`'${owner}' 的变量 '${v.name}' 属于 ${v.section}，已跳过`);
     return null;
   }
   if (v.arrayRange) {
@@ -40,19 +54,67 @@ function mapVar(v: VarDeclaration, owner: string, warnings: string[]): IecVar | 
   return out;
 }
 
-function mapProgram(pou: POU, warnings: string[]): IecProgram {
-  const vars: IecVar[] = [];
+/** 取出某 VAR 段的变量并映射；section 为 undefined 时取全部。 */
+function mapVarList(
+  pou: POU,
+  section: VarSectionKind | undefined,
+  warnings: string[],
+  owner: string,
+): IecVar[] {
+  const out: IecVar[] = [];
   for (const v of pou.vars) {
-    const mapped = mapVar(v, `Program ${pou.name}`, warnings);
-    if (mapped) vars.push(mapped);
+    if (section !== undefined && v.section !== section) continue;
+    if (section === undefined && v.section !== 'VAR') {
+      warnings.push(`'${owner}' 的变量 '${v.name}' 属于 ${v.section}，未找到对应 XML 段，已跳过`);
+      continue;
+    }
+    const mapped = mapVar(v, owner, warnings, true);
+    if (mapped) out.push(mapped);
   }
+  return out;
+}
+
+function mapProgram(pou: POU, warnings: string[]): IecProgram {
   const program: IecProgram = {
     name: pou.name,
-    vars,
+    vars: mapVarList(pou, 'VAR', warnings, `Program ${pou.name}`),
     bodySt: unparse(pou.body),
   };
   if (pou.comment) program.comment = pou.comment;
   return program;
+}
+
+function mapFunctionBlock(pou: POU, warnings: string[]): IecFunctionBlock {
+  const owner = `FunctionBlock ${pou.name}`;
+  const fb: IecFunctionBlock = {
+    name: pou.name,
+    inouts: mapVarList(pou, 'VAR_IN_OUT', warnings, owner),
+    inputs: mapVarList(pou, 'VAR_INPUT', warnings, owner),
+    outputs: mapVarList(pou, 'VAR_OUTPUT', warnings, owner),
+    vars: mapVarList(pou, 'VAR', warnings, owner),
+    bodySt: unparse(pou.body),
+  };
+  if (pou.comment) fb.comment = pou.comment;
+  return fb;
+}
+
+function mapFunction(pou: POU, warnings: string[]): IecFunction | null {
+  if (!pou.returnType) {
+    warnings.push(`函数 '${pou.name}' 缺少返回类型，无法导出为 IEC XML，已跳过`);
+    return null;
+  }
+  const owner = `Function ${pou.name}`;
+  const fn: IecFunction = {
+    name: pou.name,
+    returnType: pou.returnType,
+    inputs: mapVarList(pou, 'VAR_INPUT', warnings, owner),
+    outputs: mapVarList(pou, 'VAR_OUTPUT', warnings, owner),
+    temps: mapVarList(pou, 'VAR_TEMP', warnings, owner),
+    vars: mapVarList(pou, 'VAR', warnings, owner),
+    bodySt: unparse(pou.body),
+  };
+  if (pou.comment) fn.comment = pou.comment;
+  return fn;
 }
 
 function mapStruct(t: TypeDeclaration, warnings: string[]): IecStruct {
@@ -73,22 +135,24 @@ function mapStruct(t: TypeDeclaration, warnings: string[]): IecStruct {
 /**
  * 把解析后的 ST 工程映射为 IEC XML 发射器 DTO。
  *
- * - Program：全部导出；
- * - Function / FunctionBlock：本期跳过并给出 warning；
+ * - Program / FunctionBlock / Function：全部导出；
  * - 结构体 / 全局变量：全部导出。
  */
 export function astToIecProject(ast: AST, options: AstToIecOptions = {}): AstToIecResult {
   const warnings: string[] = [];
   const programs: IecProgram[] = [];
+  const functionBlocks: IecFunctionBlock[] = [];
+  const functions: IecFunction[] = [];
 
   for (const pou of ast.pous) {
-    if (pou.pouType !== 'program') {
-      warnings.push(
-        `POU '${pou.name}'（${pou.pouType}）暂不支持导出为 IEC XML；本期只支持 Program，已跳过`,
-      );
-      continue;
+    if (pou.pouType === 'program') {
+      programs.push(mapProgram(pou, warnings));
+    } else if (pou.pouType === 'functionBlock') {
+      functionBlocks.push(mapFunctionBlock(pou, warnings));
+    } else {
+      const fn = mapFunction(pou, warnings);
+      if (fn) functions.push(fn);
     }
-    programs.push(mapProgram(pou, warnings));
   }
 
   const types: IecStruct[] = ast.types.map((t) => mapStruct(t, warnings));
@@ -105,6 +169,8 @@ export function astToIecProject(ast: AST, options: AstToIecOptions = {}): AstToI
 
   const project: IecXmlProject = {
     programs,
+    functionBlocks,
+    functions,
     types,
     globalVars,
   };

@@ -5,7 +5,7 @@ AI 驱动的三菱 PLC **GX Works3 ST 语言**代码生成与校验工具。
 面向 **MELSEC iQ-F / FX5U**（当前已验证；iQ-R 尚未验证），把自然语言控制需求变成可直接导入 GX Works3 的
 ST 程序，并在导入前完成语法与三菱方言的静态检查。
 
-> **v0.2 核心流程**：`build-xml` 生成 **IEC 61131-10 XML**（程序 + 标签 + 结构体一次导入），
+> **v0.2 核心流程**：`build-xml` 生成 **IEC 61131-10 XML**（Program / FunctionBlock / Function + 标签 + 结构体一次导入），
 > 配合纯 ST 模板工程 `templates/FX5U_ST_Template.gx3` 使用，详见 [templates/README.md](templates/README.md)。
 > 总体设计与验证证据见 [docs/整体方案.md](docs/整体方案.md)。
 

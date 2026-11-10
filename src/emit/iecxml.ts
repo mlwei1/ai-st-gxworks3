@@ -72,6 +72,32 @@ export interface IecProgram {
   bodySt: string;
 }
 
+/**
+ * 功能块（FUNCTION_BLOCK POU）。
+ * 形参分三组（VAR_IN_OUT / VAR_INPUT / VAR_OUTPUT），局部变量放 Vars。
+ */
+export interface IecFunctionBlock {
+  name: string;
+  comment?: string;
+  inputs?: IecVar[];
+  outputs?: IecVar[];
+  inouts?: IecVar[];
+  vars?: IecVar[];
+  bodySt: string;
+}
+
+/** 函数（FUNCTION POU）：有返回类型；局部临时变量放 TempVars。 */
+export interface IecFunction {
+  name: string;
+  comment?: string;
+  returnType: string;
+  inputs?: IecVar[];
+  outputs?: IecVar[];
+  temps?: IecVar[];
+  vars?: IecVar[];
+  bodySt: string;
+}
+
 export interface IecXmlMeta {
   companyName?: string;
   companyUrl?: string;
@@ -89,6 +115,8 @@ export interface IecXmlMeta {
 /** 发射器输入 DTO。 */
 export interface IecXmlProject {
   programs: IecProgram[];
+  functionBlocks?: IecFunctionBlock[];
+  functions?: IecFunction[];
   types?: IecStruct[];
   globalVars?: IecVar[];
   meta?: IecXmlMeta;
@@ -132,12 +160,13 @@ function validateVar(kind: string, v: IecVar, allowSection: boolean): void {
   }
 }
 
-function varLines(v: IecVar, indent: number): string[] {  const pad = INDENT.repeat(indent);
+function varLines(v: IecVar, indent: number, extraAttrs = ''): string[] {
+  const pad = INDENT.repeat(indent);
   const pad2 = INDENT.repeat(indent + 1);
   const pad3 = INDENT.repeat(indent + 2);
   const pad4 = INDENT.repeat(indent + 3);
   const out: string[] = [];
-  out.push(`${pad}<Variable name="${escapeXmlAttr(v.name)}">`);
+  out.push(`${pad}<Variable name="${escapeXmlAttr(v.name)}"${extraAttrs}>`);
   if (v.comment) {
     out.push(`${pad2}<AddData>`);
     out.push(
@@ -187,6 +216,108 @@ function programLines(p: IecProgram): string[] {
   }
   out.push(`${pad2}</MainBody>`);
   out.push(`${pad}</Program>`);
+  return out;
+}
+
+/** 参数变量（带 orderWithinParamSet），用于 FB/FUN 的 InoutVars/InputVars/OutputVars。 */
+function paramSectionLines(
+  section: 'InoutVars' | 'InputVars' | 'OutputVars',
+  vars: IecVar[] | undefined,
+  indent: number,
+  startOrder: number,
+): { lines: string[]; nextOrder: number } {
+  const list = vars ?? [];
+  if (list.length === 0) return { lines: [], nextOrder: startOrder };
+  const pad = INDENT.repeat(indent);
+  const out: string[] = [];
+  const attrs = section === 'OutputVars' ? ' retain="false"' : '';
+  out.push(`${pad}<${section}${attrs}>`);
+  let order = startOrder;
+  for (const v of list) {
+    out.push(...varLines(v, indent + 1, ` orderWithinParamSet="${order}"`));
+    order++;
+  }
+  out.push(`${pad}</${section}>`);
+  return { lines: out, nextOrder: order };
+}
+
+/** MainBody 的公共片段。 */
+function mainBodyLines(bodySt: string, indent: number): string[] {
+  const pad = INDENT.repeat(indent);
+  const out: string[] = [];
+  out.push(`${pad}<MainBody>`);
+  const body = (bodySt ?? '').replace(/\r\n?/g, '\n');
+  if (body.length > 0) {
+    out.push(`${pad}${INDENT}<BodyContent xsi:type="ST">`);
+    out.push(`${pad}${INDENT}${INDENT}<ST>${escapeXmlText(body)}</ST>`);
+    out.push(`${pad}${INDENT}</BodyContent>`);
+  }
+  out.push(`${pad}</MainBody>`);
+  return out;
+}
+
+/** 功能块（FUNCTION_BLOCK）：Parameters(Inout/Input/Output) + Vars + MainBody。 */
+function functionBlockLines(fb: IecFunctionBlock): string[] {
+  const pad = INDENT.repeat(4);
+  const pad2 = INDENT.repeat(5);
+  const out: string[] = [];
+  out.push(`${pad}<FunctionBlock name="${escapeXmlAttr(fb.name)}">`);
+  if (fb.comment) {
+    out.push(`${pad2}<Documentation xsi:type="SimpleText">${escapeXmlText(fb.comment)}</Documentation>`);
+  }
+  out.push(`${pad2}<Parameters>`);
+  let order = 1;
+  for (const section of ['InoutVars', 'InputVars', 'OutputVars'] as const) {
+    const vars = section === 'InoutVars' ? fb.inouts : section === 'InputVars' ? fb.inputs : fb.outputs;
+    const res = paramSectionLines(section, vars, 6, order);
+    out.push(...res.lines);
+    order = res.nextOrder;
+  }
+  out.push(`${pad2}</Parameters>`);
+  if (fb.vars && fb.vars.length > 0) {
+    out.push(`${pad2}<Vars accessSpecifier="private">`);
+    for (const v of fb.vars) out.push(...varLines(v, 6));
+    out.push(`${pad2}</Vars>`);
+  }
+  out.push(...mainBodyLines(fb.bodySt, 5));
+  out.push(`${pad}</FunctionBlock>`);
+  return out;
+}
+
+/** 函数（FUNCTION）：ResultType + Parameters(Input/Output) + TempVars/Vars + MainBody。 */
+function functionLines(fn: IecFunction): string[] {
+  const pad = INDENT.repeat(4);
+  const pad2 = INDENT.repeat(5);
+  const pad3 = INDENT.repeat(6);
+  const out: string[] = [];
+  out.push(`${pad}<Function name="${escapeXmlAttr(fn.name)}">`);
+  if (fn.comment) {
+    out.push(`${pad2}<Documentation xsi:type="SimpleText">${escapeXmlText(fn.comment)}</Documentation>`);
+  }
+  out.push(`${pad2}<ResultType>`);
+  out.push(`${pad3}<TypeName>${escapeXmlText(fn.returnType)}</TypeName>`);
+  out.push(`${pad2}</ResultType>`);
+  out.push(`${pad2}<Parameters>`);
+  let order = 1;
+  for (const section of ['InputVars', 'OutputVars'] as const) {
+    const vars = section === 'InputVars' ? fn.inputs : fn.outputs;
+    const res = paramSectionLines(section, vars, 6, order);
+    out.push(...res.lines);
+    order = res.nextOrder;
+  }
+  out.push(`${pad2}</Parameters>`);
+  if (fn.temps && fn.temps.length > 0) {
+    out.push(`${pad2}<TempVars>`);
+    for (const v of fn.temps) out.push(...varLines(v, 6));
+    out.push(`${pad2}</TempVars>`);
+  }
+  if (fn.vars && fn.vars.length > 0) {
+    out.push(`${pad2}<Vars accessSpecifier="private">`);
+    for (const v of fn.vars) out.push(...varLines(v, 6));
+    out.push(`${pad2}</Vars>`);
+  }
+  out.push(...mainBodyLines(fn.bodySt, 5));
+  out.push(`${pad}</Function>`);
   return out;
 }
 
@@ -260,16 +391,49 @@ function groupGlobalVars(vars: IecVar[]): GlobalVarsGroup[] {
  * 输出：UTF-8 语义、2 空格缩进、`<?xml?>` 声明、确定性（不读系统时钟）。
  */
 export function emitIecXml(project: IecXmlProject): string {
-  if (!project || !Array.isArray(project.programs) || project.programs.length === 0) {
-    throw new Error('IecXmlProject.programs 不能为空：未指定任何程序块');
+  const fbs = project.functionBlocks ?? [];
+  const fns = project.functions ?? [];
+  if (
+    !project ||
+    !Array.isArray(project.programs) ||
+    (project.programs.length === 0 && fbs.length === 0 && fns.length === 0)
+  ) {
+    throw new Error('IecXmlProject 至少需要一个 Program / FunctionBlock / Function');
   }
-  // ---- 输入校验 ----
-  const programNames = new Set<string>();
+  // ---- 输入校验（Program / FunctionBlock / Function 共享同一命名空间）----
+  const pouNames = new Set<string>();
   for (const p of project.programs) {
     validateName('Program', p.name);
-    if (programNames.has(p.name)) throw new Error(`Program 名称重复: ${p.name}`);
-    programNames.add(p.name);
+    if (pouNames.has(p.name)) throw new Error(`POU 名称重复: ${p.name}`);
+    pouNames.add(p.name);
     for (const v of p.vars) validateVar(`程序 ${p.name} 的局部标签`, v, true);
+  }
+  for (const fb of fbs) {
+    validateName('FunctionBlock', fb.name);
+    if (pouNames.has(fb.name)) throw new Error(`POU 名称重复: ${fb.name}`);
+    pouNames.add(fb.name);
+    for (const [kind, vars] of [
+      ['VAR_IN_OUT', fb.inouts],
+      ['VAR_INPUT', fb.inputs],
+      ['VAR_OUTPUT', fb.outputs],
+      ['VAR', fb.vars],
+    ] as const) {
+      for (const v of vars ?? []) validateVar(`功能块 ${fb.name} 的 ${kind}`, v, true);
+    }
+  }
+  for (const fn of fns) {
+    validateName('Function', fn.name);
+    if (pouNames.has(fn.name)) throw new Error(`POU 名称重复: ${fn.name}`);
+    pouNames.add(fn.name);
+    if (!fn.returnType || !fn.returnType.trim()) throw new Error(`函数 ${fn.name} 缺少 returnType`);
+    for (const [kind, vars] of [
+      ['VAR_INPUT', fn.inputs],
+      ['VAR_OUTPUT', fn.outputs],
+      ['VAR_TEMP', fn.temps],
+      ['VAR', fn.vars],
+    ] as const) {
+      for (const v of vars ?? []) validateVar(`函数 ${fn.name} 的 ${kind}`, v, true);
+    }
   }
   const structNames = new Set<string>();
   for (const t of project.types ?? []) {
@@ -313,6 +477,8 @@ export function emitIecXml(project: IecXmlProject): string {
   L.push(`${INDENT}${INDENT}<GlobalNamespace>`);
   for (const t of project.types ?? []) L.push(...structLines(t));
   for (const p of project.programs) L.push(...programLines(p));
+  for (const fb of fbs) L.push(...functionBlockLines(fb));
+  for (const fn of fns) L.push(...functionLines(fn));
   L.push(`${INDENT}${INDENT}</GlobalNamespace>`);
   L.push(`${INDENT}</Types>`);
 
