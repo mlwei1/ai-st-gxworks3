@@ -1,0 +1,26 @@
+{
+  "scenario": "motor_start_stop_sim",
+  "observedAt": "2026-11-10T21:22:00+08:00",
+  "steps": [
+    {
+      "step": 1,
+      "name": "按下启动 X0=1",
+      "values": { "Y0": 1 }
+    },
+    {
+      "step": 2,
+      "name": "松开启动 X0=0（自锁保持）",
+      "values": { "Y0": 1 }
+    },
+    {
+      "step": 3,
+      "name": "按下停止 X1=1",
+      "values": { "Y0": 0 }
+    },
+    {
+      "step": 4,
+      "name": "松开停止 X1=0",
+      "values": { "Y0": 0 }
+    }
+  ]
+}

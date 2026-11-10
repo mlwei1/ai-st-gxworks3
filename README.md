@@ -27,6 +27,9 @@ copy templates\FX5U_ST_Template.gx3 %TEMP%\run.gx3
 > **Spec 驱动生成（M1）**：`gen specs/motor_start_stop.json -o out` 会按模板生成 ST + IEC XML 工程包
 > （`specs/` 下有 3 个示例；`gen --list-templates` 查看 8 个标准模板）。
 >
+> **仿真场景断言（M2）**：`sim sim/motor_start_stop.sim.json --observed sim/motor_start_stop.obs.json`
+> 校验「写输入 → 读输出」场景（半自动执行器，详见 [sim/README.md](sim/README.md)）。
+>
 > **LLM 兜底 + 编译诊断回灌**：模板失败时加 `--llm` 走 LLM 生成；把 GX Works3 转换错误整理成
 > JSON/文本后 `--llm --compiler-errors errors.json` 可带着真实编译错误重新生成
 > （详见 [docs/编译诊断回灌.md](docs/编译诊断回灌.md)；LLM 需要 `ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN`）。
