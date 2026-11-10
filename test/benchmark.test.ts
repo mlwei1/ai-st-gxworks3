@@ -18,7 +18,9 @@ const repo = resolve(here, '..');
 const benchDir = resolve(repo, 'bench');
 
 test('bench：8 个基准场景全部可生成（0 error）且 ST/XML 齐全', async () => {
-  const files = (await readdir(benchDir)).filter((f) => f.endsWith('.json')).sort();
+  const files = (await readdir(benchDir))
+    .filter((f) => f.startsWith('b_') && f.endsWith('.json'))
+    .sort();
   assert.ok(files.length >= 8, `基准场景不足：${files.join(', ')}`);
 
   for (const file of files) {
