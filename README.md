@@ -2,26 +2,30 @@
 
 AI 驱动的三菱 PLC **GX Works3 ST 语言**代码生成与校验工具。
 
-面向 **MELSEC iQ-F / FX5U** 与 **iQ-R** 系列，把自然语言控制需求变成可直接导入 GX Works3 的
+面向 **MELSEC iQ-F / FX5U**（当前已验证；iQ-R 尚未验证），把自然语言控制需求变成可直接导入 GX Works3 的
 ST 程序，并在导入前完成语法与三菱方言的静态检查。
 
-> **📖 第一次用请看 [docs/快速上手.md](docs/快速上手.md)** —— 5 步操作手册。
-> 完整原理与排错见 [docs/GXWorks3-导入指南.md](docs/GXWorks3-导入指南.md)。
+> **v0.2 核心流程**：`build-xml` 生成 **IEC 61131-10 XML**（程序 + 标签 + 结构体一次导入），
+> 配合纯 ST 模板工程 `templates/FX5U_ST_Template.gx3` 使用，详见 [templates/README.md](templates/README.md)。
+> 总体设计与验证证据见 [docs/整体方案.md](docs/整体方案.md)。
 
 ---
 
-## 30 秒上手
+## 30 秒上手（v0.2）
 
 ```bash
-# 1. 生成文件
-node --experimental-strip-types --no-warnings src/cli.ts build-text examples/motor_demo.st -o ./out
+# 1. 生成 IEC 61131-10 XML（推荐）
+node --experimental-strip-types --no-warnings src/cli.ts build-xml examples/motor_demo.st -o ./out
 
-# 2. 在 GX Works3 里：
-#    程序/FB 右键 → 局部标签 → 导入文件 → 选 *_local_labels.csv
-#    全局标签   右键 → 导入文件 → 选 Global.csv
-#    「程序本体」工作表 → Ctrl+V 粘贴对应的 .st
-# 3. 转换 → 全部转换
+# 2. 复制纯 ST 模板工程（不要直接改模板）
+copy templates\FX5U_ST_Template.gx3 %TEMP%\run.gx3
+
+# 3. GX Works3 打开副本 → 工程 → 导入 → IEC61131-10 XML格式 → 选 out\motor_demo.xml
+# 4. 转换 → 全部转换（Shift+Alt+F4），检查 Error/Warning
 ```
+
+> 备用通道（v0.1，标签 CSV + 粘贴 ST 正文）：`build-text`，见 [docs/快速上手.md](docs/快速上手.md)；
+> 该文档中「标签 XML 导入」的说法已过时（标签编辑器只支持 CSV 导入）。
 
 ---
 
