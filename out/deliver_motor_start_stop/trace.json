@@ -1,0 +1,99 @@
+{
+  "generatedAt": "2026-11-10T15:16:43.725Z",
+  "spec": "C:\\Users\\52900\\Documents\\项目\\ai_st_gxworks3\\specs\\motor_start_stop.json",
+  "trace": [
+    {
+      "id": "R1",
+      "text": "按下启动按钮 X0 后，电机输出 Y0 置 ON 并自保持",
+      "devices": [
+        "X0",
+        "Y0"
+      ],
+      "io": [
+        "X0:bStart",
+        "Y0:bMotor"
+      ],
+      "template": "motor_start_stop",
+      "artifacts": [
+        "artifacts/motor_start_stop.st",
+        "artifacts/motor_start_stop.xml"
+      ],
+      "localCheck": "pass",
+      "sim": "pass",
+      "nativeCompile": "not-run",
+      "note": "本地检查通过，仿真场景通过"
+    },
+    {
+      "id": "R2",
+      "text": "按下停止按钮 X1 时，电机输出 Y0 立即 OFF",
+      "devices": [
+        "X1",
+        "Y0"
+      ],
+      "io": [
+        "X1:bStop",
+        "Y0:bMotor"
+      ],
+      "template": "motor_start_stop",
+      "artifacts": [
+        "artifacts/motor_start_stop.st",
+        "artifacts/motor_start_stop.xml"
+      ],
+      "localCheck": "pass",
+      "sim": "pass",
+      "nativeCompile": "not-run",
+      "note": "本地检查通过，仿真场景通过"
+    },
+    {
+      "id": "R3",
+      "text": "故障信号 X2 为 ON 时，Y0 立即 OFF 且不允许再启动",
+      "devices": [
+        "X2",
+        "Y0"
+      ],
+      "io": [
+        "X2:bFault",
+        "Y0:bMotor"
+      ],
+      "template": "motor_start_stop",
+      "artifacts": [
+        "artifacts/motor_start_stop.st",
+        "artifacts/motor_start_stop.xml"
+      ],
+      "localCheck": "pass",
+      "sim": "pass",
+      "nativeCompile": "not-run",
+      "note": "本地检查通过，仿真场景通过"
+    },
+    {
+      "id": "R4",
+      "text": "故障消失后需重新按下启动按钮方可再次运行",
+      "devices": [],
+      "io": [],
+      "template": "motor_start_stop",
+      "artifacts": [
+        "artifacts/motor_start_stop.st",
+        "artifacts/motor_start_stop.xml"
+      ],
+      "localCheck": "pass",
+      "sim": "pass",
+      "nativeCompile": "not-run",
+      "note": "本地检查通过，仿真场景通过"
+    },
+    {
+      "id": "R5",
+      "text": "连续运行达到 autoStopSeconds 秒后自动停止（模板参数）",
+      "devices": [],
+      "io": [],
+      "template": "motor_start_stop",
+      "artifacts": [
+        "artifacts/motor_start_stop.st",
+        "artifacts/motor_start_stop.xml"
+      ],
+      "localCheck": "pass",
+      "sim": "pass",
+      "nativeCompile": "not-run",
+      "note": "本地检查通过，仿真场景通过"
+    }
+  ]
+}

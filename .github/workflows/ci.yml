@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ['22.x']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Show versions
+        run: node --version && npm --version
+
+      # 零运行时依赖：不需要 npm install
+      - name: Run tests
+        run: npm test
+
+      - name: CLI smoke test
+        run: node --experimental-strip-types --no-warnings src/cli.ts --help
+
+      - name: Generate delivery package smoke test
+        run: node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_start_stop.json -o out/ci-deliver

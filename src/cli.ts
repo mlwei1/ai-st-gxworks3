@@ -25,6 +25,8 @@ import {
 import { astToIecProject } from './emit/iec-project.ts';
 import { emitIecXml } from './emit/iecxml.ts';
 import { generateFromSpec } from './gen/generate.ts';
+import { deliverFromSpec, formatDeliverySummary } from './deliver/index.ts';
+import { runMcpServer } from './mcp/server.ts';
 import { parseCompilerErrors } from './gen/compiler-feedback.ts';
 import { listTemplates } from './templates/index.ts';
 import { formatSpecDiagnostics } from './spec/index.ts';
@@ -523,6 +525,51 @@ async function cmdGen(args: Args): Promise<number> {
   return 0;
 }
 
+/**
+ * `deliver <spec.json> [-o outdir] [--sim report.json] [--native-evidence a.png,b.png]`
+ * 生成交付工程包：ST/XML/标签 + report.md + trace.json + delivery.json(SHA256)。
+ */
+async function cmdDeliver(args: Args): Promise<number> {
+  const specPath = args._[0];
+  if (!specPath) {
+    console.error(
+      '用法: ai-st-gxworks3 deliver <spec.json> [-o outdir] [--sim report.json] [--native-evidence 证据1,证据2]',
+    );
+    return 2;
+  }
+  const nativeRaw = typeof args['native-evidence'] === 'string' ? args['native-evidence'] : undefined;
+  const nativeEvidencePaths = nativeRaw
+    ? nativeRaw.split(',').map((s) => s.trim()).filter(Boolean)
+    : undefined;
+  const target = typeof args.target === 'string' ? (args.target as 'FX5U' | 'FX5UJ' | 'iQ-R') : undefined;
+
+  const result = await deliverFromSpec({
+    specPath,
+    outDir: typeof args.out === 'string' ? args.out : undefined,
+    target,
+    simReportPath: typeof args.sim === 'string' ? args.sim : undefined,
+    nativeEvidencePaths,
+  });
+
+  console.log(formatDeliverySummary(result));
+  console.log(`文件数：${result.files.length}（SHA256 清单见 delivery.json）`);
+  for (const row of result.trace) {
+    console.log(`  ${row.id}: 本地=${row.localCheck} 仿真=${row.sim} 原生=${row.nativeCompile}`);
+  }
+  if (!result.ok) {
+    console.error('\n✖ 交付状态 FAIL（详见 report.md 失败诊断）');
+    return 1;
+  }
+  console.log('\n✓ 交付包已生成（人工审查点见 report.md 第 6 节）');
+  return 0;
+}
+
+/** `mcp`：启动内置 MCP Server（stdio）。 */
+async function cmdMcp(): Promise<number> {
+  await runMcpServer();
+  return 0;
+}
+
 async function cmdGenerate(args: Args): Promise<number> {
   const requirement = args._.join(' ') || (args.req as string);
   if (!requirement) {
@@ -633,6 +680,8 @@ function usage(): void {
   ai-st-gxworks3 check <file.st> [...]        校验 ST（语法 + 三菱方言检查）
   ai-st-gxworks3 gen <spec.json>              ★ Spec → 模板生成 ST + IEC XML 工程包
   ai-st-gxworks3 sim <scenario.json>           ★ 仿真场景校验 + 半自动断言（观测文件）
+  ai-st-gxworks3 deliver <spec.json>          ★ 交付工程包（报告 + 追溯矩阵 + SHA256）
+  ai-st-gxworks3 mcp                          启动 MCP Server（stdio，供 AI Agent 调用）
   ai-st-gxworks3 build-xml <file.st>          生成 IEC 61131-10 XML（可直接导入 GX Works3）
   ai-st-gxworks3 build-text <file.st>          生成 ST 文本 + 标签 CSV（备选通道）
   ai-st-gxworks3 generate "<需求>"             AI 生成 ST（LLM，旧流程）
@@ -689,6 +738,12 @@ async function main(): Promise<void> {
       break;
     case 'sim':
       code = await cmdSim(cmdArgs);
+      break;
+    case 'deliver':
+      code = await cmdDeliver(cmdArgs);
+      break;
+    case 'mcp':
+      code = await cmdMcp();
       break;
     case 'generate':
       code = await cmdGenerate(cmdArgs);

@@ -5,23 +5,27 @@ AI 驱动的三菱 PLC **GX Works3 ST 语言**代码生成与校验工具。
 面向 **MELSEC iQ-F / FX5U**（当前已验证；iQ-R 尚未验证），把自然语言控制需求变成可直接导入 GX Works3 的
 ST 程序，并在导入前完成语法与三菱方言的静态检查。
 
-> **v0.2 核心流程**：`build-xml` 生成 **IEC 61131-10 XML**（Program / FunctionBlock / Function + 标签 + 结构体一次导入），
-> 配合纯 ST 模板工程 `templates/FX5U_ST_Template.gx3` 使用，详见 [templates/README.md](templates/README.md)。
-> 总体设计与验证证据见 [docs/整体方案.md](docs/整体方案.md)。
+> **v0.3 核心流程（M0–M3 已验证）**：`gen`（Spec → ST + IEC 61131-10 XML）→ GX Works3 导入编译 →
+> `sim` 仿真场景断言 → `deliver` 交付包（报告 + 需求追溯矩阵 + SHA256）→ `mcp` 供 AI Agent 调用。
+> 纯 ST 模板工程 `templates/FX5U_ST_Template.gx3`；总体设计与证据见 [docs/整体方案.md](docs/整体方案.md)。
 
 ---
 
 ## 30 秒上手（v0.2）
 
 ```bash
-# 1. 生成 IEC 61131-10 XML（推荐）
-node --experimental-strip-types --no-warnings src/cli.ts build-xml examples/motor_demo.st -o ./out
+# 1. Spec → ST + IEC 61131-10 XML（8 个模板可选）
+node --experimental-strip-types --no-warnings src/cli.ts gen specs/motor_start_stop.json -o ./out
 
-# 2. 复制纯 ST 模板工程（不要直接改模板）
+# 2. 本地校验（语法 + 三菱方言）
+node --experimental-strip-types --no-warnings src/cli.ts check out/motor_start_stop.st
+
+# 3. 复制纯 ST 模板工程（不要直接改模板）→ GX Works3 导入 out/motor_start_stop.xml → 全部转换 0 error
 copy templates\FX5U_ST_Template.gx3 %TEMP%\run.gx3
 
-# 3. GX Works3 打开副本 → 工程 → 导入 → IEC61131-10 XML格式 → 选 out\motor_demo.xml
-# 4. 转换 → 全部转换（Shift+Alt+F4），检查 Error/Warning
+# 4. 仿真断言（半自动）与交付包
+node --experimental-strip-types --no-warnings src/cli.ts sim sim/motor_start_stop.sim.json --observed sim/motor_start_stop.obs.json
+node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_start_stop.json -o ./out/deliver_motor
 ```
 
 > **Spec 驱动生成（M1）**：`gen specs/motor_start_stop.json -o out` 会按模板生成 ST + IEC XML 工程包
@@ -29,6 +33,10 @@ copy templates\FX5U_ST_Template.gx3 %TEMP%\run.gx3
 >
 > **仿真场景断言（M2）**：`sim sim/motor_start_stop.sim.json --observed sim/motor_start_stop.obs.json`
 > 校验「写输入 → 读输出」场景（半自动执行器，详见 [sim/README.md](sim/README.md)）。
+>
+> **M3 交付与 MCP**：`deliver` 生成 report.md / trace.json（需求追溯矩阵）/ delivery.json（SHA256 清单）；
+> `node src/cli.ts mcp` 启动内置 MCP Server（5 个工具），供 Claude/DeepSeek 等 Agent 调用，
+> 详见 [docs/M3-交付与MCP.md](docs/M3-交付与MCP.md)。
 >
 > **LLM 兜底 + 编译诊断回灌**：模板失败时加 `--llm` 走 LLM 生成；把 GX Works3 转换错误整理成
 > JSON/文本后 `--llm --compiler-errors errors.json` 可带着真实编译错误重新生成
@@ -85,9 +93,11 @@ GX Works3 强制「结构化工程」模式，**变量声明与 ST 本体是分�
 |---|---|
 | **ST 解析器** | 自建词法/语法分析，覆盖 POU、VAR 段、STRUCT、CASE/FOR/WHILE/REPEAT、功能块调用 |
 | **三菱方言检查** | 拦截跨品牌写法、隐式类型转换、越界设备地址、非法变量名等 |
-| **文本输出** | 生成可直接粘贴的 ST 本体 + 标签录入表 + 全局标签 CSV |
-| **AI 生成层** | 系统提示词内嵌 FX5U 指令白名单与方言规则，输出结构化 JSON |
-| **CLI** | `check` / `build-text` / `generate` 三个子命令，零外部依赖 |
+| **Spec 驱动生成（M1）** | 需求规格 JSON → 8 个标准模板 → ST + IEC 61131-10 XML + 标签 CSV |
+| **仿真场景断言（M2）** | 场景 DSL + 观测文件断言 + CLI `sim`（GX Simulator3 半自动执行） |
+| **交付工程包（M3）** | `deliver`：report.md + 需求追溯矩阵 trace.json + SHA256 交付清单 |
+| **MCP Server（M3）** | `mcp`：stdio JSON-RPC，5 个工具（check/generate/build-xml/sim/deliver），供 AI Agent 调用 |
+| **CLI** | `check` / `gen` / `sim` / `deliver` / `mcp` / `build-xml` / `build-text` / `generate`，零运行时依赖 |
 
 ---
 
@@ -214,6 +224,26 @@ export ANTHROPIC_MODEL="deepseek-v4-pro[1m]"
 ```
 
 ---
+
+### `deliver` —— 交付工程包（M3）
+
+```bash
+ai-st-gxworks3 deliver specs/motor_start_stop.json -o out/deliver_motor `
+  --sim docs/evidence/M2/02-sim-scenario/report.json
+```
+
+产出 `report.md`（人读交付报告 + 需求追溯矩阵）、`trace.json`（机读追溯）、
+`delivery.json`（每个文件的 SHA256）、`artifacts/`（ST/XML/CSV/manifest）与 `evidence/`。
+失败也会产出报告并标 FAIL。详见 [docs/M3-交付与MCP.md](docs/M3-交付与MCP.md)。
+
+### `mcp` —— 内置 MCP Server（M3）
+
+```bash
+ai-st-gxworks3 mcp
+```
+
+stdio JSON-RPC 服务，暴露 `st_check` / `spec_generate` / `st_build_xml` / `sim_validate` / `deliver`
+五个工具，可直接挂到 Claude/DeepSeek 等支持 MCP 的 Agent 上。零依赖实现。
 
 ## 三菱方言规则
 
@@ -346,15 +376,14 @@ END_IF;
 
 ## 关于「工程 → 导入 → IEC61131-10 XML格式」
 
-这个功能确实存在，但导入后**程序内容为空**，不能用于本工作流。
+**已实测可用，是本工具的主路径（M0/M1 验证）**。GX Works3 1.128 上导入本工具生成的
+IEC 61131-10 XML 后，程序本体、局部标签、全局标签、结构体一次落地，`全部转换` **Error 0 / Warning 0**。
+（早期 v0.1 生成的 PLCopen TC6_0201 格式导入为空，该结论已作废；证据见 `docs/evidence/M0/`。）
 
-原因：它用的是 Mitsubishi 私有变体（`www.iec.ch/public/TC65SC65BWG7TF10`），
-结构是 `Types/GlobalNamespace/Program` + `Vars/Parameters` + `MainBody/BodyContent`。
-GX Works3 的导入器在这个路径下没有把 ST 主体与标签表关联起来。
-
-而且**标签根本不能通过这个菜单导入** —— 标签菜单只接受 CSV，XML 仅支持导出。
-
-所以本工具的路径是：标签用 CSV 导入，ST 本体用文本粘贴。
+注意事项：
+- 资源执行类型必须是 `scan`（本工具已固化），否则程序会被放到 Initial 只执行一次；
+- 锁存区变量（如 D200+）需声明为 `VAR_GLOBAL_RETAIN`，否则编译报 `0x11021040`（发射器已按此分组）；
+- 标签 CSV + 粘贴 ST 仍作为**备选通道**保留（`build-text`）。
 
 ---
 
@@ -401,7 +430,7 @@ docs/
 ## 开发
 
 ```bash
-npm test          # 104 个测试
+npm test          # 203 个测试（含 deliver / MCP 集成测试）
 npm run check -- examples/motor_demo.st
 ```
 

@@ -1,0 +1,51 @@
+{
+  "scenario": "motor_start_stop_sim",
+  "scenarioFile": "C:\\Users\\52900\\Documents\\项目\\ai_st_gxworks3\\sim\\motor_start_stop.sim.json",
+  "observedFile": "C:\\Users\\52900\\Documents\\项目\\ai_st_gxworks3\\sim\\motor_start_stop.obs.json",
+  "ok": true,
+  "mismatchCount": 0,
+  "steps": [
+    {
+      "step": 1,
+      "name": "按下启动 X0=1",
+      "status": "pass",
+      "mismatches": [],
+      "observed": {
+        "Y0": 1
+      },
+      "note": "启动按钮点动：写 X0=1 后 Y0 应为 ON"
+    },
+    {
+      "step": 2,
+      "name": "松开启动 X0=0（自锁保持）",
+      "status": "pass",
+      "mismatches": [],
+      "observed": {
+        "Y0": 1
+      },
+      "note": "程序自锁：X0 松开后 Y0 保持 ON"
+    },
+    {
+      "step": 3,
+      "name": "按下停止 X1=1",
+      "status": "pass",
+      "mismatches": [],
+      "observed": {
+        "Y0": 0
+      },
+      "note": "停止优先：Y0 应为 OFF"
+    },
+    {
+      "step": 4,
+      "name": "松开停止 X1=0",
+      "status": "pass",
+      "mismatches": [],
+      "observed": {
+        "Y0": 0
+      },
+      "note": "停止释放后保持停机，直到再次启动"
+    }
+  ],
+  "diagnostics": [],
+  "generatedAt": "2026-11-10T13:21:27.792Z"
+}

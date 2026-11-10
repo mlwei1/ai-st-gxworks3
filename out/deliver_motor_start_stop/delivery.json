@@ -1,0 +1,70 @@
+{
+  "generatedAt": "2026-11-10T15:16:43.725Z",
+  "spec": "C:\\Users\\52900\\Documents\\项目\\ai_st_gxworks3\\specs\\motor_start_stop.json",
+  "summary": {
+    "name": "motor_start_stop",
+    "title": "电机启停控制（启动/停止/故障联锁）",
+    "cpu": "FX5U / FX5U-32MT/ES",
+    "template": "motor_start_stop",
+    "generator": "template",
+    "generatedAt": "2026-11-10T15:16:43.725Z",
+    "ok": true,
+    "requirementCount": 5,
+    "passCount": 5,
+    "failCount": 0,
+    "simReport": {
+      "path": "evidence/sim-report.json",
+      "ok": true,
+      "mismatchCount": 0
+    },
+    "diagnostics": {
+      "errors": 0,
+      "warnings": 0
+    }
+  },
+  "evidenceFiles": [
+    "evidence/sim-report.json"
+  ],
+  "files": [
+    {
+      "path": "artifacts/diagnostics.json",
+      "sha256": "2bb88b713437bdcb8078c40ab4519aeeb770cb48681ce51dac2ac4d78265da2e",
+      "bytes": 66
+    },
+    {
+      "path": "artifacts/Main_local_labels.csv",
+      "sha256": "670c038f9fbabf0a7d90d2f51f555298e4cb4ca17d59df149a125a4da97ab778",
+      "bytes": 988
+    },
+    {
+      "path": "artifacts/manifest.json",
+      "sha256": "a7aedabeda87ee1301f50122aaea31b8b835e387aba0c1493e2e67bc08892334",
+      "bytes": 1726
+    },
+    {
+      "path": "artifacts/motor_start_stop.st",
+      "sha256": "d39b8dd5a28c9385f45e07abf3da4beca76f1cf59b93b804df52078d73c3ec23",
+      "bytes": 1085
+    },
+    {
+      "path": "artifacts/motor_start_stop.xml",
+      "sha256": "f29b89c9671867970bd17af74cd4504273db0d40a7a46805c8a772c2019fc0bd",
+      "bytes": 2097
+    },
+    {
+      "path": "evidence/sim-report.json",
+      "sha256": "37374768eae85623a5b66e1dfef8796fc37c9004420f955eb2e7654aab4669b4",
+      "bytes": 1249
+    },
+    {
+      "path": "report.md",
+      "sha256": "c42d4d65f1efae056df24e5691f88c9d97be6d881f29ab74def6587a4330426e",
+      "bytes": 2320
+    },
+    {
+      "path": "trace.json",
+      "sha256": "bdbeaaa363c0d46941b84fcb12628815cfe0e0172e05eb50e290c8a3eb4768cb",
+      "bytes": 2591
+    }
+  ]
+}
