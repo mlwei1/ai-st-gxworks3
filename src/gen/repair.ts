@@ -36,9 +36,11 @@ export interface RepairAttempt<T> extends RepairAttemptResult<T> {
 export interface RepairLoopOptions<T> {
   /** 最大尝试次数（含首次），默认 3。 */
   maxAttempts?: number;
+  /** 首轮就带上的初始反馈（如 GX Works3 编译错误），默认空串。 */
+  initialFeedback?: string;
   /**
    * 生成器：第 attempt 轮（1 起）调用；
-   * feedback 是上一轮诊断的格式化文本，首轮为空字符串。
+   * feedback 是上一轮诊断的格式化文本，首轮为空字符串（或 initialFeedback）。
    */
   generate: (attempt: number, feedback: string) => Promise<RepairAttemptResult<T>> | RepairAttemptResult<T>;
   /** 判定成功；默认「无 error 级诊断」即成功。 */
@@ -89,7 +91,7 @@ export async function runRepairLoop<T>(options: RepairLoopOptions<T>): Promise<R
   }
   const isSuccess = options.isSuccess ?? hasNoErrors;
   const attempts: RepairAttempt<T>[] = [];
-  let feedback = '';
+  let feedback = options.initialFeedback ?? '';
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const started = Date.now();

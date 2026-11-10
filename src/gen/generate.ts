@@ -27,6 +27,8 @@ import { analyzeST, type Diagnostic } from '../dialect/analyzer.ts';
 import { astToIecProject } from '../emit/iec-project.ts';
 import { emitIecXml } from '../emit/iecxml.ts';
 import { generateLabelCsvFiles } from '../emit/label-csv.ts';
+import { generateWithLlmFallback, type LlmSourceGenerator } from './llm.ts';
+import { compilerErrorsToDiagnostics, type CompilerErrorEntry } from './compiler-feedback.ts';
 import type { DiagnosticLike } from './repair.ts';
 
 export interface GenerateOptions {
@@ -34,6 +36,12 @@ export interface GenerateOptions {
   outDir?: string;
   /** 目标 CPU 覆盖（默认取 spec.cpu.series）。 */
   target?: 'FX5U' | 'FX5UJ' | 'iQ-R';
+  /** 模板失败时启用 LLM 兜底（需要 LLM 环境变量；测试可注入 llmGenerate）。 */
+  useLlm?: boolean;
+  /** 注入自定义 LLM 生成器（测试/替代模型）；提供时隐含启用兜底。 */
+  llmGenerate?: LlmSourceGenerator;
+  /** GX Works3 编译错误列表（半自动回灌），需同时启用 LLM。 */
+  compilerErrors?: CompilerErrorEntry[];
 }
 
 export interface GenerateResult {
@@ -47,6 +55,10 @@ export interface GenerateResult {
   /** 模板/生成告警（非阻断）。 */
   warnings: string[];
   templateName?: string;
+  /** 本次产物来自模板还是 LLM 兜底。 */
+  generator?: 'template' | 'llm';
+  /** 回灌的 GX Works3 编译诊断（manifest 用）。 */
+  compilerDiagnostics?: DiagnosticLike[];
   outDir: string;
   stPath?: string;
   xmlPath?: string;
@@ -109,32 +121,81 @@ export async function generateFromSpec(
   result.outDir = options.outDir ? resolve(options.outDir) : defaultOutDir(spec);
   await mkdir(result.outDir, { recursive: true });
 
-  // ---- 1) 模板实例化 ----
-  let stSource: string;
-  try {
-    const template = requireTemplate(spec.template.name);
-    const params = mergeParams(template, spec.template.params ?? {});
-    stSource = template.instantiate({
-      spec: {
-        name: spec.name,
-        cpu: spec.cpu,
-        io: spec.io,
-        vars: spec.vars,
-        requirements: spec.requirements,
-      },
-      params,
-    });
-    result.stSource = stSource;
-    result.attempts = 1;
-  } catch (e) {
-    result.diagnostics.push({
-      severity: 'error',
-      code: 'GEN_E_TEMPLATE',
-      message: e instanceof Error ? e.message : String(e),
-    });
+  // ---- 1) 生成 ST：模板优先；失败/编译错误回灌时走 LLM 兜底 ----
+  const llmEnabled = options.useLlm === true || typeof options.llmGenerate === 'function';
+  const tryTemplate = (): { ok: true; source: string } | { ok: false; error: string } => {
+    try {
+      const template = requireTemplate(spec.template.name);
+      const params = mergeParams(template, spec.template.params ?? {});
+      const source = template.instantiate({
+        spec: {
+          name: spec.name,
+          cpu: spec.cpu,
+          io: spec.io,
+          vars: spec.vars,
+          requirements: spec.requirements,
+        },
+        params,
+      });
+      return { ok: true, source };
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    }
+  };
+
+  let stSource: string | undefined;
+  let generator: 'template' | 'llm' = 'template';
+
+  // 场景 A：有编译错误回灌 → 优先让 LLM 带着真实编译错误重新生成。
+  if (options.compilerErrors && options.compilerErrors.length > 0) {
+    result.compilerDiagnostics = compilerErrorsToDiagnostics(options.compilerErrors);
+    if (!llmEnabled) {
+      result.warnings.push('收到 GX Works3 编译错误，但未启用 --llm；已忽略错误列表，按模板生成。');
+    } else {
+      const fb = await generateWithLlmFallback(spec, {
+        generate: options.llmGenerate,
+        compilerErrors: options.compilerErrors,
+      });
+      result.attempts = Math.max(1, fb.attempts.length);
+      if (fb.ok) {
+        stSource = fb.stSource;
+        generator = 'llm';
+      } else {
+        result.warnings.push('LLM 带着编译错误重生成后仍未通过本地检查，回退模板生成。');
+        result.diagnostics.push(...fb.diagnostics);
+      }
+    }
+  }
+
+  // 场景 B：常规路径（模板优先；模板失败且启用 LLM 时兜底）。
+  if (!stSource) {
+    const t = tryTemplate();
+    if (t.ok) {
+      stSource = t.source;
+      generator = 'template';
+      result.attempts = Math.max(result.attempts, 1);
+    } else if (llmEnabled) {
+      result.warnings.push(`模板实例化失败（${t.error}），改用 LLM 兜底生成。`);
+      const fb = await generateWithLlmFallback(spec, { generate: options.llmGenerate });
+      result.attempts = Math.max(1, fb.attempts.length);
+      if (fb.ok) {
+        stSource = fb.stSource;
+        generator = 'llm';
+      } else {
+        result.diagnostics.push({ severity: 'error', code: 'GEN_E_TEMPLATE', message: t.error });
+        result.diagnostics.push(...fb.diagnostics);
+      }
+    } else {
+      result.diagnostics.push({ severity: 'error', code: 'GEN_E_TEMPLATE', message: t.error });
+    }
+  }
+
+  if (!stSource) {
     await writeArtifacts(result, null);
     return result;
   }
+  result.stSource = stSource;
+  result.generator = generator;
 
   // ---- 2) 解析 + 方言检查 ----
   const { ast, errors } = parseWithRecovery(stSource);
@@ -233,10 +294,12 @@ async function writeArtifacts(
         }
       : { source: result.specPath },
     templateName: result.templateName ?? null,
+    generator: result.generator ?? null,
     generatedAt: new Date().toISOString(),
     ok: result.ok,
     attempts: result.attempts,
     diagnostics: result.diagnostics,
+    compilerDiagnostics: result.compilerDiagnostics ?? [],
     warnings: result.warnings,
     specDiagnostics: result.specDiagnostics,
   };
@@ -251,6 +314,7 @@ async function writeArtifacts(
       {
         spec: result.specDiagnostics,
         code: result.diagnostics,
+        compiler: result.compilerDiagnostics ?? [],
         warnings: result.warnings,
       },
       null,

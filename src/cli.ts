@@ -25,6 +25,7 @@ import {
 import { astToIecProject } from './emit/iec-project.ts';
 import { emitIecXml } from './emit/iecxml.ts';
 import { generateFromSpec } from './gen/generate.ts';
+import { parseCompilerErrors } from './gen/compiler-feedback.ts';
 import { listTemplates } from './templates/index.ts';
 import { formatSpecDiagnostics } from './spec/index.ts';
 import { convertAIGenerated, type AIGeneratedProject } from './ai/convert.ts';
@@ -59,7 +60,9 @@ function parseArgs(argv: string[]): Args {
         args[a.slice(2, eq)] = a.slice(eq + 1);
       } else {
         const next = argv[i + 1];
-        if (next && !next.startsWith('--')) {
+        // 值为下一个 token 时，只要它本身不是选项（- 开头）就消费；
+        // 避免 --llm -o out 把 -o 当成 --llm 的值。
+        if (next && !next.startsWith('-')) {
           args[a.slice(2)] = next;
           i++;
         } else {
@@ -344,12 +347,38 @@ async function cmdGen(args: Args): Promise<number> {
 
   const specPath = args._[0];
   if (!specPath) {
-    console.error('用法: ai-st-gxworks3 gen <spec.json> [-o outdir] [--list-templates]');
+    console.error('用法: ai-st-gxworks3 gen <spec.json> [-o outdir] [--llm] [--compiler-errors errors.json] [--list-templates]');
     return 2;
   }
 
   const outDir = typeof args.out === 'string' ? args.out : undefined;
-  const result = await generateFromSpec(resolve(specPath), { outDir });
+  const useLlm = args.llm === true || (typeof args.llm === 'string' && args.llm !== 'false');
+
+  // GX Works3 编译错误回灌（半自动）：--compiler-errors <file>（JSON 或纯文本）
+  let compilerErrors;
+  const compilerErrorsPath = typeof args['compiler-errors'] === 'string' ? args['compiler-errors'] : undefined;
+  if (compilerErrorsPath) {
+    if (!useLlm) {
+      console.error('--compiler-errors 需要同时指定 --llm（回灌需要 LLM 重新生成）。');
+      return 2;
+    }
+    try {
+      const raw = await readFile(resolve(compilerErrorsPath), 'utf8');
+      const parsed = parseCompilerErrors(raw);
+      compilerErrors = parsed.entries;
+      for (const w of parsed.diagnostics) console.warn(`▲ ${w.code}: ${w.message}`);
+      if (compilerErrors.length === 0) {
+        console.warn('▲ 编译错误文件中没有识别到有效条目，按普通 LLM 兜底流程继续。');
+      } else {
+        console.log(`已读取 ${compilerErrors.length} 条 GX Works3 编译错误，将作为修复反馈。`);
+      }
+    } catch (e) {
+      console.error(`读取编译错误文件失败：${e instanceof Error ? e.message : String(e)}`);
+      return 2;
+    }
+  }
+
+  const result = await generateFromSpec(resolve(specPath), { outDir, useLlm, compilerErrors });
 
   if (result.specDiagnostics.length > 0) {
     console.error(formatSpecDiagnostics(result.specDiagnostics));
@@ -376,7 +405,15 @@ async function cmdGen(args: Args): Promise<number> {
     return 1;
   }
 
-  console.log(`\n✓ 生成成功: ${result.spec?.name}（模板 ${result.templateName}）`);
+  console.log(
+    `\n✓ 生成成功: ${result.spec?.name}（${
+      result.generator === 'llm' ? 'LLM 兜底生成' : `模板 ${result.templateName}`
+    }）`,
+  );
+  if (result.compilerDiagnostics?.length) {
+    console.log(`  回灌编译错误: ${result.compilerDiagnostics.length} 条`);
+  }
+  if (result.attempts > 1) console.log(`  生成尝试: ${result.attempts} 轮`);
   if (result.stPath) console.log(`  ST       : ${result.stPath}`);
   if (result.xmlPath) console.log(`  IEC XML  : ${result.xmlPath}`);
   if (result.labelFiles?.length) console.log(`  标签 CSV : ${result.labelFiles.length} 个`);

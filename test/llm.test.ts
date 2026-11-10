@@ -5,7 +5,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { generateWithLlmFallback, specToRequirement } from '../src/gen/llm.ts';
+import {
+  generateWithCompilerFeedback,
+  generateWithLlmFallback,
+  specToRequirement,
+} from '../src/gen/llm.ts';
 import type { RequirementSpec } from '../src/spec/index.ts';
 
 const SPEC: RequirementSpec = {
@@ -99,4 +103,24 @@ test('LLM 兜底：生成器抛错时以 LLM_E_CALL 结束，不崩溃', async (
   });
   assert.equal(result.ok, false);
   assert.ok(result.diagnostics.some((d) => d.code === 'LLM_E_CALL' && d.message.includes('网络超时')));
+});
+
+test('编译错误回灌：首轮反馈带 GX Works3 错误，成功后 compilerDiagnostics 保留', async () => {
+  const feedbacks: string[] = [];
+  const result = await generateWithCompilerFeedback(
+    SPEC,
+    [{ code: '0x11021040', message: '锁存区标签必须为 RETAIN', line: 12, pou: 'Main' }],
+    {
+      maxAttempts: 2,
+      generate: async ({ feedback }) => {
+        feedbacks.push(feedback);
+        return GOOD_ST;
+      },
+    },
+  );
+  assert.equal(result.ok, true);
+  assert.equal(result.attempts.length, 1);
+  assert.match(feedbacks[0]!, /0x11021040/);
+  assert.equal(result.compilerDiagnostics?.length, 1);
+  assert.equal(result.compilerDiagnostics?.[0].code, 'GXW3_0x11021040');
 });

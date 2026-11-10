@@ -27,6 +27,10 @@ copy templates\FX5U_ST_Template.gx3 %TEMP%\run.gx3
 > **Spec 驱动生成（M1）**：`gen specs/motor_start_stop.json -o out` 会按模板生成 ST + IEC XML 工程包
 > （`specs/` 下有 3 个示例；`gen --list-templates` 查看 8 个标准模板）。
 >
+> **LLM 兜底 + 编译诊断回灌**：模板失败时加 `--llm` 走 LLM 生成；把 GX Works3 转换错误整理成
+> JSON/文本后 `--llm --compiler-errors errors.json` 可带着真实编译错误重新生成
+> （详见 [docs/编译诊断回灌.md](docs/编译诊断回灌.md)；LLM 需要 `ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN`）。
+>
 > 备用通道（v0.1，标签 CSV + 粘贴 ST 正文）：`build-text`，见 [docs/快速上手.md](docs/快速上手.md)；
 > 该文档中「标签 XML 导入」的说法已过时（标签编辑器只支持 CSV 导入）。
 

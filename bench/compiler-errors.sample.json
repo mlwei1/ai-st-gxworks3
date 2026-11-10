@@ -1,0 +1,13 @@
+[
+  {
+    "code": "0x11021040",
+    "message": "标签分配在锁存区，但未声明 RETAIN",
+    "line": 12,
+    "pou": "Main"
+  },
+  {
+    "message": "未定义的标识符 'bFault'",
+    "line": 30,
+    "pou": "Main"
+  }
+]

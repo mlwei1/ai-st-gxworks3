@@ -19,6 +19,11 @@ import {
   type DiagnosticLike,
   type RepairAttempt,
 } from './repair.ts';
+import {
+  compilerErrorsToDiagnostics,
+  formatCompilerFeedback,
+  type CompilerErrorEntry,
+} from './compiler-feedback.ts';
 
 export interface LlmSourceContext {
   spec: RequirementSpec;
@@ -36,6 +41,11 @@ export interface LlmFallbackOptions {
   generate?: LlmSourceGenerator;
   /** 最大轮数（含首轮），默认 3。 */
   maxAttempts?: number;
+  /**
+   * GX Works3 编译错误（半自动回灌）：作为首轮反馈喂给生成器。
+   * 错误列表需要先从 GX Works3 Output 人工整理/导出为 JSON 或文本。
+   */
+  compilerErrors?: CompilerErrorEntry[];
 }
 
 export interface LlmFallbackResult {
@@ -46,6 +56,8 @@ export interface LlmFallbackResult {
   ast?: AST;
   diagnostics: DiagnosticLike[];
   attempts: RepairAttempt<string>[];
+  /** 回灌的编译诊断（manifest/日志用）。 */
+  compilerDiagnostics?: DiagnosticLike[];
   /** 模板名不适用时，调用方的提示。 */
   note?: string;
 }
@@ -128,8 +140,16 @@ export async function generateWithLlmFallback(
   let lastSource = '';
   let lastAst: AST | undefined;
 
+  const compilerDiagnostics = options.compilerErrors
+    ? compilerErrorsToDiagnostics(options.compilerErrors)
+    : undefined;
+  const initialFeedback = options.compilerErrors
+    ? formatCompilerFeedback(options.compilerErrors)
+    : undefined;
+
   const loop = await runRepairLoop<string>({
     maxAttempts: options.maxAttempts ?? 3,
+    initialFeedback,
     generate: async (attempt, feedback) => {
       let source: string;
       try {
@@ -156,8 +176,21 @@ export async function generateWithLlmFallback(
     attempts: loop.attempts,
   };
   if (lastAst) result.ast = lastAst;
+  if (compilerDiagnostics) result.compilerDiagnostics = compilerDiagnostics;
   if (!loop.ok) {
-    result.note = 'LLM 兜底未通过本地检查；建议改模板或人工介入（真机编译诊断回灌待接入）';
+    result.note = 'LLM 兜底未通过本地检查；建议改模板或人工介入';
   }
   return result;
+}
+
+/**
+ * 半自动编译诊断回灌：把 GX Works3 全部转换的错误列表作为首轮反馈，
+ * 让生成器带着真实编译错误重新生成。
+ */
+export async function generateWithCompilerFeedback(
+  spec: RequirementSpec,
+  compilerErrors: CompilerErrorEntry[],
+  options: Omit<LlmFallbackOptions, 'compilerErrors'> = {},
+): Promise<LlmFallbackResult> {
+  return generateWithLlmFallback(spec, { ...options, compilerErrors });
 }
