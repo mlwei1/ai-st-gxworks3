@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="www.iec.ch/public/TC65SC65BWG7TF10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.000" xsi:schemaLocation="www.iec.ch/public/TC65SC65BWG7TF10 GXW3_IEC61131_10_Ed1_0_ForGXW3.xsd">
+  <FileHeader companyName="MITSUBISHI ELECTRIC CORPORATION" companyURL="http://www.mitsubishielectric.com" productName="GX Works3" productVersion="ver.1.0"/>
+  <ContentHeader name="robot_transfer" creationDateTime="2026-11-10T14:29:29.070Z" modificationDateTime="2026-11-10T14:29:29.070Z"/>
+  <Types>
+    <GlobalNamespace>
+      <Program name="Main">
+        <Vars accessSpecifier="private">
+          <Variable name="nStep">
+            <Type>
+              <TypeName>INT</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="0"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bRun">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bX0Last">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bDelayAck">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="tStep">
+            <Type>
+              <TypeName>TON</TypeName>
+            </Type>
+          </Variable>
+          <Variable name="tStepTime">
+            <Type>
+              <TypeName>TIME</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="T#1500ms"/>
+            </InitialValue>
+          </Variable>
+        </Vars>
+        <MainBody>
+          <BodyContent xsi:type="ST">
+            <ST>IF X1 OR X2 THEN
+    bRun := FALSE;
+    bDelayAck := FALSE;
+    nStep := 0;
+END_IF;
+IF X0 AND NOT bX0Last AND NOT X1 AND NOT X2 THEN
+    bRun := TRUE;
+    bDelayAck := FALSE;
+    nStep := 1;
+END_IF;
+bX0Last := X0;
+CASE nStep OF
+    1:
+        tStepTime := T#1500ms;
+    2:
+        tStepTime := T#600ms;
+    3:
+        tStepTime := T#1500ms;
+    4:
+        tStepTime := T#2000ms;
+    5:
+        tStepTime := T#1500ms;
+    6:
+        tStepTime := T#600ms;
+    7:
+        tStepTime := T#1500ms;
+    8:
+        tStepTime := T#2000ms;
+ELSE
+    tStepTime := T#500ms;
+END_CASE;
+tStep(IN := bRun AND NOT bDelayAck, PT := tStepTime);
+IF tStep.Q THEN
+    bDelayAck := TRUE;
+    IF nStep &gt;= 8 THEN
+        nStep := 0;
+        bRun := FALSE;
+    ELSE
+        nStep := nStep + 1;
+    END_IF;
+END_IF;
+IF NOT tStep.Q THEN
+    bDelayAck := FALSE;
+END_IF;
+Y0 := FALSE;
+Y1 := FALSE;
+Y2 := FALSE;
+Y3 := FALSE;
+Y4 := FALSE;
+IF bRun THEN
+    CASE nStep OF
+        1:
+            Y0 := TRUE;
+        2:
+            Y0 := TRUE;
+            Y2 := TRUE;
+        3:
+            Y1 := TRUE;
+            Y2 := TRUE;
+        4:
+            Y2 := TRUE;
+            Y3 := TRUE;
+        5:
+            Y0 := TRUE;
+            Y2 := TRUE;
+            Y3 := TRUE;
+        6:
+            Y0 := TRUE;
+            Y3 := TRUE;
+        7:
+            Y1 := TRUE;
+            Y3 := TRUE;
+        8:
+            Y4 := TRUE;
+    END_CASE;
+END_IF;</ST>
+          </BodyContent>
+        </MainBody>
+      </Program>
+    </GlobalNamespace>
+  </Types>
+  <Instances>
+    <Configuration name="config1">
+      <Resource name="Main" resourceTypeName="prgFile">
+        <AddData>
+          <Data name="http://www.mitsubishielectric.com/xml/ResourceExecutionType" handleUnknown="implementation">
+            <ResourceExecutionType type="scan"/>
+          </Data>
+        </AddData>
+        <ProgramInstance name="Main" typeName="pou" evaluationOrder="1"/>
+      </Resource>
+      <GlobalVars constant="false" retain="false">
+      </GlobalVars>
+    </Configuration>
+  </Instances>
+</Project>

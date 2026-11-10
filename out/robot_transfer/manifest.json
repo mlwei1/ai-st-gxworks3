@@ -1,0 +1,13 @@
+{
+  "tool": "ai-st-gxworks3",
+  "format": "IEC61131-10",
+  "target": "FX5U",
+  "source": "robot_transfer.st",
+  "generatedAt": "2026-11-10T14:29:29.080Z",
+  "programs": [
+    "Main"
+  ],
+  "structs": [],
+  "globalVars": [],
+  "warnings": []
+}
