@@ -126,3 +126,20 @@ END_FUNCTION
   assert.ok(xml.includes('<ResultType>'));
   assert.ok(xml.includes('<TempVars>'));
 });
+
+test('映射：FB 实例化与调用（fbMotor : FB_Motor; fbMotor.bRunning）完整进入 XML', () => {
+  const src = readFileSync(resolve(here, '../examples/fb_call_demo.st'), 'utf8');
+  const ast = parse(src);
+  const { project } = astToIecProject(ast);
+  const main = project.programs.find((p) => p.name === 'Main');
+  assert.ok(main);
+  const fbVar = main.vars.find((v) => v.name === 'fbMotor');
+  assert.equal(fbVar?.type, 'FB_Motor');
+  const fb = project.functionBlocks?.find((f) => f.name === 'FB_Motor');
+  assert.ok(fb);
+  const xml = emitIecXml(project);
+  assert.ok(xml.includes('<Variable name="fbMotor">'));
+  assert.ok(xml.includes('<TypeName>FB_Motor</TypeName>'));
+  assert.ok(xml.includes('fbMotor(bEnable := bStart, nTarget := 100);'));
+  assert.ok(xml.includes('IF fbMotor.bRunning THEN'));
+});
