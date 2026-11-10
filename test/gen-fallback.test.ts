@@ -104,6 +104,47 @@ test('编译错误回灌：首轮反馈包含 GX 错误码，重生成后成功'
   }
 });
 
+test('编译错误回灌但 LLM 不可用：回退模板成功，LLM 失败仅告警', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'aist-fallback-'));
+  try {
+    const specPath = join(dir, 'spec.json');
+    // 用可正常实例化的 spec，确保模板回退能成功
+    await writeFile(
+      specPath,
+      JSON.stringify({
+        name: 'cf_fallback_demo',
+        cpu: { series: 'FX5U' },
+        template: { name: 'motor_start_stop', params: { faultReset: 'manual' } },
+        io: [
+          { device: 'X0', name: 'bStart', type: 'BOOL' },
+          { device: 'X1', name: 'bStop', type: 'BOOL' },
+          { device: 'X2', name: 'bFault', type: 'BOOL' },
+          { device: 'X3', name: 'bReset', type: 'BOOL' },
+          { device: 'Y0', name: 'bMotor', type: 'BOOL' },
+        ],
+        requirements: [{ id: 'R1', text: '启停' }],
+      }),
+      'utf8',
+    );
+    const result = await generateFromSpec(specPath, {
+      outDir: join(dir, 'out'),
+      useLlm: true,
+      compilerErrors: [{ code: '0x11021040', message: '锁存区标签必须为 RETAIN', line: 12 }],
+      llmGenerate: async () => {
+        throw new Error('未配置 LLM 凭据');
+      },
+    });
+    assert.equal(result.ok, true, `诊断: ${JSON.stringify(result.diagnostics)}`);
+    assert.equal(result.generator, 'template');
+    assert.ok(result.xmlPath && existsSync(result.xmlPath));
+    assert.ok(result.warnings.some((w) => w.includes('回退模板')));
+    assert.ok(result.warnings.some((w) => w.includes('LLM_E_CALL') || w.includes('未配置 LLM')));
+    assert.equal(result.compilerDiagnostics?.length, 1);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('编译错误回灌但未启用 LLM：告警并回退模板生成', async () => {
   const { dir } = await setup();
   try {

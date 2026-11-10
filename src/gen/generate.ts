@@ -161,8 +161,11 @@ export async function generateFromSpec(
         stSource = fb.stSource;
         generator = 'llm';
       } else {
-        result.warnings.push('LLM 带着编译错误重生成后仍未通过本地检查，回退模板生成。');
-        result.diagnostics.push(...fb.diagnostics);
+        // LLM 不可用时不应阻断确定性模板路径：把失败记为告警，回退模板。
+        result.warnings.push('LLM 带着编译错误重生成未通过本地检查，回退模板生成。');
+        for (const d of fb.diagnostics) {
+          result.warnings.push(`LLM ${d.code}: ${d.message}`);
+        }
       }
     }
   }
