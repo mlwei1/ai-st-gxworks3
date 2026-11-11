@@ -25,6 +25,7 @@ import {
 import { astToIecProject } from './emit/iec-project.ts';
 import { emitIecXml } from './emit/iecxml.ts';
 import { generateFromSpec } from './gen/generate.ts';
+import { extractPouBodies } from './pipeline/pou-text.ts';
 import { deliverFromSpec, formatDeliverySummary } from './deliver/index.ts';
 import { runMcpServer } from './mcp/server.ts';
 import { parseCompilerErrors } from './gen/compiler-feedback.ts';
@@ -296,6 +297,8 @@ async function cmdBuildXml(args: Args): Promise<number> {
   const mapped = astToIecProject(ast, {
     contentName: projectName,
     createdAt: new Date().toISOString(),
+    // 保留原始正文注释（AST 不携带语句级注释）
+    bodyTexts: extractPouBodies(src),
   });
   for (const w of mapped.warnings) console.log(`▲ ${w}`);
 

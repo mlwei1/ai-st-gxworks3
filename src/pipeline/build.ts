@@ -10,6 +10,7 @@ import { analyzeST, type Diagnostic } from '../dialect/analyzer.ts';
 import { astToIecProject } from '../emit/iec-project.ts';
 import { emitIecXml } from '../emit/iecxml.ts';
 import { generateLabelCsvFiles } from '../emit/label-csv.ts';
+import { extractPouBodies } from './pou-text.ts';
 
 export interface BuildXmlOptions {
   /** XML 内程序内容名（默认 ST 文件名）。 */
@@ -59,6 +60,8 @@ export async function buildXmlFromStFile(
   const mapped = astToIecProject(ast, {
     contentName: projectName,
     createdAt: new Date().toISOString(),
+    // 保留原始正文注释（AST 不携带语句级注释）
+    bodyTexts: extractPouBodies(source),
   });
   result.warnings.push(...mapped.warnings);
   const xml = emitIecXml(mapped.project);

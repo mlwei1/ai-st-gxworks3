@@ -189,7 +189,9 @@ node --experimental-strip-types --no-warnings src/cli.ts check out/robot_steps/r
 
 证据：
 - [02-step-program-gx-import.png](evidence/M3/02-step-program-gx-import.png)：程序树（Main 在 MAIN 下）+ 输出窗口 Error:0；
-- [03-step-program-gx-labels.png](evidence/M3/03-step-program-gx-labels.png)：Main 的局部标签（生成变量已导入）。
+- [03-step-program-gx-labels.png](evidence/M3/03-step-program-gx-labels.png)：Main 的局部标签（生成变量已导入）；
+- [04-step-program-gx-comments.png](evidence/M3/04-step-program-gx-comments.png)：**导入后程序正文保留注释**
+  （XML 正文直接使用 ST 源文件原始正文，而不是从 AST 重新生成；2026-11-11 验证 Error:0）。
 
 > 踩坑记录：若新建工程时 GX 自动生成了空 SFC 骨架程序（`000:Block [SFC]`），
 > 全部转换会报 `Action0/Transition0 未定义`（这是空 SFC 骨架的问题，**不是**我们生成的 ST 代码）。

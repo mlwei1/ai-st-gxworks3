@@ -25,6 +25,11 @@ export interface AstToIecOptions {
   contentName?: string;
   /** ContentHeader 时间戳（ISO 8601）；默认使用发射器的确定性固定值。 */
   createdAt?: string;
+  /**
+   * POU 名 → 原始 ST 正文（保留注释/格式）。
+   * 有值时优先于 unparse(pou.body)，避免语句级注释在 XML 中丢失。
+   */
+  bodyTexts?: ReadonlyMap<string, string>;
 }
 
 export interface AstToIecResult {
@@ -145,13 +150,21 @@ export function astToIecProject(ast: AST, options: AstToIecOptions = {}): AstToI
   const functions: IecFunction[] = [];
 
   for (const pou of ast.pous) {
+    const originalBody = options.bodyTexts?.get(pou.name);
     if (pou.pouType === 'program') {
-      programs.push(mapProgram(pou, warnings));
+      const program = mapProgram(pou, warnings);
+      if (originalBody !== undefined) program.bodySt = originalBody;
+      programs.push(program);
     } else if (pou.pouType === 'functionBlock') {
-      functionBlocks.push(mapFunctionBlock(pou, warnings));
+      const fb = mapFunctionBlock(pou, warnings);
+      if (originalBody !== undefined) fb.bodySt = originalBody;
+      functionBlocks.push(fb);
     } else {
       const fn = mapFunction(pou, warnings);
-      if (fn) functions.push(fn);
+      if (fn) {
+        if (originalBody !== undefined) fn.bodySt = originalBody;
+        functions.push(fn);
+      }
     }
   }
 

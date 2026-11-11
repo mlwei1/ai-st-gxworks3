@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="www.iec.ch/public/TC65SC65BWG7TF10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.000" xsi:schemaLocation="www.iec.ch/public/TC65SC65BWG7TF10 GXW3_IEC61131_10_Ed1_0_ForGXW3.xsd">
   <FileHeader companyName="MITSUBISHI ELECTRIC CORPORATION" companyURL="http://www.mitsubishielectric.com" productName="GX Works3" productVersion="ver.1.0"/>
-  <ContentHeader name="robot_transfer_steps" creationDateTime="2026-11-11T02:08:53.618Z" modificationDateTime="2026-11-11T02:08:53.618Z"/>
+  <ContentHeader name="robot_transfer_steps" creationDateTime="2026-11-11T03:31:14.787Z" modificationDateTime="2026-11-11T03:31:14.787Z"/>
   <Types>
     <GlobalNamespace>
       <Program name="Main">
@@ -33,84 +33,117 @@
         </Vars>
         <MainBody>
           <BodyContent xsi:type="ST">
-            <ST>IF (X1) OR (X2) THEN
-    bRun := FALSE;
-    nStep := 0;
-END_IF;
-IF (X0) AND NOT bStartLast AND NOT bRun AND NOT (X1) AND NOT (X2) THEN
-    bRun := TRUE;
-    nStep := 1;
-END_IF;
-bStartLast := (X0);
-IF bRun THEN
-    CASE nStep OF
-        1:
-            IF (X10) THEN
-                nStep := 2;
-            END_IF;
-        2:
-            IF (X11) THEN
-                nStep := 3;
-            END_IF;
-        3:
-            IF (X12) THEN
-                nStep := 4;
-            END_IF;
-        4:
-            IF (X13) THEN
-                nStep := 5;
-            END_IF;
-        5:
-            IF (X10) THEN
-                nStep := 6;
-            END_IF;
-        6:
-            IF (X15) THEN
-                nStep := 7;
-            END_IF;
-        7:
-            IF (X12) THEN
-                nStep := 8;
-            END_IF;
-        8:
-            IF (X14) THEN
-                nStep := 0;
-                bRun := FALSE;
-            END_IF;
-    END_CASE;
-END_IF;
-Y0 := FALSE;
-Y1 := FALSE;
-Y2 := FALSE;
-Y3 := FALSE;
-Y4 := FALSE;
-IF bRun THEN
-    CASE nStep OF
-        1:
-            Y0 := TRUE;
-        2:
-            Y0 := TRUE;
-            Y2 := TRUE;
-        3:
-            Y1 := TRUE;
-            Y2 := TRUE;
-        4:
-            Y2 := TRUE;
-            Y3 := TRUE;
-        5:
-            Y0 := TRUE;
-            Y2 := TRUE;
-            Y3 := TRUE;
-        6:
-            Y0 := TRUE;
-            Y3 := TRUE;
-        7:
-            Y1 := TRUE;
-            Y3 := TRUE;
-        8:
-            Y4 := TRUE;
-    END_CASE;
-END_IF;</ST>
+            <ST>    // ---- 步号对照（便于审查） ----
+    // 0 = 待机（idle）
+    // 1 = S1 竖直下降
+    // 2 = S2 夹爪夹紧
+    // 3 = S3 竖直上升
+    // 4 = S4 水平右移
+    // 5 = S5 右位竖直下降
+    // 6 = S6 夹爪松开
+    // 7 = S7 松开后上升
+    // 8 = S8 水平左移回原位
+
+    // 1) 停止 / 故障：直接回待机
+    IF (X1) OR (X2) THEN
+        bRun := FALSE;
+        nStep := 0;
+    END_IF;
+
+    // 2) 启动：启动条件上升沿（且无停止/故障）
+    IF (X0) AND NOT bStartLast AND NOT bRun AND NOT (X1) AND NOT (X2) THEN
+        bRun := TRUE;
+        nStep := 1;
+    END_IF;
+    bStartLast := (X0);
+
+    // 3) 步转移（选择分支按顺序先真先走）
+    IF bRun THEN
+        CASE nStep OF
+            // S1 竖直下降
+            1:
+                IF (X10) THEN
+                    nStep := 2;
+                END_IF;
+            // S2 夹爪夹紧
+            2:
+                IF (X11) THEN
+                    nStep := 3;
+                END_IF;
+            // S3 竖直上升
+            3:
+                IF (X12) THEN
+                    nStep := 4;
+                END_IF;
+            // S4 水平右移
+            4:
+                IF (X13) THEN
+                    nStep := 5;
+                END_IF;
+            // S5 右位竖直下降
+            5:
+                IF (X10) THEN
+                    nStep := 6;
+                END_IF;
+            // S6 夹爪松开
+            6:
+                IF (X15) THEN
+                    nStep := 7;
+                END_IF;
+            // S7 松开后上升
+            7:
+                IF (X12) THEN
+                    nStep := 8;
+                END_IF;
+            // S8 水平左移回原位
+            8:
+                IF (X14) THEN
+                    nStep := 0; bRun := FALSE;
+                END_IF;
+        END_CASE;
+    END_IF;
+
+    // 4) 输出驱动：先复位本程序用到的输出，再按当前步置位
+    Y0 := FALSE;
+    Y1 := FALSE;
+    Y2 := FALSE;
+    Y3 := FALSE;
+    Y4 := FALSE;
+    IF bRun THEN
+        CASE nStep OF
+            // S1
+            1:
+                Y0 := TRUE;
+            // S2
+            2:
+                Y0 := TRUE;
+                Y2 := TRUE;
+            // S3
+            3:
+                Y1 := TRUE;
+                Y2 := TRUE;
+            // S4
+            4:
+                Y2 := TRUE;
+                Y3 := TRUE;
+            // S5
+            5:
+                Y0 := TRUE;
+                Y2 := TRUE;
+                Y3 := TRUE;
+            // S6
+            6:
+                Y0 := TRUE;
+                Y3 := TRUE;
+            // S7
+            7:
+                Y1 := TRUE;
+                Y3 := TRUE;
+            // S8
+            8:
+                Y4 := TRUE;
+        END_CASE;
+    END_IF;</ST>
           </BodyContent>
         </MainBody>
       </Program>

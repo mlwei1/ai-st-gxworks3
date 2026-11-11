@@ -29,6 +29,7 @@ import { emitIecXml } from '../emit/iecxml.ts';
 import { generateLabelCsvFiles } from '../emit/label-csv.ts';
 import { generateWithLlmFallback, type LlmSourceGenerator } from './llm.ts';
 import { generateStepSequence } from './step-sequence.ts';
+import { extractPouBodies } from '../pipeline/pou-text.ts';
 import { compilerErrorsToDiagnostics, type CompilerErrorEntry } from './compiler-feedback.ts';
 import type { DiagnosticLike } from './repair.ts';
 
@@ -251,7 +252,12 @@ export async function generateFromSpec(
   let xml: string | null = null;
   if (!hasError) {
     try {
-      const mapped = astToIecProject(ast, { contentName: spec.name, createdAt: new Date().toISOString() });
+      const mapped = astToIecProject(ast, {
+        contentName: spec.name,
+        createdAt: new Date().toISOString(),
+        // 保留原始正文注释（AST 不携带语句级注释）
+        bodyTexts: extractPouBodies(stSource),
+      });
       result.warnings.push(...mapped.warnings);
       xml = emitIecXml(mapped.project);
       result.ok = true;
