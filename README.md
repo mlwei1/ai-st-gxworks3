@@ -107,8 +107,8 @@ $t=$t.Replace('### `deliver` —— 交付工程包（M3）',
 ai-st-gxworks3 gen specs/robot_transfer_steps.json -o out/robot_steps
 ```
 
-生成物是「步号状态机」：`nStep` + 步转移 `CASE` + 按步输出，等价梯形图 STL 的步进写法。
-支持：选择分支（多条 `next`）、延时转移（`delayMs`）、表达式动作；并行分支暂不支持。
+生成物是「步号状态机」：`nStep` + 步转移 `CASE` + 按步输出，等价梯形图 STL 的步进写法（**纯 ST，不含 SFC 对象**）。
+支持：选择分支（多条 `next`）、延时转移（`delayMs`）、表达式动作；并行分支暂不支持。specs/robot_transfer_steps.json 已通过 GX Works3 导入 + 全部转换验证（Error:0，见 [docs/ST步进程序.md](docs/ST步进程序.md)）。
 详见 [docs/ST步进程序.md](docs/ST步进程序.md)。
 
 ### `deliver` —— 交付工程包（M3）

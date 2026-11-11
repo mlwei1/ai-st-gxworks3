@@ -176,7 +176,25 @@ node --experimental-strip-types --no-warnings src/cli.ts gen specs/robot_transfe
 node --experimental-strip-types --no-warnings src/cli.ts check out/robot_steps/robot_transfer_steps.st
 ```
 
-然后按常规流程导入 GX Works3（模板工程 → 工程 → 导入 IEC61131-10 XML → 全部转换）。
+### GX Works3 导入验证（2026-11-11，FX5U，GX Works3 1.128.0.1）
+
+验证流程（**不要生成 SFC 骨架程序**）：
+
+1. GX Works3 → 新建工程：系列 FX5CPU / 机型 FX5U / **程序语言「不指定」**；
+2. 工程(P) → 导入文件 → IEC61131-10 XML格式 → 选 `out/robot_steps/robot_transfer_steps.xml`；
+3. 转换(C) → 全部转换(R) → 确定。
+
+结果：ST Program 直接落在 **程序 → 扫描 → Main → Main**（程序本体 + 局部标签 `nStep`/`bRun`/`bStartLast`），
+全部转换 **Error:0 Warning:0**。
+
+证据：
+- [02-step-program-gx-import.png](evidence/M3/02-step-program-gx-import.png)：程序树（Main 在 MAIN 下）+ 输出窗口 Error:0；
+- [03-step-program-gx-labels.png](evidence/M3/03-step-program-gx-labels.png)：Main 的局部标签（生成变量已导入）。
+
+> 踩坑记录：若新建工程时 GX 自动生成了空 SFC 骨架程序（`000:Block [SFC]`），
+> 全部转换会报 `Action0/Transition0 未定义`（这是空 SFC 骨架的问题，**不是**我们生成的 ST 代码）。
+> 处理：不要生成 SFC 程序；若已生成，先在工程树删除该 SFC 骨架程序，再导入/转换。
+> 我们的 `step_sequence` 只生成 ST 源码（`CASE nStep`），不生成任何 SFC 对象。
 
 示例：
 - `specs/robot_transfer_steps.json`：搬运机械手 8 步（下降→夹紧→上升→右移→下降→松开→上升→左移），
