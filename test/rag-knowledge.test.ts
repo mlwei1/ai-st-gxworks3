@@ -64,3 +64,47 @@ test('官方手册附3：iQ-F 不支持 Unicode 字符串常数（双引号）�
   ].join('\n');
   assert.ok(!codes(ascii).includes('W010'));
 });
+
+test('指令篇：ST 中 LIMIT 是 3 参通用功能，不再误报方言陷阱', () => {
+  const src = [
+    'PROGRAM Main',
+    'VAR',
+    '    nIn : INT;',
+    '    nOut : INT;',
+    'END_VAR',
+    'nOut := LIMIT(0, nIn, 100);',
+    'END_PROGRAM',
+  ].join('\n');
+  const result = codes(src);
+  assert.ok(!result.includes('W006'), `不应再报 LIMIT 陷阱，实际：${result.join(',')}`);
+  assert.ok(!result.includes('E011'), `3 参 LIMIT 参数个数应正确，实际：${result.join(',')}`);
+});
+
+test('指令篇：LIMIT 4 操作数指令形式在 ST 中应报参数个数错误', () => {
+  const src = [
+    'PROGRAM Main',
+    'VAR',
+    '    nIn : INT;',
+    '    nOut : INT;',
+    'END_VAR',
+    'LIMIT(0, 100, nIn, nOut);',
+    'END_PROGRAM',
+  ].join('\n');
+  assert.ok(codes(src).includes('E011'), ' 4 参 LIMIT 应报 E011（梯形图指令不支持 ST）');
+});
+
+test('指令篇：RAMPF 指令（ST 形式 ENO:=RAMPF(EN,s1,s2,n,d)）可识别', () => {
+  const src = [
+    'PROGRAM Main',
+    'VAR',
+    '    bEn : BOOL;',
+    '    bEno : BOOL;',
+    '    nOut : INT;',
+    'END_VAR',
+    'bEno := RAMPF(bEn, 0, 100, 10, nOut);',
+    'END_PROGRAM',
+  ].join('\n');
+  const result = codes(src);
+  assert.ok(!result.includes('W007'), `RAMPF 不应再报“无法确认”，实际：${result.join(',')}`);
+  assert.ok(!result.includes('E011'), `RAMPF 5 参应匹配，实际：${result.join(',')}`);
+});

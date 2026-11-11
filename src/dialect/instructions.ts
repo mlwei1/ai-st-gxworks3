@@ -60,7 +60,12 @@ export const STANDARD_FUNCTIONS: Record<string, { min: number; max: number; ret:
   // 多参函数
   MAX: { min: 2, max: 255, ret: null },
   MIN: { min: 2, max: 255, ret: null },
+  // ST 中使用「通用功能 LIMIT」：d := LIMIT(s1下限, s2输入值, s3上限)；
+  // 梯形图指令 LIMIT(P) 不支持 ST 语言（JY997D58901 p712 注），不要按 4 操作数指令写法调用。
   LIMIT: { min: 3, max: 3, ret: null },
+  // 斜坡信号指令（应用指令）：ENO := RAMPF(EN, s1初始值, s2目标值, n扫描次数, d数组)；
+  // JY997D58901 8.17 p747。返回 ENO。
+  RAMPF: { min: 5, max: 5, ret: 'BOOL' },
   SEL: { min: 3, max: 3, ret: null },
   MUX: { min: 2, max: 255, ret: null },
   // 位操作
@@ -106,10 +111,8 @@ export const MITSUBISHI_FUNCTIONS: Record<string, { argTypes: string[]; ret: str
  * key 为函数名，value 为说明，校验器命中即报错。
  */
 export const KNOWN_TRAPS: Record<string, string> = {
-  LIMIT:
-    '三菱 GX Works3 的 LIMIT 参数顺序为 LIMIT(EN, 下限, 上限, 输入, 输出)，与部分 IEC 实现不同；本工具使用 3 参形式 LIMIT(下限, 上限, 输入)。',
   RAMP_REAL:
-    '三菱无 RAMP_REAL 函数。整数用 RAMPF，REAL 浮点用 RAMP；如需 REAL 斜坡请自定义 FB。',
+    '三菱无 RAMP_REAL 函数。斜坡控制用 RAMPF 指令（ST 形式：ENO := RAMPF(EN, s1, s2, n, d);，JY997D58901 p747）；REAL 斜坡请自定义 FB。',
   BLKMOV: 'BLKMOV 为批量搬移，请确认参数个数与数据长度一致。',
   TONR: '三菱 FX5U 的 ST 中使用标准 TON，不使用 IEC 的 TONR。',
 };
