@@ -20,8 +20,9 @@ import {
   CPU_SERIES,
   IO_TYPES,
   KNOWN_TEMPLATES,
+  STEP_SEQUENCE_TEMPLATE,
   VAR_SCOPES,
-  isKnownTemplate,
+  isAcceptedTemplateName,
 } from './schema.ts';
 import type {
   CpuSeries,
@@ -169,12 +170,12 @@ function parseTemplate(raw: unknown, diagnostics: SpecDiagnostic[]): TemplateSpe
     err(diagnostics, 'SPEC_E_TEMPLATE_NAME', 'template.name', 'template.name 必须是非空字符串');
     return null;
   }
-  if (!isKnownTemplate(raw.name)) {
+  if (!isAcceptedTemplateName(raw.name)) {
     err(
       diagnostics,
       'SPEC_E_TEMPLATE_UNKNOWN',
       'template.name',
-      `未知模板 '${raw.name}'；已知模板：${KNOWN_TEMPLATES.join(', ')}`,
+      `未知模板 '${raw.name}'；已知模板：${[...KNOWN_TEMPLATES, STEP_SEQUENCE_TEMPLATE].join(', ')}`,
     );
     return null;
   }
@@ -468,6 +469,184 @@ function parseMeta(raw: unknown, diagnostics: SpecDiagnostic[]): SpecMeta | null
 }
 
 /**
+ * 校验并解析 sequence 段（SFC/STL 风格的 ST 步进程序）。
+ *
+ * 结构：{ initialStep?, startCondition?, stopCondition?, faultCondition?, steps[] }
+ * 每步：{ id, name?, actions[]?, next? }
+ */
+function parseSequence(
+  raw: unknown,
+  series: CpuSeries,
+  diagnostics: SpecDiagnostic[],
+): import('./schema.ts').SequenceSpec | null {
+  if (raw === undefined) return null;
+  if (!isPlainObject(raw)) {
+    err(diagnostics, 'SPEC_E_SEQUENCE', 'sequence', 'sequence 必须是对象');
+    return null;
+  }
+  const stepsRaw = raw.steps;
+  if (!Array.isArray(stepsRaw) || stepsRaw.length === 0) {
+    err(diagnostics, 'SPEC_E_SEQUENCE_STEPS', 'sequence.steps', 'sequence.steps 必须是至少 1 个元素的数组');
+    return null;
+  }
+
+  const parsedSteps: import('./schema.ts').SequenceStep[] = [];
+  const ids = new Set<string>();
+  const actionStrs: Array<{ stepId: string; actions: import('./schema.ts').StepAction[] }> = [];
+
+  stepsRaw.forEach((stepRaw, i) => {
+    const path = `sequence.steps[${i}]`;
+    if (!isPlainObject(stepRaw)) {
+      err(diagnostics, 'SPEC_E_SEQUENCE_STEP', path, 'step 必须是对象');
+      return;
+    }
+    const id = stepRaw.id;
+    if (!isNonEmptyString(id) || !IDENTIFIER.test(id.trim())) {
+      err(diagnostics, 'SPEC_E_SEQUENCE_STEP_ID', `${path}.id`, `步 ID 必须是合法标识符（字母/数字/下划线），如 S1`);
+      return;
+    }
+    if (ids.has(id.trim())) {
+      err(diagnostics, 'SPEC_E_SEQUENCE_STEP_DUP', `${path}.id`, `步 ID 重复：${id}`);
+      return;
+    }
+    ids.add(id.trim());
+
+    const step: import('./schema.ts').SequenceStep = { id: id.trim() };
+    if (stepRaw.name !== undefined) {
+      if (typeof stepRaw.name !== 'string') {
+        err(diagnostics, 'SPEC_E_SEQUENCE_STEP_NAME', `${path}.name`, 'name 必须是字符串');
+      } else {
+        step.name = stepRaw.name;
+      }
+    }
+
+    const actions: import('./schema.ts').StepAction[] = [];
+    if (stepRaw.actions !== undefined) {
+      if (!Array.isArray(stepRaw.actions)) {
+        err(diagnostics, 'SPEC_E_SEQUENCE_ACTIONS', `${path}.actions`, 'actions 必须是数组');
+      } else {
+        stepRaw.actions.forEach((aRaw, j) => {
+          const aPath = `${path}.actions[${j}]`;
+          if (!isPlainObject(aRaw)) {
+            err(diagnostics, 'SPEC_E_SEQUENCE_ACTION', aPath, 'action 必须是对象');
+            return;
+          }
+          if (!isNonEmptyString(aRaw.target)) {
+            err(diagnostics, 'SPEC_E_SEQUENCE_ACTION_TARGET', `${aPath}.target`, 'action.target 必须是非空字符串');
+            return;
+          }
+          const target = aRaw.target.trim();
+          const val = aRaw.value;
+          const expr = aRaw.expression;
+          if (val !== undefined && val !== 'ON' && val !== 'OFF') {
+            err(diagnostics, 'SPEC_E_SEQUENCE_ACTION_VALUE', `${aPath}.value`, "value 只能是 'ON' 或 'OFF'");
+            return;
+          }
+          if (expr !== undefined && !isNonEmptyString(expr)) {
+            err(diagnostics, 'SPEC_E_SEQUENCE_ACTION_EXPR', `${aPath}.expression`, 'expression 必须是非空字符串');
+            return;
+          }
+          if (val === undefined && expr === undefined) {
+            err(diagnostics, 'SPEC_E_SEQUENCE_ACTION_EMPTY', aPath, 'action 必须给 value(ON/OFF) 或 expression');
+            return;
+          }
+          if (val !== undefined && expr !== undefined) {
+            err(diagnostics, 'SPEC_E_SEQUENCE_ACTION_CONFLICT', aPath, 'value 与 expression 只能二选一');
+            return;
+          }
+          const looksLikeDevice = /^[A-Za-z]{1,3}[0-9]+(\.[0-9]+)?$/.test(target);
+          if (looksLikeDevice) {
+            validateDevice(target, `${aPath}.target`, series, diagnostics);
+          } else if (!IDENTIFIER.test(target)) {
+            err(diagnostics, 'SPEC_E_SEQUENCE_ACTION_TARGET_ID', `${aPath}.target`, `action.target '${target}' 既不是软元件也不是合法变量名`);
+            return;
+          }
+          actions.push({ target, ...(val ? { value: val } : {}), ...(expr ? { expression: String(expr) } : {}) });
+        });
+      }
+    }
+    if (actions.length > 0) step.actions = actions;
+
+    // next：单条或数组
+    if (stepRaw.next !== undefined) {
+      const nextRaw = stepRaw.next;
+      const arr = Array.isArray(nextRaw) ? nextRaw : [nextRaw];
+      const transitions: import('./schema.ts').StepTransition[] = [];
+      arr.forEach((tRaw, k) => {
+        const tPath = `${path}.next${Array.isArray(nextRaw) ? `[${k}]` : ''}`;
+        if (!isPlainObject(tRaw)) {
+          err(diagnostics, 'SPEC_E_SEQUENCE_TRANSITION', tPath, 'transition 必须是对象');
+          return;
+        }
+        if (!isNonEmptyString(tRaw.to)) {
+          err(diagnostics, 'SPEC_E_SEQUENCE_TRANSITION_TO', `${tPath}.to`, 'to 必须是非空字符串（步 ID 或 END）');
+          return;
+        }
+        const to = tRaw.to.trim();
+        const condition = tRaw.condition;
+        const delayMs = tRaw.delayMs;
+        if (condition !== undefined && !isNonEmptyString(condition)) {
+          err(diagnostics, 'SPEC_E_SEQUENCE_TRANSITION_COND', `${tPath}.condition`, 'condition 必须是非空字符串');
+          return;
+        }
+        if (delayMs !== undefined) {
+          if (typeof delayMs !== 'number' || !Number.isFinite(delayMs) || delayMs <= 0 || Math.trunc(delayMs) !== delayMs) {
+            err(diagnostics, 'SPEC_E_SEQUENCE_TRANSITION_DELAY', `${tPath}.delayMs`, 'delayMs 必须是正整数（毫秒）');
+            return;
+          }
+        }
+        if (condition === undefined && delayMs === undefined) {
+          err(diagnostics, 'SPEC_E_SEQUENCE_TRANSITION_EMPTY', tPath, 'transition 必须给 condition 或 delayMs');
+          return;
+        }
+        transitions.push({
+          to,
+          ...(condition !== undefined ? { condition: String(condition) } : {}),
+          ...(delayMs !== undefined ? { delayMs: Number(delayMs) } : {}),
+        });
+      });
+      if (transitions.length > 0) step.next = Array.isArray(nextRaw) ? transitions : transitions[0];
+    }
+
+    actionStrs.push({ stepId: step.id, actions });
+    parsedSteps.push(step);
+  });
+
+  const result: import('./schema.ts').SequenceSpec = { steps: parsedSteps };
+
+  // 可选字段
+  for (const field of ['initialStep', 'startCondition', 'stopCondition', 'faultCondition'] as const) {
+    if (raw[field] !== undefined) {
+      if (!isNonEmptyString(raw[field])) {
+        err(diagnostics, 'SPEC_E_SEQUENCE_FIELD', `sequence.${field}`, `${field} 必须是非空字符串`);
+      } else {
+        result[field] = String(raw[field]);
+      }
+    }
+  }
+
+  // 引用完整性：initialStep / 转移目标
+  if (result.initialStep !== undefined && !ids.has(result.initialStep)) {
+    err(diagnostics, 'SPEC_E_SEQUENCE_INITIAL', 'sequence.initialStep', `initialStep '${result.initialStep}' 不在 steps 中`);
+  }
+  parsedSteps.forEach((step, i) => {
+    const list = step.next === undefined ? [] : Array.isArray(step.next) ? step.next : [step.next];
+    list.forEach((t, k) => {
+      if (t.to !== 'END' && !ids.has(t.to)) {
+        err(
+          diagnostics,
+          'SPEC_E_SEQUENCE_TRANSITION_TARGET',
+          `sequence.steps[${i}].next${Array.isArray(step.next) ? `[${k}]` : ''}.to`,
+          `转移目标 '${t.to}' 不存在（可用：${[...ids].join(', ')} 或 END）`,
+        );
+      }
+    });
+  });
+
+  return result;
+}
+
+/**
  * 校验并规范化一个 spec 对象。
  * 注意：内部使用；外部请用 `parseSpec` / `loadSpecFile`。
  */
@@ -512,6 +691,25 @@ export function validateSpec(root: unknown): SpecLoadResult {
   const requirements = parseRequirements(root.requirements, diagnostics);
   const safety = parseSafety(root.safety, series, diagnostics);
   const meta = parseMeta(root.meta, diagnostics);
+  const sequence = parseSequence(root.sequence, series, diagnostics);
+
+  // step_sequence 与 sequence 段必须成对出现
+  if (sequence !== null && template !== null && template.name !== 'step_sequence') {
+    err(
+      diagnostics,
+      'SPEC_E_SEQUENCE_TEMPLATE',
+      'template.name',
+      `包含 sequence 段时 template.name 必须为 'step_sequence'（当前 '${template.name}'）`,
+    );
+  }
+  if (sequence === null && template !== null && template.name === 'step_sequence') {
+    err(
+      diagnostics,
+      'SPEC_E_SEQUENCE_MISSING',
+      'sequence',
+      `template.name 为 'step_sequence' 时必须提供 sequence 段（steps/next/actions）`,
+    );
+  }
 
   if (root.tests !== undefined && !Array.isArray(root.tests)) {
     err(diagnostics, 'SPEC_E_TESTS', 'tests', 'tests 必须是数组（预留字段）');
@@ -519,7 +717,14 @@ export function validateSpec(root: unknown): SpecLoadResult {
   const tests = Array.isArray(root.tests) ? [...root.tests] : undefined;
 
   const errors = severityOf(diagnostics, 'error');
-  if (errors > 0 || cpu === null || template === null || io === null || requirements === null) {
+  if (
+    errors > 0 ||
+    cpu === null ||
+    template === null ||
+    io === null ||
+    requirements === null ||
+    (root.sequence !== undefined && sequence === null)
+  ) {
     return { ok: false, spec: null, diagnostics };
   }
 
@@ -533,6 +738,7 @@ export function validateSpec(root: unknown): SpecLoadResult {
   if (title !== undefined) spec.title = title;
   if (vars !== null) spec.vars = vars;
   if (safety !== null) spec.safety = safety;
+  if (sequence !== null) spec.sequence = sequence;
   if (tests !== undefined) spec.tests = tests;
   if (meta !== null) spec.meta = meta;
 

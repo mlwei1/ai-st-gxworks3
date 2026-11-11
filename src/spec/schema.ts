@@ -61,6 +61,56 @@ export interface RequirementItem {
   text: string;
 }
 
+/* ------------------------------------------------------------------ */
+/* 步进程序（SFC/STL 的 ST 实现）                                      */
+/* ------------------------------------------------------------------ */
+
+/** 步内动作：对 BOOL 目标置 ON/OFF，或做一次赋值。 */
+export interface StepAction {
+  /** 目标：软元件（Y0/X0/M100）或变量名（bRun/nCount）。 */
+  target: string;
+  /** BOOL 动作：'ON' / 'OFF'（与 expression 二选一）。 */
+  value?: 'ON' | 'OFF';
+  /** 赋值表达式：如 "nCount + 1"（生成 target := 表达式;）。 */
+  expression?: string;
+}
+
+/** 步转移：条件表达式或延时；to 为目标步 ID 或 'END'。 */
+export interface StepTransition {
+  /** ST 布尔表达式，如 "X10 AND NOT X11"；与 delayMs 同时给出表示“条件 + 延时”。 */
+  condition?: string;
+  /** 延时推进（毫秒）；单独使用时到时间即转移。 */
+  delayMs?: number;
+  /** 目标步 ID；'END' 表示结束本序列（回待机）。 */
+  to: string;
+}
+
+/** 一个步（SFC 的 step + transition + action）。 */
+export interface SequenceStep {
+  /** 步 ID（唯一），如 S1 / S10。 */
+  id: string;
+  /** 步名称（仅注释/报告用）。 */
+  name?: string;
+  /** 进入该步后持续执行的动作。 */
+  actions?: StepAction[];
+  /** 转移：单条或选择分支（多条时按顺序先真先走）。 */
+  next?: StepTransition | StepTransition[];
+}
+
+/** 步进程序定义（spec.sequence）。 */
+export interface SequenceSpec {
+  /** 初始步 ID（缺省为 steps 的第一个）。 */
+  initialStep?: string;
+  /** 启动条件表达式（缺省 X0，取上升沿）。 */
+  startCondition?: string;
+  /** 停止条件表达式（缺省 X1）。 */
+  stopCondition?: string;
+  /** 故障/急停条件表达式（缺省 X2）。 */
+  faultCondition?: string;
+  /** 步列表（至少 1 步）。 */
+  steps: SequenceStep[];
+}
+
 /** 安全相关约束。 */
 export interface SafetySpec {
   /** 急停/停止信号（软元件地址或变量名，可选）。 */
@@ -86,6 +136,8 @@ export interface RequirementSpec {
   vars?: VarBinding[];
   requirements: RequirementItem[];
   safety?: SafetySpec;
+  /** 步进程序（SFC/STL 的 ST 实现）；存在时 template.name 应为 step_sequence。 */
+  sequence?: SequenceSpec;
   /** 预留：仿真/验收测试用例。 */
   tests?: unknown[];
   meta?: SpecMeta;
@@ -112,7 +164,7 @@ export interface SpecLoadResult {
   diagnostics: SpecDiagnostic[];
 }
 
-/** 已知模板名（与模板库约定，M1 固定这 8 个）。 */
+/** 已知模板名（8 个标准回路模板）。 */
 export const KNOWN_TEMPLATES = [
   'motor_start_stop',
   'motor_auto_stop',
@@ -123,6 +175,14 @@ export const KNOWN_TEMPLATES = [
   'analog_scale',
   'alarm_first_out',
 ] as const;
+
+/** 步进程序模板名（特殊：不实例化模板库，而由 spec.sequence 生成 SFC/STL 风格 ST）。 */
+export const STEP_SEQUENCE_TEMPLATE = 'step_sequence' as const;
+
+/** 是否接受为 spec.template.name 的名称（8 个模板 + step_sequence）。 */
+export function isAcceptedTemplateName(name: string): boolean {
+  return isKnownTemplate(name) || name === STEP_SEQUENCE_TEMPLATE;
+}
 
 /** 已知模板名联合类型。 */
 export type KnownTemplateName = (typeof KNOWN_TEMPLATES)[number];
@@ -168,7 +228,7 @@ export const SPEC_JSON_SCHEMA: Record<string, unknown> = {
       additionalProperties: true,
       required: ['name'],
       properties: {
-        name: { type: 'string', enum: [...KNOWN_TEMPLATES] },
+        name: { type: 'string', enum: [...KNOWN_TEMPLATES, STEP_SEQUENCE_TEMPLATE] },
         params: {
           type: 'object',
           additionalProperties: { type: ['string', 'number', 'boolean'] },
@@ -226,6 +286,49 @@ export const SPEC_JSON_SCHEMA: Record<string, unknown> = {
         interlocks: { type: 'array', items: { type: 'string', minLength: 1 } },
       },
     },
+    sequence: {
+      type: 'object',
+      additionalProperties: true,
+      required: ['steps'],
+      properties: {
+        initialStep: { type: 'string', minLength: 1 },
+        startCondition: { type: 'string', minLength: 1 },
+        stopCondition: { type: 'string', minLength: 1 },
+        faultCondition: { type: 'string', minLength: 1 },
+        steps: {
+          type: 'array',
+          minItems: 1,
+          items: {
+            type: 'object',
+            additionalProperties: true,
+            required: ['id'],
+            properties: {
+              id: { type: 'string', minLength: 1 },
+              name: { type: 'string' },
+              actions: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  additionalProperties: true,
+                  required: ['target'],
+                  properties: {
+                    target: { type: 'string', minLength: 1 },
+                    value: { type: 'string', enum: ['ON', 'OFF'] },
+                    expression: { type: 'string', minLength: 1 },
+                  },
+                },
+              },
+              next: {
+                oneOf: [
+                  { $ref: '#/definitions/stepTransition' },
+                  { type: 'array', minItems: 1, items: { $ref: '#/definitions/stepTransition' } },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
     tests: { type: 'array' },
     meta: {
       type: 'object',
@@ -233,6 +336,18 @@ export const SPEC_JSON_SCHEMA: Record<string, unknown> = {
       properties: {
         version: { type: 'string' },
         createdAt: { type: 'string' },
+      },
+    },
+  },
+  definitions: {
+    stepTransition: {
+      type: 'object',
+      additionalProperties: true,
+      required: ['to'],
+      properties: {
+        condition: { type: 'string', minLength: 1 },
+        delayMs: { type: 'integer', minimum: 1 },
+        to: { type: 'string', minLength: 1 },
       },
     },
   },

@@ -1,0 +1,3 @@
+﻿[validate-iecxml] XML: out\robot_steps\robot_transfer_steps.xml
+[schema] �� DLL ��ȡ 3 �� XSD �� C:\Users\52900\AppData\Local\Temp\gxw3-iecxml-xsd-vz6sn0xn
+[RESULT] PASS ���� XSD У��ͨ����mode=xsd, schema=ForGXW3+AddData��

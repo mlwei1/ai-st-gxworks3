@@ -1,0 +1,113 @@
+{
+  "name": "robot_transfer_steps",
+  "title": "搬运机械手步进程序（SFC/STL 风格的 ST 步进）",
+  "cpu": {
+    "series": "FX5U",
+    "model": "FX5U-32MT/ES"
+  },
+  "template": {
+    "name": "step_sequence"
+  },
+  "io": [
+    { "device": "X0", "name": "bStart", "type": "BOOL", "comment": "启动按钮" },
+    { "device": "X1", "name": "bStop", "type": "BOOL", "comment": "停止按钮" },
+    { "device": "X2", "name": "bFault", "type": "BOOL", "comment": "故障/急停" },
+    { "device": "X10", "name": "bDownPos", "type": "BOOL", "comment": "竖直缸下降到位" },
+    { "device": "X11", "name": "bClampPos", "type": "BOOL", "comment": "夹爪夹紧到位" },
+    { "device": "X12", "name": "bUpPos", "type": "BOOL", "comment": "竖直缸上升到位" },
+    { "device": "X13", "name": "bRightPos", "type": "BOOL", "comment": "水平右限位" },
+    { "device": "X14", "name": "bLeftPos", "type": "BOOL", "comment": "水平左限位" },
+    { "device": "X15", "name": "bReleasePos", "type": "BOOL", "comment": "夹爪松开到位" },
+    { "device": "Y0", "name": "bDown", "type": "BOOL", "comment": "竖直下降电磁阀" },
+    { "device": "Y1", "name": "bUp", "type": "BOOL", "comment": "竖直上升电磁阀" },
+    { "device": "Y2", "name": "bClamp", "type": "BOOL", "comment": "夹爪电磁阀（ON=夹紧）" },
+    { "device": "Y3", "name": "bRight", "type": "BOOL", "comment": "水平右移电磁阀" },
+    { "device": "Y4", "name": "bLeft", "type": "BOOL", "comment": "水平左移电磁阀" }
+  ],
+  "requirements": [
+    { "id": "R1", "text": "按下启动 X0 后从初始步 S1 开始按顺序执行" },
+    { "id": "R2", "text": "每步由对应到位信号推进：下降 X10、夹紧 X11、上升 X12、右限位 X13、松开 X15、左限位 X14" },
+    { "id": "R3", "text": "夹紧后在右移/下降过程中保持夹紧 Y2" },
+    { "id": "R4", "text": "最后一步左移到位后结束，回待机" },
+    { "id": "R5", "text": "停止 X1 或故障 X2 时立即中止并回待机，需重新启动" }
+  ],
+  "sequence": {
+    "initialStep": "S1",
+    "startCondition": "X0",
+    "stopCondition": "X1",
+    "faultCondition": "X2",
+    "steps": [
+      {
+        "id": "S1",
+        "name": "竖直下降",
+        "actions": [{ "target": "Y0", "value": "ON" }],
+        "next": { "condition": "X10", "to": "S2" }
+      },
+      {
+        "id": "S2",
+        "name": "夹爪夹紧",
+        "actions": [
+          { "target": "Y0", "value": "ON" },
+          { "target": "Y2", "value": "ON" }
+        ],
+        "next": { "condition": "X11", "to": "S3" }
+      },
+      {
+        "id": "S3",
+        "name": "竖直上升",
+        "actions": [
+          { "target": "Y1", "value": "ON" },
+          { "target": "Y2", "value": "ON" }
+        ],
+        "next": { "condition": "X12", "to": "S4" }
+      },
+      {
+        "id": "S4",
+        "name": "水平右移",
+        "actions": [
+          { "target": "Y2", "value": "ON" },
+          { "target": "Y3", "value": "ON" }
+        ],
+        "next": { "condition": "X13", "to": "S5" }
+      },
+      {
+        "id": "S5",
+        "name": "右位竖直下降",
+        "actions": [
+          { "target": "Y0", "value": "ON" },
+          { "target": "Y2", "value": "ON" },
+          { "target": "Y3", "value": "ON" }
+        ],
+        "next": { "condition": "X10", "to": "S6" }
+      },
+      {
+        "id": "S6",
+        "name": "夹爪松开",
+        "actions": [
+          { "target": "Y0", "value": "ON" },
+          { "target": "Y3", "value": "ON" }
+        ],
+        "next": { "condition": "X15", "to": "S7" }
+      },
+      {
+        "id": "S7",
+        "name": "松开后上升",
+        "actions": [
+          { "target": "Y1", "value": "ON" },
+          { "target": "Y3", "value": "ON" }
+        ],
+        "next": { "condition": "X12", "to": "S8" }
+      },
+      {
+        "id": "S8",
+        "name": "水平左移回原位",
+        "actions": [{ "target": "Y4", "value": "ON" }],
+        "next": { "condition": "X14", "to": "END" }
+      }
+    ]
+  },
+  "meta": {
+    "version": "0.1.0",
+    "createdAt": "2026-11-11"
+  }
+}

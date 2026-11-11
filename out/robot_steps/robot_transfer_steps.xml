@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="www.iec.ch/public/TC65SC65BWG7TF10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.000" xsi:schemaLocation="www.iec.ch/public/TC65SC65BWG7TF10 GXW3_IEC61131_10_Ed1_0_ForGXW3.xsd">
+  <FileHeader companyName="MITSUBISHI ELECTRIC CORPORATION" companyURL="http://www.mitsubishielectric.com" productName="GX Works3" productVersion="ver.1.0"/>
+  <ContentHeader name="robot_transfer_steps" creationDateTime="2026-11-11T02:08:53.618Z" modificationDateTime="2026-11-11T02:08:53.618Z"/>
+  <Types>
+    <GlobalNamespace>
+      <Program name="Main">
+        <Vars accessSpecifier="private">
+          <Variable name="nStep">
+            <Type>
+              <TypeName>INT</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="0"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bRun">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bStartLast">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+        </Vars>
+        <MainBody>
+          <BodyContent xsi:type="ST">
+            <ST>IF (X1) OR (X2) THEN
+    bRun := FALSE;
+    nStep := 0;
+END_IF;
+IF (X0) AND NOT bStartLast AND NOT bRun AND NOT (X1) AND NOT (X2) THEN
+    bRun := TRUE;
+    nStep := 1;
+END_IF;
+bStartLast := (X0);
+IF bRun THEN
+    CASE nStep OF
+        1:
+            IF (X10) THEN
+                nStep := 2;
+            END_IF;
+        2:
+            IF (X11) THEN
+                nStep := 3;
+            END_IF;
+        3:
+            IF (X12) THEN
+                nStep := 4;
+            END_IF;
+        4:
+            IF (X13) THEN
+                nStep := 5;
+            END_IF;
+        5:
+            IF (X10) THEN
+                nStep := 6;
+            END_IF;
+        6:
+            IF (X15) THEN
+                nStep := 7;
+            END_IF;
+        7:
+            IF (X12) THEN
+                nStep := 8;
+            END_IF;
+        8:
+            IF (X14) THEN
+                nStep := 0;
+                bRun := FALSE;
+            END_IF;
+    END_CASE;
+END_IF;
+Y0 := FALSE;
+Y1 := FALSE;
+Y2 := FALSE;
+Y3 := FALSE;
+Y4 := FALSE;
+IF bRun THEN
+    CASE nStep OF
+        1:
+            Y0 := TRUE;
+        2:
+            Y0 := TRUE;
+            Y2 := TRUE;
+        3:
+            Y1 := TRUE;
+            Y2 := TRUE;
+        4:
+            Y2 := TRUE;
+            Y3 := TRUE;
+        5:
+            Y0 := TRUE;
+            Y2 := TRUE;
+            Y3 := TRUE;
+        6:
+            Y0 := TRUE;
+            Y3 := TRUE;
+        7:
+            Y1 := TRUE;
+            Y3 := TRUE;
+        8:
+            Y4 := TRUE;
+    END_CASE;
+END_IF;</ST>
+          </BodyContent>
+        </MainBody>
+      </Program>
+    </GlobalNamespace>
+  </Types>
+  <Instances>
+    <Configuration name="config1">
+      <Resource name="Main" resourceTypeName="prgFile">
+        <AddData>
+          <Data name="http://www.mitsubishielectric.com/xml/ResourceExecutionType" handleUnknown="implementation">
+            <ResourceExecutionType type="scan"/>
+          </Data>
+        </AddData>
+        <ProgramInstance name="Main" typeName="pou" evaluationOrder="1"/>
+      </Resource>
+      <GlobalVars constant="false" retain="false">
+      </GlobalVars>
+    </Configuration>
+  </Instances>
+</Project>

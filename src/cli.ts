@@ -441,6 +441,10 @@ async function cmdGen(args: Args): Promise<number> {
       console.log(`  ${t.name.padEnd(24)} ${t.description}`);
       if (params) console.log(`     参数: ${params}`);
     }
+    console.log('');
+    console.log(
+      '  step_sequence            （特殊）SFC/STL 风格步进程序：不实例化模板库，由 spec.sequence 生成；见 docs/ST步进程序.md',
+    );
     return 0;
   }
 

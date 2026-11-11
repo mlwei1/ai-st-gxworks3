@@ -28,6 +28,7 @@ import { astToIecProject } from '../emit/iec-project.ts';
 import { emitIecXml } from '../emit/iecxml.ts';
 import { generateLabelCsvFiles } from '../emit/label-csv.ts';
 import { generateWithLlmFallback, type LlmSourceGenerator } from './llm.ts';
+import { generateStepSequence } from './step-sequence.ts';
 import { compilerErrorsToDiagnostics, type CompilerErrorEntry } from './compiler-feedback.ts';
 import type { DiagnosticLike } from './repair.ts';
 
@@ -170,6 +171,30 @@ export async function generateFromSpec(
     }
   }
 
+  // 场景 B0：步进程序（spec.sequence）→ 由生成器输出 SFC/STL 风格 ST
+  if (!stSource && spec.sequence) {
+    try {
+      const stepGen = generateStepSequence(spec);
+      stSource = stepGen.source;
+      generator = 'template';
+      result.attempts = Math.max(result.attempts, 1);
+      result.warnings.push(...stepGen.warnings);
+    } catch (e) {
+      result.diagnostics.push({
+        severity: 'error',
+        code: 'GEN_E_SEQUENCE',
+        message: `步进程序生成失败：${e instanceof Error ? e.message : String(e)}`,
+      });
+    }
+  }
+  if (!stSource && spec.template.name === 'step_sequence' && !spec.sequence) {
+    result.diagnostics.push({
+      severity: 'error',
+      code: 'GEN_E_SEQUENCE_MISSING',
+      message: "template.name 为 'step_sequence' 时必须提供 sequence 段（steps/actions/next）",
+    });
+  }
+
   // 场景 B：常规路径（模板优先；模板失败且启用 LLM 时兜底）。
   if (!stSource) {
     const t = tryTemplate();
@@ -294,6 +319,7 @@ async function writeArtifacts(
           template: spec.template,
           io: spec.io,
           requirements: spec.requirements,
+          sequence: spec.sequence ?? null,
         }
       : { source: result.specPath },
     templateName: result.templateName ?? null,
