@@ -1,0 +1,90 @@
+{
+  "tool": "ai-st-gxworks3",
+  "format": "IEC61131-10",
+  "spec": {
+    "name": "temperature_two_position_demo",
+    "cpu": {
+      "series": "FX5U",
+      "model": "FX5U-32MT/ES"
+    },
+    "template": {
+      "name": "temperature_two_position",
+      "params": {
+        "setpoint": 600,
+        "hysteresis": 20,
+        "tempMin": -500,
+        "tempMax": 1500
+      }
+    },
+    "io": [
+      {
+        "device": "X0",
+        "name": "bStart",
+        "type": "BOOL",
+        "comment": "温控启动"
+      },
+      {
+        "device": "X1",
+        "name": "bStop",
+        "type": "BOOL",
+        "comment": "温控停止"
+      },
+      {
+        "device": "Y0",
+        "name": "bHeat",
+        "type": "BOOL",
+        "comment": "加热输出"
+      },
+      {
+        "device": "Y1",
+        "name": "bCool",
+        "type": "BOOL",
+        "comment": "冷却输出"
+      },
+      {
+        "device": "D100",
+        "name": "nTemp",
+        "type": "INT",
+        "comment": "当前温度（0.1°C）"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "R1",
+        "text": "X0 启动温控，X1 停止；停止时加热/冷却立即关闭"
+      },
+      {
+        "id": "R2",
+        "text": "温度 ≤ 580（设定600-回差20）时加热 Y0=ON；温度 ≥ 600 时加热 OFF"
+      },
+      {
+        "id": "R3",
+        "text": "温度 ≥ 620（设定600+回差20）时冷却 Y1=ON；温度 ≤ 600 时冷却 OFF"
+      },
+      {
+        "id": "R4",
+        "text": "D100 超出 -500~1500 时判定传感器故障，加热/冷却均 OFF"
+      }
+    ],
+    "sequence": null
+  },
+  "templateName": "temperature_two_position",
+  "generator": "template",
+  "generatedAt": "2026-11-11T04:11:28.171Z",
+  "ok": true,
+  "attempts": 1,
+  "diagnostics": [
+    {
+      "severity": "warning",
+      "code": "W008",
+      "message": "赋值类型不匹配：INT <- WORD",
+      "line": 15,
+      "column": 5,
+      "pou": "Main",
+      "hint": "建议使用显式类型转换函数"
+    }
+  ],
+  "compilerDiagnostics": [],
+  "warnings": [],
+  "specDiagnostics": []
+}

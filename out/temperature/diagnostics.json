@@ -1,0 +1,16 @@
+{
+  "spec": [],
+  "code": [
+    {
+      "severity": "warning",
+      "code": "W008",
+      "message": "赋值类型不匹配：INT <- WORD",
+      "line": 15,
+      "column": 5,
+      "pou": "Main",
+      "hint": "建议使用显式类型转换函数"
+    }
+  ],
+  "compiler": [],
+  "warnings": []
+}

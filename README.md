@@ -14,7 +14,7 @@ ST 程序，并在导入前完成语法与三菱方言的静态检查。
 ## 30 秒上手（v0.2）
 
 ```bash
-# 1. Spec → ST + IEC 61131-10 XML（9 个模板可选）
+# 1. Spec → ST + IEC 61131-10 XML（10 个模板可选）
 node --experimental-strip-types --no-warnings src/cli.ts gen specs/motor_start_stop.json -o ./out
 
 # 2. 本地校验（语法 + 三菱方言）
@@ -29,10 +29,10 @@ node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_sta
 ```
 
 > **Spec 驱动生成（M1）**：`gen specs/motor_start_stop.json -o out` 会按模板生成 ST + IEC XML 工程包
-> （`specs/` 下有多个示例；`gen --list-templates` 查看 9 个标准/行业模板）。
+> （`specs/` 下有多个示例；`gen --list-templates` 查看 10 个标准/行业模板）。
 >
 > **ST 步进程序 / 定位模板（M3+）**：`gen specs/robot_transfer_steps.json`（SFC/STL 风格的 ST 步进）、
-> `gen specs/positioning_drva.json`（DRVA 定位模板）；均已在 GX Works3 导入 + 全部转换验证 0 error。
+> `gen specs/positioning_drva.json`（DRVA 定位模板）、`gen specs/temperature_two_position.json`（位式温控模板）；均已在 GX Works3 导入 + 全部转换验证 0 error。
 > 详见 [docs/ST步进程序.md](docs/ST步进程序.md)、[docs/定位模板.md](docs/定位模板.md)。
 >
 > **仿真场景断言（M2）**：`sim sim/motor_start_stop.sim.json --observed sim/motor_start_stop.obs.json`
@@ -97,9 +97,10 @@ GX Works3 强制「结构化工程」模式，**变量声明与 ST 本体是分�
 |---|---|
 | **ST 解析器** | 自建词法/语法分析，覆盖 POU、VAR 段、STRUCT、CASE/FOR/WHILE/REPEAT、功能块调用 |
 | **三菱方言检查** | 拦截跨品牌写法、隐式类型转换、越界设备地址、非法变量名等 |
-| **Spec 驱动生成（M1）** | 需求规格 JSON → 9 个标准/行业模板 → ST + IEC 61131-10 XML + 标签 CSV |
+| **Spec 驱动生成（M1）** | 需求规格 JSON → 10 个标准/行业模板 → ST + IEC 61131-10 XML + 标签 CSV |
 | **ST 步进程序（SFC/STL 的 ST 实现）** | `spec.sequence` 定义步/动作/转移/分支/延时 → 生成 `nStep + CASE` 步号状态机（纯 ST） |
 | **定位模板（工业场景）** | `positioning_drva`：DRVA ST 指令 + 完成/超时/出错处理，见 [docs/定位模板.md](docs/定位模板.md) |
+| **温控模板（工业场景）** | `temperature_two_position`：位式温控（加热/冷却 + 回差 + 超量程保护），见 [docs/温度模板.md](docs/温度模板.md) |
 | **仿真场景断言（M2）** | 场景 DSL + 观测文件断言 + CLI `sim`（GX Simulator3 半自动执行） |
 | **交付工程包（M3）** | `deliver`：report.md + 需求追溯矩阵 trace.json + SHA256 交付清单 |
 | **MCP Server（M3）** | `mcp`：stdio JSON-RPC，5 个工具（check/generate/build-xml/sim/deliver），供 AI Agent 调用 |

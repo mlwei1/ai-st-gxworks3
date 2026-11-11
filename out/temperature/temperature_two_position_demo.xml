@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="www.iec.ch/public/TC65SC65BWG7TF10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.000" xsi:schemaLocation="www.iec.ch/public/TC65SC65BWG7TF10 GXW3_IEC61131_10_Ed1_0_ForGXW3.xsd">
+  <FileHeader companyName="MITSUBISHI ELECTRIC CORPORATION" companyURL="http://www.mitsubishielectric.com" productName="GX Works3" productVersion="ver.1.0"/>
+  <ContentHeader name="temperature_two_position_demo" creationDateTime="2026-11-11T04:11:28.140Z" modificationDateTime="2026-11-11T04:11:28.140Z"/>
+  <Types>
+    <GlobalNamespace>
+      <Program name="Main">
+        <Vars accessSpecifier="private">
+          <Variable name="bStartLast">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+          </Variable>
+          <Variable name="bRun">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bErr">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bHeat">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bCool">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="nTemp">
+            <Type>
+              <TypeName>INT</TypeName>
+            </Type>
+          </Variable>
+          <Variable name="nSet">
+            <Type>
+              <TypeName>INT</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="600"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="nHyst">
+            <Type>
+              <TypeName>INT</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="20"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="nTempMin">
+            <Type>
+              <TypeName>INT</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="-500"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="nTempMax">
+            <Type>
+              <TypeName>INT</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="1500"/>
+            </InitialValue>
+          </Variable>
+        </Vars>
+        <MainBody>
+          <BodyContent xsi:type="ST">
+            <ST>    // 1) 当前温度：D100（0.1°C，由模拟量/通信写入）
+    nTemp := D100;
+
+    // 2) 传感器量程检查：超量程视为故障，停止输出
+    IF nTemp &lt;= nTempMin OR nTemp &gt;= nTempMax THEN
+        bErr := TRUE;
+    END_IF;
+
+    // 3) 启动/停止
+    IF X1 THEN
+        bRun := FALSE;
+    END_IF;
+    IF X0 AND NOT bStartLast AND NOT bErr THEN
+        bRun := TRUE;
+    END_IF;
+    bStartLast := X0;
+
+    // 4) 位式温控（带回差，避免临界点频繁动作）
+    IF bRun AND NOT bErr THEN
+        // 加热：低于(设定-回差)开，达到设定关
+        IF nTemp &lt;= nSet - nHyst THEN
+            bHeat := TRUE;
+        END_IF;
+        IF nTemp &gt;= nSet THEN
+            bHeat := FALSE;
+        END_IF;
+        // 冷却：高于(设定+回差)开，降到设定关
+        IF nTemp &gt;= nSet + nHyst THEN
+            bCool := TRUE;
+        END_IF;
+        IF nTemp &lt;= nSet THEN
+            bCool := FALSE;
+        END_IF;
+    ELSE
+        bHeat := FALSE;
+        bCool := FALSE;
+    END_IF;
+
+    // 5) 输出
+    Y0 := bRun AND bHeat;
+    Y1 := bRun AND bCool;</ST>
+          </BodyContent>
+        </MainBody>
+      </Program>
+    </GlobalNamespace>
+  </Types>
+  <Instances>
+    <Configuration name="config1">
+      <Resource name="Main" resourceTypeName="prgFile">
+        <AddData>
+          <Data name="http://www.mitsubishielectric.com/xml/ResourceExecutionType" handleUnknown="implementation">
+            <ResourceExecutionType type="scan"/>
+          </Data>
+        </AddData>
+        <ProgramInstance name="Main" typeName="pou" evaluationOrder="1"/>
+      </Resource>
+      <GlobalVars constant="false" retain="false">
+      </GlobalVars>
+    </Configuration>
+  </Instances>
+</Project>
