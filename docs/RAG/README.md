@@ -46,6 +46,7 @@ pwsh tools/rag-search.ps1 -Keyword 'VAR_GLOBAL_RETAIN|RETAIN' -Doc '应用篇|�
 | `SQRT` 同时有指令（p844）与通用功能（p1221）；ST 中可用 | 指令篇 | ✅ 与现有白名单一致 |
 | `HIOEN` 高速 I/O 指令存在（p1049） | 指令篇 | ✅ 记录 |
 | 定位指令 ST 形式：ENO:=DRVA(EN,s1,s2,d1,d2)、DRVI/DSZR/DVIT/DRVTBL/PLSV/PLSY/DPLSY（8 条） | 指令篇 18 章 p1079~p1115、8.18 p761~p763 | ✅ 写入 profile + 参数校验 + 测试 |
+| 通信指令 ST 形式：SP_SOCOPEN/SOCRCV/SOCSND、GP_SOCRCV/SOCSND、RS2、ADPRW（7 条） | 指令篇 13 章 p981~p1021、17 章 p1059/p1073 | ✅ 写入 profile + 测试（ADPRW ST 顺序待验证） |
 | 旧版白名单里的 `OUT_M/OUT_H/OUT_L/HIOTRK/DHIO_TRK/TIMER_T/COUNTER_FB` 在指令篇中**检索不到** | 指令篇全文检索 | ✅ 已从白名单移除（v0.1 历史错误） |
 | FX5U：X/Y `0~1777`（八进制）、M/L `0~32767`、B `0~7FFF`、S `0~4095`、T/C `0~1023`、D `0~7999` 等 | 应用篇 p87、p142 | ✅ profile 一致（本目录 README 旧表已改） |
 

@@ -61,6 +61,16 @@ export type {
   PositioningOperand,
 } from './positioning.ts';
 
+export {
+  FX5_COMMUNICATION_INSTRUCTIONS,
+  getCommunicationInstruction,
+  isCommunicationInstruction,
+} from './communication.ts';
+export type {
+  CommInstructionFact,
+  CommOperand,
+} from './communication.ts';
+
 /** 默认机型。 */
 export const DEFAULT_CPU_MODEL: CpuModel = 'FX5U';
 
