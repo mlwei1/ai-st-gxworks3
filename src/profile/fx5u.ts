@@ -182,6 +182,14 @@ export const FX5_TYPE_NAMES: ReadonlySet<string> = new Set(FX5_TYPE_FACTS.map((t
 /* 标准 FB 与通用 FB                                                   */
 /* ------------------------------------------------------------------ */
 
+/** 标准 FB 的单个形参（名称/方向/数据类型，均来自手册参数表）。 */
+export interface FbParamFact {
+  name: string;
+  direction: 'IN' | 'OUT';
+  type: string;
+  comment?: string;
+}
+
 export interface FbFact {
   name: string;
   inputs: readonly string[];
@@ -190,24 +198,164 @@ export interface FbFact {
   paramsVerified: VerifiedStatus;
   source: string;
   note?: string;
+  /** 完整形参表（名称/方向/类型），来自手册「设置数据」表；核实后填写。 */
+  params?: readonly FbParamFact[];
+  /** 必填输入参数（缺省 = 全部 inputs）。 */
+  required?: readonly string[];
 }
 
 const SRC_FB_LIST = 'JY997D58901 指令/通用FUN/FB篇 text/08009（通用FB一览）；SH081322 text/07009（iQ-R 同名）';
-const SRC_TON = 'JY997D58901 text/29001（TON 形参 IN/PT/Q/ET 原文）';
-const SRC_RS = 'JY997D58901 text/26001（RS 形参 S/R1/Q1 原文）；SH081322 text/32001';
 
-/** 标准 FB（IEC 通用部分）。 */
+/**
+ * 标准 FB（IEC 通用部分）。
+ *
+ * 形参表已逐页核对（2026-11-11，PDF 页序 → 印刷页）：
+ *  SR 29.1(p1298)、RS 29.2(p1300)、R_TRIG 30.1(p1302)、F_TRIG 30.2(p1304)、
+ *  CTU 31.1(p1306)、CTD 31.2(p1308)、CTUD 31.3(p1310)、
+ *  TP 32.1(p1315)、TON 32.2(p1317)、TOF 32.3(p1319)。
+ *  EN/ENO 不是普通形参：无 EN 版直接调用；带 EN 版为 `_E` 类型（如 TON_E），另行支持。
+ */
 export const FX5_STANDARD_FBS: readonly FbFact[] = [
-  { name: 'TON', inputs: ['IN', 'PT'], outputs: ['Q', 'ET'], paramsVerified: 'verified', source: SRC_TON },
-  { name: 'TOF', inputs: ['IN', 'PT'], outputs: ['Q', 'ET'], paramsVerified: 'unverified', source: SRC_FB_LIST, note: '形参沿用 IEC/TOF 同构，未逐页核实' },
-  { name: 'TP', inputs: ['IN', 'PT'], outputs: ['Q', 'ET'], paramsVerified: 'unverified', source: SRC_FB_LIST },
-  { name: 'CTU', inputs: ['CU', 'R', 'PV'], outputs: ['Q', 'CV'], paramsVerified: 'unverified', source: SRC_FB_LIST },
-  { name: 'CTD', inputs: ['CD', 'LD', 'PV'], outputs: ['Q', 'CV'], paramsVerified: 'unverified', source: SRC_FB_LIST },
-  { name: 'CTUD', inputs: ['CU', 'CD', 'R', 'LD', 'PV'], outputs: ['QU', 'QD', 'CV'], paramsVerified: 'unverified', source: SRC_FB_LIST },
-  { name: 'R_TRIG', inputs: ['CLK'], outputs: ['Q'], paramsVerified: 'unverified', source: SRC_FB_LIST },
-  { name: 'F_TRIG', inputs: ['CLK'], outputs: ['Q'], paramsVerified: 'unverified', source: SRC_FB_LIST },
-  { name: 'RS', inputs: ['S', 'R1'], outputs: ['Q1'], paramsVerified: 'verified', source: SRC_RS },
-  { name: 'SR', inputs: ['S1', 'R'], outputs: ['Q1'], paramsVerified: 'unverified', source: SRC_FB_LIST, note: '手册列有 SR(设置优先)，形参待逐页核实' },
+  {
+    name: 'TON',
+    inputs: ['IN', 'PT'],
+    outputs: ['Q', 'ET'],
+    paramsVerified: 'verified',
+    source: 'JY997D58901 32.2 ON延迟定时器 p1317（PDF 1319）',
+    required: ['IN', 'PT'],
+    params: [
+      { name: 'IN', direction: 'IN', type: 'BOOL', comment: '时间计测' },
+      { name: 'PT', direction: 'IN', type: 'TIME', comment: '延迟时间设置值（0~32767ms）' },
+      { name: 'Q', direction: 'OUT', type: 'BOOL', comment: '输出' },
+      { name: 'ET', direction: 'OUT', type: 'TIME', comment: '经过时间' },
+    ],
+  },
+  {
+    name: 'TOF',
+    inputs: ['IN', 'PT'],
+    outputs: ['Q', 'ET'],
+    paramsVerified: 'verified',
+    source: 'JY997D58901 32.3 OFF延迟定时器 p1319（PDF 1321）',
+    required: ['IN', 'PT'],
+    params: [
+      { name: 'IN', direction: 'IN', type: 'BOOL', comment: '时间计测' },
+      { name: 'PT', direction: 'IN', type: 'TIME', comment: '延迟时间设置值' },
+      { name: 'Q', direction: 'OUT', type: 'BOOL', comment: '输出' },
+      { name: 'ET', direction: 'OUT', type: 'TIME', comment: '经过时间' },
+    ],
+  },
+  {
+    name: 'TP',
+    inputs: ['IN', 'PT'],
+    outputs: ['Q', 'ET'],
+    paramsVerified: 'verified',
+    source: 'JY997D58901 32.1 脉冲定时器 p1315（PDF 1317）',
+    required: ['IN', 'PT'],
+    params: [
+      { name: 'IN', direction: 'IN', type: 'BOOL', comment: '输出开始' },
+      { name: 'PT', direction: 'IN', type: 'TIME', comment: '输出时间设置值' },
+      { name: 'Q', direction: 'OUT', type: 'BOOL', comment: '输出' },
+      { name: 'ET', direction: 'OUT', type: 'TIME', comment: '经过时间' },
+    ],
+  },
+  {
+    name: 'CTU',
+    inputs: ['CU', 'R', 'PV'],
+    outputs: ['Q', 'CV'],
+    paramsVerified: 'verified',
+    source: 'JY997D58901 31.1 升计数器 p1306（PDF 1308）',
+    required: ['CU', 'R', 'PV'],
+    params: [
+      { name: 'CU', direction: 'IN', type: 'BOOL', comment: '计数信号输入（OFF→ON 加 1）' },
+      { name: 'R', direction: 'IN', type: 'BOOL', comment: '计数值复位' },
+      { name: 'PV', direction: 'IN', type: 'INT', comment: '计数最大值（0~32767）' },
+      { name: 'Q', direction: 'OUT', type: 'BOOL', comment: '计数完成' },
+      { name: 'CV', direction: 'OUT', type: 'INT', comment: '计数值' },
+    ],
+  },
+  {
+    name: 'CTD',
+    inputs: ['CD', 'LD', 'PV'],
+    outputs: ['Q', 'CV'],
+    paramsVerified: 'verified',
+    source: 'JY997D58901 31.2 降值计数器 p1308（PDF 1310）',
+    required: ['CD', 'LD', 'PV'],
+    params: [
+      { name: 'CD', direction: 'IN', type: 'BOOL', comment: '计数信号输入（OFF→ON 减 1）' },
+      { name: 'LD', direction: 'IN', type: 'BOOL', comment: '计数值设置' },
+      { name: 'PV', direction: 'IN', type: 'INT', comment: '计数开始值（0~32767）' },
+      { name: 'Q', direction: 'OUT', type: 'BOOL', comment: '计数完成' },
+      { name: 'CV', direction: 'OUT', type: 'INT', comment: '计数值' },
+    ],
+  },
+  {
+    name: 'CTUD',
+    inputs: ['CU', 'CD', 'R', 'LD', 'PV'],
+    outputs: ['QU', 'QD', 'CV'],
+    paramsVerified: 'verified',
+    source: 'JY997D58901 31.3 升/降计数器 p1310（PDF 1312）',
+    required: ['CU', 'CD', 'R', 'LD', 'PV'],
+    params: [
+      { name: 'CU', direction: 'IN', type: 'BOOL', comment: '递增计数信号' },
+      { name: 'CD', direction: 'IN', type: 'BOOL', comment: '递减计数信号' },
+      { name: 'R', direction: 'IN', type: 'BOOL', comment: '计数值复位' },
+      { name: 'LD', direction: 'IN', type: 'BOOL', comment: '计数值设置' },
+      { name: 'PV', direction: 'IN', type: 'INT', comment: '计数最大值/开始值' },
+      { name: 'QU', direction: 'OUT', type: 'BOOL', comment: '递增计数完成' },
+      { name: 'QD', direction: 'OUT', type: 'BOOL', comment: '递减计数完成' },
+      { name: 'CV', direction: 'OUT', type: 'INT', comment: '当前计数值' },
+    ],
+  },
+  {
+    name: 'R_TRIG',
+    inputs: ['CLK'],
+    outputs: ['Q'],
+    paramsVerified: 'verified',
+    source: 'JY997D58901 30.1 上升沿边缘检测 p1302（PDF 1304）',
+    required: ['CLK'],
+    params: [
+      { name: 'CLK', direction: 'IN', type: 'BOOL', comment: '上升沿边缘检测输入' },
+      { name: 'Q', direction: 'OUT', type: 'BOOL', comment: '输出（1 个扫描）' },
+    ],
+  },
+  {
+    name: 'F_TRIG',
+    inputs: ['CLK'],
+    outputs: ['Q'],
+    paramsVerified: 'verified',
+    source: 'JY997D58901 30.2 下降沿边缘检测 p1304（PDF 1306）',
+    required: ['CLK'],
+    params: [
+      { name: 'CLK', direction: 'IN', type: 'BOOL', comment: '下降沿边缘检测输入' },
+      { name: 'Q', direction: 'OUT', type: 'BOOL', comment: '输出（1 个扫描）' },
+    ],
+  },
+  {
+    name: 'RS',
+    inputs: ['S', 'R1'],
+    outputs: ['Q1'],
+    paramsVerified: 'verified',
+    source: 'JY997D58901 29.2 双稳态功能块(复位优先) p1300（PDF 1302）',
+    required: ['S', 'R1'],
+    params: [
+      { name: 'S', direction: 'IN', type: 'BOOL', comment: '设置指令' },
+      { name: 'R1', direction: 'IN', type: 'BOOL', comment: '复位指令（优先）' },
+      { name: 'Q1', direction: 'OUT', type: 'BOOL', comment: '输出' },
+    ],
+  },
+  {
+    name: 'SR',
+    inputs: ['S1', 'R'],
+    outputs: ['Q1'],
+    paramsVerified: 'verified',
+    source: 'JY997D58901 29.1 双稳态功能块(设置优先) p1298（PDF 1300）',
+    required: ['S1', 'R'],
+    params: [
+      { name: 'S1', direction: 'IN', type: 'BOOL', comment: '设置指令（优先）' },
+      { name: 'R', direction: 'IN', type: 'BOOL', comment: '复位指令' },
+      { name: 'Q1', direction: 'OUT', type: 'BOOL', comment: '输出' },
+    ],
+  },
 ] as const;
 
 /** FX5 专有通用 FB（不属于 IEC 标准）。 */

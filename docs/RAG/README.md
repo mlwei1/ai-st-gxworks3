@@ -42,7 +42,7 @@ pwsh tools/rag-search.ps1 -Keyword 'VAR_GLOBAL_RETAIN|RETAIN' -Doc '应用篇|�
 | `LIMIT` 有两条路径：ST 用通用功能 `d := LIMIT(s1下限, s2输入, s3上限)`；梯形图指令 `LIMIT(P)` **不支持 ST** | 指令篇 p1265/1267、p712 注 | ✅ 已修正 analyzer 误报陷阱 + 测试 |
 | `RAMPF` 是应用指令，ST 形式 `ENO := RAMPF(EN, s1, s2, n, d);`（5 操作数） | 指令篇 8.17 p747 | ✅ 已加入函数白名单 + 测试 |
 | 三菱**无 RAMP / RAMP_REAL**（只有 RAMPF） | 指令篇检索「RAMP」无命中、只有 RAMPF | ✅ 已修正提示文案 |
-| `TON`/`TP`/`CTU` 是**定时器/计数器功能块**，ST 调用带 `IN/PT/Q/ET` 等形参，支持 `_E`（EN/ENO）变体 | 指令篇 第 30/32 章（CTU p1306、TP p1315、TON p1317） | ✅ 记录（现有 analyzer 已支持 FB） |
+| `TON`/`TOF`/`TP`/`CTU`/`CTD`/`CTUD`/`R_TRIG`/`F_TRIG`/`RS`/`SR` 的**完整形参表**（名称/方向/类型）已逐页核实 | 指令篇 29~32 章：SR p1298、RS p1300、R_TRIG p1302、F_TRIG p1304、CTU p1306、CTD p1308、CTUD p1310、TP p1315、TON p1317、TOF p1319 | ✅ 写入 profile（`paramsVerified: verified`）+ `test/fb-knowledge.test.ts` 回归 |
 | `SQRT` 同时有指令（p844）与通用功能（p1221）；ST 中可用 | 指令篇 | ✅ 与现有白名单一致 |
 | `HIOEN` 高速 I/O 指令存在（p1049） | 指令篇 | ✅ 记录 |
 | 旧版白名单里的 `OUT_M/OUT_H/OUT_L/HIOTRK/DHIO_TRK/TIMER_T/COUNTER_FB` 在指令篇中**检索不到** | 指令篇全文检索 | ✅ 已从白名单移除（v0.1 历史错误） |

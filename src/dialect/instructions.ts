@@ -151,8 +151,8 @@ export const STANDARD_FB_SIGNATURES: Record<
     {
       inputs: [...f.inputs],
       outputs: [...f.outputs],
-      // TON/RS 的必填输入已核实；其余 FB 暂按“全部输入必填”保守处理（仅 W009 警告）
-      required: [...f.inputs],
+      // 必填输入：优先用 profile 核实的 required（如 TON 的 IN/PT）
+      required: [...(f.required ?? f.inputs)],
     },
   ]),
 );

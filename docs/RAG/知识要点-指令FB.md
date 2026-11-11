@@ -25,18 +25,63 @@
 - 三菱**没有** `RAMP`、`RAMP_REAL`（全文检索无此指令）；
 - 本工具：`STANDARD_FUNCTIONS.RAMPF` = 5 参、返回 BOOL（ENO）；旧版提示文案已改。
 
-## 3. 定时器 / 计数器 / 边沿检测 FB（第 28~33 章）
+## 3. 定时器 / 计数器 / 边沿检测 / 锁存 FB（29~32 章，形参已逐页核实）
 
-| FB | 作用 | ST 调用示例（手册写法） | 出处 |
+> 核实日期 2026-11-11，来源 JY997D58901；页码为手册**印刷页**（PDF 页序多 2 页）。
+> 已写入 `src/profile/fx5u.ts`（`FX5_STANDARD_FBS`，`paramsVerified: 'verified'`），
+> 并由 `test/fb-knowledge.test.ts` 回归。
+
+### 3.1 定时器：`TP` / `TON` / `TOF`
+
+| 形参 | 方向 | 类型 | 说明 |
 |---|---|---|---|
-| `TP` / `TP_E` / `TP_10(_E)` | 脉冲定时器（指定时间 ON） | `TP_1(IN:=s, PT:=n, Q:=d1, ET:=d2);`（`TP_1` 中 1 为实例名） | 32.1，p1315 |
-| `TON` / `TON_E` 等 | 接通延时定时器，指定时间后输出 ON | 见 p1317 起 | 32 章，p1317 |
-| `CTU` / `CTU_E` 等 | 上升沿计数 | 见 p1306 起 | 30 章，p1306 |
-| `F_TRIG` / `F_TRIG_E` | 下降沿检测 | `F_TRIG_1(CLK:=s, Q:=d);` | 30.2，p1306 邻页（PDF 页 1306） |
+| `IN` | 输入变量 | BOOL | 时间计测（TP 为“输出开始”） |
+| `PT` | 输入变量 | TIME | 延迟/输出时间设定，0~32767ms |
+| `Q` | 输出变量 | BOOL | 输出 |
+| `ET` | 输出变量 | TIME | 经过时间 |
 
-- 共同规律：无 EN/ENO 版 → `FB_实例(形参:=实参, ...)`；带 `_E` 版 → 前两个参数为 `EN, ENO`；
-- 输出参数形参名：定时器常见 `Q`、`ET`；边沿检测 `Q`；计数器 `Q`、`CV` 等（按具体页核对）；
-- 本工具 analyzer 已支持 FB 形参校验（`STANDARD_FB_SIGNATURES`），新增 FB 时照手册参数表补数据。
+| FB | 功能 | ST 示例 | 出处 |
+|---|---|---|---|
+| `TP` | 脉冲定时器：IN=ON 后 Q 保持 PT 时间 | `TP_1(IN:=s, PT:=T#1s, Q:=d1, ET:=d2);` | 32.1 p1315 |
+| `TON` | 接通延时：IN=ON 持续 PT 后 Q=ON | `TON_1(IN:=s, PT:=T#2s, Q:=d1, ET:=d2);` | 32.2 p1317 |
+| `TOF` | 断开延时：IN 由 ON→OFF 后 Q 再保持 PT | `TOF_1(IN:=s, PT:=T#500ms, Q:=d1, ET:=d2);` | 32.3 p1319 |
+
+### 3.2 计数器：`CTU` / `CTD` / `CTUD`
+
+| 形参 | 方向 | 类型 | 说明 |
+|---|---|---|---|
+| `CU` | 输入变量 | BOOL | 递增计数（OFF→ON 加 1） |
+| `CD` | 输入变量 | BOOL | 递减计数（OFF→ON 减 1） |
+| `R` | 输入变量 | BOOL | 计数值复位（CTU/CTUD） |
+| `LD` | 输入变量 | BOOL | 计数值设置（CTD/CTUD） |
+| `PV` | 输入变量 | INT | 计数最大值/开始值（0~32767） |
+| `Q` | 输出变量 | BOOL | 计数完成（CTU/CTD） |
+| `QU` / `QD` | 输出变量 | BOOL | 递增/递减计数完成（CTUD） |
+| `CV` | 输出变量 | INT | 当前计数值 |
+
+| FB | 输入 → 输出 | 出处 |
+|---|---|---|
+| `CTU` | CU, R, PV → Q, CV | 31.1 p1306 |
+| `CTD` | CD, LD, PV → Q, CV | 31.2 p1308 |
+| `CTUD` | CU, CD, R, LD, PV → QU, QD, CV | 31.3 p1310 |
+
+### 3.3 边沿检测 / 锁存
+
+| FB | 形参 | 功能 | 出处 |
+|---|---|---|---|
+| `R_TRIG` | CLK → Q | 上升沿输出 1 个扫描 | 30.1 p1302 |
+| `F_TRIG` | CLK → Q | 下降沿输出 1 个扫描 | 30.2 p1304 |
+| `RS` | S, R1 → Q1 | 复位优先锁存 | 29.2 p1300 |
+| `SR` | S1, R → Q1 | 设置优先锁存 | 29.1 p1298 |
+
+### 3.4 调用规则
+
+- 无 EN/ENO 版：`FB实例(形参:=实参, ..., 输出=>变量);`（如 `t1(IN:=s, PT:=T#1s, Q=>d);`）；
+- 带 EN/ENO 版为独立类型/变体（如 `TON_E`、`TON_10`），前两个形参为 `EN`/`ENO`
+  （本工具当前只对无 EN/ENO 版做形参校验；生成代码默认用无 EN/ENO 版）；
+- `PT` 必须是 `TIME`（`T#1s` / `T#500ms`），不要传常数 1000；
+- analyzer 已按 `STANDARD_FB_SIGNATURES` 校验 E016（未知输入）/E017（未知输出）/
+  W009（缺必填输入），数据来自 profile，测试见 `test/fb-knowledge.test.ts`。
 
 ## 4. 其他已核对指令
 
@@ -57,10 +102,13 @@
 | 方言陷阱提示（RAMP_REAL 等） | 同上 → `KNOWN_TRAPS` |
 | 未知函数告警（W007） | `src/dialect/analyzer.ts` |
 | 软元件范围 | `src/profile/fx5u.ts`（每条带手册来源） |
-| 规则回归 | `test/rag-knowledge.test.ts` |
+| 标准 FB 形参表（名称/方向/类型） | `src/profile/fx5u.ts` → `FX5_STANDARD_FBS[].params` |
+| FB 形参校验（E016/E017/W009） | `src/dialect/analyzer.ts` → `checkFbInstanceCall` |
+| FB 知识回归 | `test/fb-knowledge.test.ts` |
 
 ## 6. 待补
 
-- TON/TOF/CTU/CTD/CTUD/R_TRIG/F_TRIG 的**完整形参表**（输入/输出名、类型、默认值）；
-- 第 25 章「通用功能」清单（SEL/MUX/MAX/MIN/LIMIT 等）与 ST 参数顺序；
+- ✅ **已完成**：TON/TOF/TP/CTU/CTD/CTUD/R_TRIG/F_TRIG/RS/SR 完整形参表（名称/方向/类型/必填）；
+- 第 25 章「通用功能」清单（SEL/MUX/MAX/MIN/LIMIT 等）与 ST 参数顺序（部分已核实，见指令篇 p1265 等）；
+- `_E`（EN/ENO）变体与 `_10`（10ms 单位）定时器变体的形参表；
 - 模块 FB（定位/温度/串口）参数表（来自 FX5 CPU 模块 FB 参考，另见 README 清单）。
