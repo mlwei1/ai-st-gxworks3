@@ -35,6 +35,16 @@ test('提示词：包含标准功能块形参表（防止 AI 写成 SET/RESET1�
   assert.ok(p.includes('RESET1'), '应明确指出 RESET1 是错误写法');
 });
 
+test('提示词：包含通信模板与 RS2 操作数限制（实测坑）', () => {
+  const p = buildSystemPrompt('FX5U');
+  assert.ok(p.includes('modbus_read'), '应包含 modbus_read 模板');
+  assert.ok(p.includes('serial_send_recv'), '应包含 serial_send_recv 模板');
+  assert.ok(p.includes('ADPRW'), '应包含 ADPRW 指令形式');
+  assert.ok(p.includes('SM8401'), '应包含 RS2 发送待机标志');
+  assert.ok(p.includes('SD8403'), '应包含接收点数判定');
+  assert.ok(p.includes('0x12011070'), '应提示 RS2 标签不可用的实测错误');
+});
+
 test('提示词：不得含有会破坏模板字面量的反引号', () => {
   // 反引号出现在模板字面量内部会导致 TS 语法错误，这里做回归保护
   const p = buildSystemPrompt('FX5U');
