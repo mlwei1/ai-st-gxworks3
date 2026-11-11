@@ -27,6 +27,7 @@ test('温度 harness：语法/方言检查 0 error', async () => {
 test('温度 harness：包含 1 秒时钟、阶段记录与自检', async () => {
   const src = await readFile(harnessPath, 'utf8');
   assert.match(src, /tTick\(IN := NOT tTick\.Q, PT := T#1s\);/);
+  assert.match(src, /D0 := nScan;/);
   assert.match(src, /D310 := nBits/);
   assert.match(src, /D316 := nBits/);
   assert.match(src, /D320 := 0/);
