@@ -1,0 +1,37 @@
+{
+  "name": "serial_send_recv_demo",
+  "title": "串口无协议收发示例（RS2，CH1 发 8 字节收 8 字节）",
+  "cpu": {
+    "series": "FX5U",
+    "model": "FX5U-32MT/ES"
+  },
+  "template": {
+    "name": "serial_send_recv",
+    "params": {
+      "channel": 1,
+      "sendBytes": 8,
+      "recvBytes": 8,
+      "timeoutMs": 3000
+    }
+  },
+  "io": [
+    { "device": "X0", "name": "bStart", "type": "BOOL", "comment": "启动一次串口收发" },
+    { "device": "X1", "name": "bReset", "type": "BOOL", "comment": "复位完成/异常" },
+    { "device": "Y0", "name": "bBusy", "type": "BOOL", "comment": "通信中" },
+    { "device": "Y1", "name": "bDone", "type": "BOOL", "comment": "收发正常结束" },
+    { "device": "Y2", "name": "bErr", "type": "BOOL", "comment": "超时/异常" },
+    { "device": "D100", "name": "nSend", "type": "INT", "comment": "发送数据区（8 字节，D100~D103）" },
+    { "device": "D104", "name": "nRecv", "type": "INT", "comment": "接收数据区（8 字节，D104~D107）" }
+  ],
+  "requirements": [
+    { "id": "R1", "text": "X0 上升沿触发一次串口收发（CH1，发送 8 字节、接收 8 字节）" },
+    { "id": "R2", "text": "发送数据从 D100 起，接收数据写入 D104 起" },
+    { "id": "R3", "text": "发送待机标志 ON 后变 OFF 且接收到数据时判定完成，Y1=ON" },
+    { "id": "R4", "text": "串口超时判定标志 ON 或软件超时（3000ms）时 Y2=ON，请求取消" },
+    { "id": "R5", "text": "需在 GX Works3 模块参数中配置 CH1 通信格式（波特率/数据位/校验/停止位）" }
+  ],
+  "meta": {
+    "version": "0.1.0",
+    "createdAt": "2026-11-11"
+  }
+}

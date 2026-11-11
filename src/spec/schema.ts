@@ -164,7 +164,7 @@ export interface SpecLoadResult {
   diagnostics: SpecDiagnostic[];
 }
 
-/** 已知模板名（11 个标准回路/工业模板）。 */
+/** 已知模板名（12 个标准回路/工业模板）。 */
 export const KNOWN_TEMPLATES = [
   'motor_start_stop',
   'motor_auto_stop',
@@ -177,6 +177,7 @@ export const KNOWN_TEMPLATES = [
   'positioning_drva',
   'temperature_two_position',
   'modbus_read',
+  'serial_send_recv',
 ] as const;
 
 /** 步进程序模板名（特殊：不实例化模板库，而由 spec.sequence 生成 SFC/STL 风格 ST）。 */

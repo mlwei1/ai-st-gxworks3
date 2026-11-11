@@ -299,7 +299,7 @@ test('spec：文件不存在返回 SPEC_E_READ（不抛异常）', async () => {
 });
 
 test('spec：JSON Schema 与已知模板常量可用', () => {
-  assert.equal(KNOWN_TEMPLATES.length, 11);
+  assert.equal(KNOWN_TEMPLATES.length, 12);
   const schema = SPEC_JSON_SCHEMA as { required?: string[]; properties?: Record<string, unknown> };
   assert.deepEqual(schema.required, ['name', 'cpu', 'template', 'io', 'requirements']);
   assert.ok(schema.properties);

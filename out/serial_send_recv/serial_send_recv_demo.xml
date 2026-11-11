@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="www.iec.ch/public/TC65SC65BWG7TF10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.000" xsi:schemaLocation="www.iec.ch/public/TC65SC65BWG7TF10 GXW3_IEC61131_10_Ed1_0_ForGXW3.xsd">
+  <FileHeader companyName="MITSUBISHI ELECTRIC CORPORATION" companyURL="http://www.mitsubishielectric.com" productName="GX Works3" productVersion="ver.1.0"/>
+  <ContentHeader name="serial_send_recv_demo" creationDateTime="2026-11-11T04:56:05.481Z" modificationDateTime="2026-11-11T04:56:05.481Z"/>
+  <Types>
+    <GlobalNamespace>
+      <Program name="Main">
+        <Vars accessSpecifier="private">
+          <Variable name="bStartLast">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bReq">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bSending">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bDone">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bErr">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bEno">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="tTimeout">
+            <Type>
+              <TypeName>TON</TypeName>
+            </Type>
+          </Variable>
+        </Vars>
+        <MainBody>
+          <BodyContent xsi:type="ST">
+            <ST>    // 1) 复位（X1）：清除请求/完成/异常
+    IF X1 THEN
+        bReq := FALSE;
+        bDone := FALSE;
+        bErr := FALSE;
+        bSending := FALSE;
+    END_IF;
+
+    // 2) 启动（X0 上升沿）：触发一次串口收发
+    IF X0 AND NOT bStartLast AND NOT bReq THEN
+        bReq := TRUE;
+        bDone := FALSE;
+        bErr := FALSE;
+        bSending := FALSE;
+    END_IF;
+    bStartLast := X0;
+
+    // 3) RS2 无协议收发：ENO := RS2(EN, s, n1, n2, n3, d)
+    //    s=D100 发送区, n1=8 发送字节, n2=8 接收字节,
+    //    n3=1 通道, d=D104 接收区
+    // 注意：RS2 的 n1/n2/n3 必须是指定软元件/常数，不能是未分配软元件的标签，
+    //       因此这里直接写常数。
+    IF bReq THEN
+        bEno := RS2(TRUE, D100, 8, 8, 1, D104);
+
+        // 4) 发送中：SM8401 ON 表示发送待机
+        IF SM8401 THEN
+            bSending := TRUE;
+        END_IF;
+
+        // 5) 完成：发送结束（SM8401 OFF）且 SD8403 收到数据
+        IF bSending AND NOT SM8401 AND SD8403 &gt; 0 THEN
+            bReq := FALSE;
+            bDone := TRUE;
+        END_IF;
+
+        // 6a) 串口超时判定（SM8409）
+        IF SM8409 THEN
+            bReq := FALSE;
+            bErr := TRUE;
+        END_IF;
+
+        // 6b) 软件超时监控（3000ms）
+        tTimeout(IN := bReq, PT := T#3000ms);
+        IF tTimeout.Q THEN
+            bReq := FALSE;
+            bErr := TRUE;
+        END_IF;
+    END_IF;
+
+    // 7) 状态输出
+    Y0 := bReq;
+    Y1 := bDone;
+    Y2 := bErr;</ST>
+          </BodyContent>
+        </MainBody>
+      </Program>
+    </GlobalNamespace>
+  </Types>
+  <Instances>
+    <Configuration name="config1">
+      <Resource name="Main" resourceTypeName="prgFile">
+        <AddData>
+          <Data name="http://www.mitsubishielectric.com/xml/ResourceExecutionType" handleUnknown="implementation">
+            <ResourceExecutionType type="scan"/>
+          </Data>
+        </AddData>
+        <ProgramInstance name="Main" typeName="pou" evaluationOrder="1"/>
+      </Resource>
+      <GlobalVars constant="false" retain="false">
+      </GlobalVars>
+    </Configuration>
+  </Instances>
+</Project>
