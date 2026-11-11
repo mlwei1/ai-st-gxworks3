@@ -1,0 +1,13 @@
+{
+  "tool": "ai-st-gxworks3",
+  "format": "IEC61131-10",
+  "target": "FX5U",
+  "source": "temperature_two_position.harness.st",
+  "generatedAt": "2026-11-11T04:32:19.428Z",
+  "programs": [
+    "Main"
+  ],
+  "structs": [],
+  "globalVars": [],
+  "warnings": []
+}
