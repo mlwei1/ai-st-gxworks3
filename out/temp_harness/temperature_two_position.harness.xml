@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="www.iec.ch/public/TC65SC65BWG7TF10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.000" xsi:schemaLocation="www.iec.ch/public/TC65SC65BWG7TF10 GXW3_IEC61131_10_Ed1_0_ForGXW3.xsd">
   <FileHeader companyName="MITSUBISHI ELECTRIC CORPORATION" companyURL="http://www.mitsubishielectric.com" productName="GX Works3" productVersion="ver.1.0"/>
-  <ContentHeader name="temperature_two_position.harness" creationDateTime="2026-11-11T04:32:19.396Z" modificationDateTime="2026-11-11T04:32:19.396Z"/>
+  <ContentHeader name="temperature_two_position.harness" creationDateTime="2026-11-11T05:26:10.154Z" modificationDateTime="2026-11-11T05:26:10.154Z"/>
   <Types>
     <GlobalNamespace>
       <Program name="Main">
@@ -14,13 +14,10 @@
               <SimpleValue value="0"/>
             </InitialValue>
           </Variable>
-          <Variable name="bClockLast">
+          <Variable name="tTick">
             <Type>
-              <TypeName>BOOL</TypeName>
+              <TypeName>TON</TypeName>
             </Type>
-            <InitialValue>
-              <SimpleValue value="FALSE"/>
-            </InitialValue>
           </Variable>
           <Variable name="nTemp">
             <Type>
@@ -111,7 +108,8 @@
         <MainBody>
           <BodyContent xsi:type="ST">
             <ST>    // ---- 1) 每秒推进阶段，并记录上一阶段结束时的 Y0/Y1 ----
-    IF SM412 AND NOT bClockLast THEN
+    tTick(IN := NOT tTick.Q, PT := T#1s);
+    IF tTick.Q THEN
         nBits := 0;
         IF Y0 THEN
             nBits := nBits + 1;
@@ -143,7 +141,6 @@
             END_IF;
         END_IF;
     END_IF;
-    bClockLast := SM412;
 
     // ---- 2) 各阶段设定温度 D100 ----
     CASE nPhase OF

@@ -26,7 +26,7 @@ test('温度 harness：语法/方言检查 0 error', async () => {
 
 test('温度 harness：包含 1 秒时钟、阶段记录与自检', async () => {
   const src = await readFile(harnessPath, 'utf8');
-  assert.match(src, /SM412/);
+  assert.match(src, /tTick\(IN := NOT tTick\.Q, PT := T#1s\);/);
   assert.match(src, /D310 := nBits/);
   assert.match(src, /D316 := nBits/);
   assert.match(src, /D320 := 0/);
@@ -41,7 +41,7 @@ test('温度 harness：可构建 XML（正文含 harness 逻辑）', async () =>
     const xml = await readFile(r.xmlPath!, 'utf8');
     assert.match(xml, /<ST>/);
     assert.ok(xml.includes('D310 := nBits'), 'XML 正文应包含阶段记录');
-    assert.ok(xml.includes('SM412'), 'XML 正文应包含 SM412');
+    assert.ok(xml.includes('tTick'), 'XML 正文应包含 TON 节拍');
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

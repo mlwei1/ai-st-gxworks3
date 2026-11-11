@@ -1,6 +1,6 @@
 // ============================================================
 // 自驱动温度模板仿真 harness（测试脚手架，不属于交付模板）
-// 目的：不依赖外部写 D100，程序内部用 SM412（1 秒时钟）推进 7 个阶段，
+// 目的：不依赖外部写 D100，程序内部用 TON（1 秒）推进 7 个阶段，
 //       把每阶段结束时刻的 Y0/Y1 记录到 D310~D316，
 //       最后自检写入 D320（0=PASS，1=FAIL）。
 // 运行：FX5U + GX Simulator3，启动仿真后用批量监视读 D310~D316、D320。
@@ -9,7 +9,7 @@
 PROGRAM Main
 VAR
     nPhase : INT := 0;                      // 当前阶段 0..7
-    bClockLast : BOOL := FALSE;             // SM412 上一扫描
+    tTick : TON;                            // 1 秒节拍（TON 在 Simulator3 中正常）
     nTemp : INT;                            // 当前温度（0.1°C）
     nSet : INT := 600;                      // 设定 60.0°C
     nHyst : INT := 20;                      // 回差 2.0°C
@@ -23,7 +23,8 @@ VAR
     bChecked : BOOL := FALSE;               // 自检已执行
 END_VAR
     // ---- 1) 每秒推进阶段，并记录上一阶段结束时的 Y0/Y1 ----
-    IF SM412 AND NOT bClockLast THEN
+    tTick(IN := NOT tTick.Q, PT := T#1s);
+    IF tTick.Q THEN
         nBits := 0;
         IF Y0 THEN
             nBits := nBits + 1;
@@ -55,7 +56,6 @@ END_VAR
             END_IF;
         END_IF;
     END_IF;
-    bClockLast := SM412;
 
     // ---- 2) 各阶段设定温度 D100 ----
     CASE nPhase OF
