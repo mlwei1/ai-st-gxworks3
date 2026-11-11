@@ -21,9 +21,11 @@ END_VAR
     // 1) 当前温度：D100（0.1°C，由模拟量/通信写入）
     nTemp := D100;
 
-    // 2) 传感器量程检查：超量程视为故障，停止输出
+    // 2) 传感器量程检查：超量程时停止运行（回到量程内可重新启动）
+    bErr := FALSE;
     IF nTemp <= nTempMin OR nTemp >= nTempMax THEN
         bErr := TRUE;
+        bRun := FALSE;
     END_IF;
 
     // 3) 启动/停止

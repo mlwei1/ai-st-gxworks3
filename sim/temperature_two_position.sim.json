@@ -1,0 +1,76 @@
+{
+  "name": "temperature_two_position_sim",
+  "title": "位式温控仿真场景（回差 / 故障恢复）",
+  "spec": "specs/temperature_two_position.json",
+  "cpu": "FX5U",
+  "program": { "resource": "MAIN", "name": "Main" },
+  "initial": {
+    "X0": 0,
+    "X1": 0,
+    "D100": 0,
+    "Y0": 0,
+    "Y1": 0
+  },
+  "steps": [
+    {
+      "name": "启动温控（X0 脉冲），冷态 D100=0",
+      "set": { "X0": 1, "D100": 0 },
+      "waitMs": 500,
+      "expect": { "Y0": 1, "Y1": 0 },
+      "note": "0.1°C 单位；0 ≤ 600-20 → 加热 ON"
+    },
+    {
+      "name": "松开启动 X0=0（运行保持）",
+      "set": { "X0": 0 },
+      "waitMs": 400,
+      "expect": { "Y0": 1, "Y1": 0 },
+      "note": "温控运行中，加热保持"
+    },
+    {
+      "name": "温度升到设定 60.0°C（D100=600）",
+      "set": { "D100": 600 },
+      "waitMs": 500,
+      "expect": { "Y0": 0, "Y1": 0 },
+      "note": "达到设定 → 加热 OFF（回差逻辑：此时不立即冷却）"
+    },
+    {
+      "name": "温度升到设定+回差 62.0°C（D100=620）",
+      "set": { "D100": 620 },
+      "waitMs": 500,
+      "expect": { "Y1": 1 },
+      "note": "≥ 600+20 → 冷却 ON"
+    },
+    {
+      "name": "温度降回设定 60.0°C（D100=600）",
+      "set": { "D100": 600 },
+      "waitMs": 500,
+      "expect": { "Y1": 0 },
+      "note": "≤ 设定 → 冷却 OFF"
+    },
+    {
+      "name": "传感器超量程（D100=2000）",
+      "set": { "D100": 2000 },
+      "waitMs": 500,
+      "expect": { "Y0": 0, "Y1": 0 },
+      "note": "超出 1500 → 故障，停止输出"
+    },
+    {
+      "name": "回到量程内并重新启动（D100=0，X0 脉冲）",
+      "set": { "D100": 0, "X0": 1 },
+      "waitMs": 500,
+      "expect": { "Y0": 1 },
+      "note": "故障非锁存：回到量程内允许重新启动"
+    },
+    {
+      "name": "松开启动 X0=0（保持加热）",
+      "set": { "X0": 0 },
+      "waitMs": 400,
+      "expect": { "Y0": 1 },
+      "note": "启动后自锁运行"
+    }
+  ],
+  "meta": {
+    "version": "0.1.0",
+    "source": "gen specs/temperature_two_position.json（模板 temperature_two_position）"
+  }
+}

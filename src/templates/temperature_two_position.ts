@@ -53,9 +53,11 @@ function instantiate(ctx: TemplateContext): string {
   body.push(`nTemp := ${dTemp};`);
   body.push('');
 
-  body.push('// 2) 传感器量程检查：超量程视为故障，停止输出');
+  body.push('// 2) 传感器量程检查：超量程时停止运行（回到量程内可重新启动）');
+  body.push('bErr := FALSE;');
   body.push('IF nTemp <= nTempMin OR nTemp >= nTempMax THEN');
   body.push('    bErr := TRUE;');
+  body.push('    bRun := FALSE;');
   body.push('END_IF;');
   body.push('');
 

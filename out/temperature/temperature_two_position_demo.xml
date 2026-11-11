@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="www.iec.ch/public/TC65SC65BWG7TF10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.000" xsi:schemaLocation="www.iec.ch/public/TC65SC65BWG7TF10 GXW3_IEC61131_10_Ed1_0_ForGXW3.xsd">
   <FileHeader companyName="MITSUBISHI ELECTRIC CORPORATION" companyURL="http://www.mitsubishielectric.com" productName="GX Works3" productVersion="ver.1.0"/>
-  <ContentHeader name="temperature_two_position_demo" creationDateTime="2026-11-11T04:11:28.140Z" modificationDateTime="2026-11-11T04:11:28.140Z"/>
+  <ContentHeader name="temperature_two_position_demo" creationDateTime="2026-11-11T04:19:29.080Z" modificationDateTime="2026-11-11T04:19:29.080Z"/>
   <Types>
     <GlobalNamespace>
       <Program name="Main">
@@ -86,9 +86,11 @@
             <ST>    // 1) 当前温度：D100（0.1°C，由模拟量/通信写入）
     nTemp := D100;
 
-    // 2) 传感器量程检查：超量程视为故障，停止输出
+    // 2) 传感器量程检查：超量程时停止运行（回到量程内可重新启动）
+    bErr := FALSE;
     IF nTemp &lt;= nTempMin OR nTemp &gt;= nTempMax THEN
         bErr := TRUE;
+        bRun := FALSE;
     END_IF;
 
     // 3) 启动/停止
