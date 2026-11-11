@@ -23,6 +23,7 @@ import {
   type CpuModel,
 } from '../profile/index.ts';
 import {
+  COMMUNICATION_FUNCTIONS,
   FOREIGN_BRANDS_FUNCTIONS,
   KNOWN_TRAPS,
   MITSUBISHI_FUNCTIONS,
@@ -465,7 +466,10 @@ export class Analyzer {
             STANDARD_FUNCTIONS[expr.name.toUpperCase()] !== undefined ||
             MITSUBISHI_FUNCTIONS[expr.name.toUpperCase()] !== undefined ||
             STANDARD_FUNCTION_BLOCKS[expr.name.toUpperCase()] !== undefined ||
-            MITSUBISHI_FUNCTION_BLOCKS[expr.name.toUpperCase()] !== undefined;
+            MITSUBISHI_FUNCTION_BLOCKS[expr.name.toUpperCase()] !== undefined ||
+            // 模块号：通信指令的 `U0`/`U`（手册注明为字符串操作数，ST 中直接写 U0）
+            expr.name === 'U' ||
+            /^U\d+$/i.test(expr.name);
           if (!known) {
             this.add(
               'error',
@@ -683,6 +687,23 @@ export class Analyzer {
           call.loc,
           pou.name,
           '定位指令 ST 形式见 docs/RAG/知识要点-定位.md',
+        );
+      }
+      return;
+    }
+
+    // 通信指令（ST 函数形式，如 ENO:=SP_SOCOPEN(EN,U0,s1,s2,d);）
+    const comm = COMMUNICATION_FUNCTIONS[upper];
+    if (comm) {
+      const total = call.args.length + call.outputArgs.length;
+      if (total < comm.min || total > comm.max) {
+        this.add(
+          'error',
+          'E011',
+          `通信指令 '${call.callee}' 参数个数错误：期望 ${comm.min}，实际 ${total}`,
+          call.loc,
+          pou.name,
+          '通信指令 ST 形式见 docs/RAG/知识要点-通信.md',
         );
       }
       return;

@@ -57,3 +57,59 @@ test('通信指令：SP_* 的 U0 模块号操作数被明确记录', () => {
     assert.match(u0!.comment, /模块号/);
   }
 });
+
+import { parseST } from '../src/dialect/parser.ts';
+import { analyzeST } from '../src/dialect/analyzer.ts';
+
+function codes(src: string): string[] {
+  return analyzeST(parseST(src), { target: 'FX5U' }).map((d) => d.code);
+}
+
+test('通信指令：SP_SOCOPEN 合法调用（含 U0）不报 E008/E011/W007', () => {
+  const src = [
+    'PROGRAM Main',
+    'VAR',
+    '    bEno : BOOL;',
+    '    nConn : WORD := 1;',
+    '    bDone : BOOL;',
+    'END_VAR',
+    'bEno := SP_SOCOPEN(TRUE, U0, nConn, D100, bDone);',
+    'END_PROGRAM',
+  ].join('\n');
+  const c = codes(src);
+  assert.ok(!c.includes('E008'), `不应有 E008：${c.join(',')}`);
+  assert.ok(!c.includes('E011'), `不应有 E011：${c.join(',')}`);
+  assert.ok(!c.includes('W007'), `不应有 W007：${c.join(',')}`);
+});
+
+test('通信指令：SP_SOCSND 参数个数错误 → E011', () => {
+  const src = [
+    'PROGRAM Main',
+    'VAR',
+    '    bEno : BOOL;',
+    '    nConn : WORD := 1;',
+    '    bDone : BOOL;',
+    'END_VAR',
+    'bEno := SP_SOCSND(TRUE, U0, nConn, D100);',
+    'END_PROGRAM',
+  ].join('\n');
+  assert.ok(codes(src).includes('E011'));
+});
+
+test('通信指令：RS2 合法调用（6 参）不报警', () => {
+  const src = [
+    'PROGRAM Main',
+    'VAR',
+    '    bEno : BOOL;',
+    '    bStart : BOOL;',
+    '    nSend : WORD := 10;',
+    '    nRecv : WORD := 10;',
+    '    nCh : WORD := 1;',
+    'END_VAR',
+    'bEno := RS2(bStart, D100, nSend, nRecv, nCh, D200);',
+    'END_PROGRAM',
+  ].join('\n');
+  const c = codes(src);
+  assert.ok(!c.includes('E011'), c.join(','));
+  assert.ok(!c.includes('W007'), c.join(','));
+});

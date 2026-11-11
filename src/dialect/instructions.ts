@@ -13,6 +13,7 @@ import {
   FX5_STANDARD_FBS,
   FX5_NATIVE_FBS,
   FX5_POSITIONING_INSTRUCTIONS,
+  FX5_COMMUNICATION_INSTRUCTIONS,
   FX5U_PROFILE,
   getDeviceFact,
   type DeviceBase,
@@ -30,6 +31,19 @@ export const STANDARD_FUNCTION_BLOCKS: Record<string, string> = Object.fromEntri
 export const POSITIONING_FUNCTIONS: Record<string, { min: number; max: number; ret: string | null }> =
   Object.fromEntries(
     FX5_POSITIONING_INSTRUCTIONS.map((f) => [
+      f.name,
+      { min: f.operands.length, max: f.operands.length, ret: 'BOOL' },
+    ]),
+  );
+
+/**
+ * 通信指令（ST 中以函数形式调用，返回 ENO）。
+ * 形参个数来自 profile 的手册核实结果；`U0`/`U` 是模块号字符串操作数。
+ * ADPRW 的 ST 顺序待原生验证，但参数个数按操作数表记录为 7。
+ */
+export const COMMUNICATION_FUNCTIONS: Record<string, { min: number; max: number; ret: string | null }> =
+  Object.fromEntries(
+    FX5_COMMUNICATION_INSTRUCTIONS.map((f) => [
       f.name,
       { min: f.operands.length, max: f.operands.length, ret: 'BOOL' },
     ]),
