@@ -1,0 +1,38 @@
+{
+  "name": "modbus_read_demo",
+  "title": "MODBUS 主站读取示例（ADPRW，03H 读保持寄存器）",
+  "cpu": {
+    "series": "FX5U",
+    "model": "FX5U-32MT/ES"
+  },
+  "template": {
+    "name": "modbus_read",
+    "params": {
+      "slave": 1,
+      "func": 3,
+      "addr": 0,
+      "count": 4,
+      "timeoutMs": 3000
+    }
+  },
+  "io": [
+    { "device": "X0", "name": "bStart", "type": "BOOL", "comment": "启动一次 MODBUS 读取" },
+    { "device": "X1", "name": "bReset", "type": "BOOL", "comment": "复位完成/异常" },
+    { "device": "Y0", "name": "bBusy", "type": "BOOL", "comment": "通信中" },
+    { "device": "Y1", "name": "bDone", "type": "BOOL", "comment": "读取正常结束" },
+    { "device": "Y2", "name": "bErr", "type": "BOOL", "comment": "读取异常/超时" },
+    { "device": "D100", "name": "nData", "type": "INT", "comment": "读取数据区（4 个字，D100~D103）" },
+    { "device": "M100", "name": "nStatus", "type": "BOOL", "comment": "状态位 M100/M101/M102" }
+  ],
+  "requirements": [
+    { "id": "R1", "text": "X0 上升沿触发一次 MODBUS 读取（从站 1，功能码 03H，起始地址 0，数量 4）" },
+    { "id": "R2", "text": "读取结果写入 D100~D103；正常结束时 Y1=ON、通信中 Y0=OFF" },
+    { "id": "R3", "text": "从站异常结束时 Y2=ON，等待 X1 复位" },
+    { "id": "R4", "text": "通信超过 3000ms 未结束判定超时，Y2=ON 并取消请求" },
+    { "id": "R5", "text": "需在 GX Works3 模块参数中配置 RS-485 MODBUS 主站参数后才会实际通信" }
+  ],
+  "meta": {
+    "version": "0.1.0",
+    "createdAt": "2026-11-11"
+  }
+}

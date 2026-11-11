@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="www.iec.ch/public/TC65SC65BWG7TF10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.000" xsi:schemaLocation="www.iec.ch/public/TC65SC65BWG7TF10 GXW3_IEC61131_10_Ed1_0_ForGXW3.xsd">
+  <FileHeader companyName="MITSUBISHI ELECTRIC CORPORATION" companyURL="http://www.mitsubishielectric.com" productName="GX Works3" productVersion="ver.1.0"/>
+  <ContentHeader name="modbus_read_demo" creationDateTime="2026-11-11T04:48:43.076Z" modificationDateTime="2026-11-11T04:48:43.076Z"/>
+  <Types>
+    <GlobalNamespace>
+      <Program name="Main">
+        <Vars accessSpecifier="private">
+          <Variable name="bStartLast">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bReq">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bDone">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bErr">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bEno">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="nSlave">
+            <Type>
+              <TypeName>INT</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="1"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="nFunc">
+            <Type>
+              <TypeName>INT</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="3"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="nAddr">
+            <Type>
+              <TypeName>INT</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="0"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="nCount">
+            <Type>
+              <TypeName>INT</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="4"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="tTimeout">
+            <Type>
+              <TypeName>TON</TypeName>
+            </Type>
+          </Variable>
+        </Vars>
+        <MainBody>
+          <BodyContent xsi:type="ST">
+            <ST>    // 1) 复位（X1）：清除请求/完成/异常
+    IF X1 THEN
+        bReq := FALSE;
+        bDone := FALSE;
+        bErr := FALSE;
+    END_IF;
+
+    // 2) 启动（X0 上升沿）：触发一次读取
+    IF X0 AND NOT bStartLast AND NOT bReq THEN
+        bReq := TRUE;
+        bDone := FALSE;
+        bErr := FALSE;
+    END_IF;
+    bStartLast := X0;
+
+    // 3) MODBUS 读取（功能码 03H 读保持寄存器）：ENO := ADPRW(EN, s1, s2, s3, s4, s5, d2)
+    //    s1=站号1, s2=功能码3, s3=起始地址0, s4=数量4,
+    //    s5=读数据区 D100，d2=状态位 M100/M101/M102
+    IF bReq THEN
+        bEno := ADPRW(TRUE, nSlave, nFunc, nAddr, nCount, D100, M100);
+
+        // 4) 正常结束（状态位 M101 ON，ON 持续 1 个扫描）
+        IF M101 THEN
+            bReq := FALSE;
+            bDone := TRUE;
+        END_IF;
+
+        // 5) 异常结束（状态位 M102 ON）
+        IF M102 THEN
+            bReq := FALSE;
+            bErr := TRUE;
+        END_IF;
+
+        // 6) 超时监控：3000ms 内未结束判通信异常
+        tTimeout(IN := bReq, PT := T#3000ms);
+        IF tTimeout.Q THEN
+            bReq := FALSE;
+            bErr := TRUE;
+        END_IF;
+    END_IF;
+
+    // 7) 状态输出
+    Y0 := bReq;
+    Y1 := bDone;
+    Y2 := bErr;</ST>
+          </BodyContent>
+        </MainBody>
+      </Program>
+    </GlobalNamespace>
+  </Types>
+  <Instances>
+    <Configuration name="config1">
+      <Resource name="Main" resourceTypeName="prgFile">
+        <AddData>
+          <Data name="http://www.mitsubishielectric.com/xml/ResourceExecutionType" handleUnknown="implementation">
+            <ResourceExecutionType type="scan"/>
+          </Data>
+        </AddData>
+        <ProgramInstance name="Main" typeName="pou" evaluationOrder="1"/>
+      </Resource>
+      <GlobalVars constant="false" retain="false">
+      </GlobalVars>
+    </Configuration>
+  </Instances>
+</Project>
