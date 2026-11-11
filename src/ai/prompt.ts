@@ -131,13 +131,13 @@ ${targetNote}
 
     | 功能块 | 输入 | 输出 | 说明 |
     |---|---|---|---|
-    | TON、TOF、TP | IN, PT | Q, ET | 定时器（TON 形参已核实） |
-    | CTU | CU, R, PV | Q, CV | 加计数（形参待验证） |
-    | CTD | CD, LD, PV | Q, CV | 减计数（形参待验证） |
-    | CTUD | CU, CD, R, LD, PV | QU, QD, CV | 双向计数（形参待验证） |
-    | R_TRIG、F_TRIG | CLK | Q | 上升/下降沿（形参待验证） |
+    | TON、TOF、TP | IN, PT | Q, ET | 定时器（形参已核实） |
+    | CTU | CU, R, PV | Q, CV | 加计数（形参已核实） |
+    | CTD | CD, LD, PV | Q, CV | 减计数（形参已核实） |
+    | CTUD | CU, CD, R, LD, PV | QU, QD, CV | 双向计数（形参已核实） |
+    | R_TRIG、F_TRIG | CLK | Q | 上升/下降沿（形参已核实） |
     | RS（复位优先） | S, R1 | Q1 | 锁存器（形参已核实） |
-    | SR（置位优先） | S1, R | Q1 | 锁存器（形参待验证） |
+    | SR（置位优先） | S1, R | Q1 | 锁存器（形参已核实） |
 
     **注意**：RS 的输入是 S 和 R1（不是 SET / RESET1），
     输出是 Q1（不是 Q）。SR 的输入是 S1 和 R。
@@ -150,6 +150,17 @@ ${targetNote}
 
     **置位复位**：推荐用 RS / SR 功能块（优先级明确）。
     SET / RST 在 ST 中的调用形式**未经原生验证**，非必要不要生成。
+
+14. **定位指令在 ST 中用函数形式 + ENO 赋值**（不要写成梯形图触点/指令表）：
+    - 绝对定位：ENO := DRVA(EN, s1目标地址, s2速度, d1脉冲Y, d2方向Y);
+    - 相对定位：ENO := DRVI(EN, s1相对量, s2速度, d1脉冲Y, d2方向Y);
+    - 原点回归：ENO := DSZR(EN, s1近点信号, s2零点信号, d1脉冲Y, d2方向Y);
+    - 表格运行：ENO := DRVTBL(EN, n1起始表, n2最终表, n3执行方法, d1轴号, d2结束标志);
+    - 可变速脉冲：ENO := PLSV(EN, s速度, d1脉冲Y, d2方向Y);
+    完成/出错判断用 SM5500~SM5503（轴1~4 定位驱动中）、SM5532~SM5535（定位出错）。
+
+15. **工位步进程序用“步号状态机”实现**：nStep + CASE nStep OF，
+    每步先判断转移条件再切换步号；不要尝试生成 SFC/STL 图形对象（本工具只输出 ST）。
 
 ## 质量要求
 
