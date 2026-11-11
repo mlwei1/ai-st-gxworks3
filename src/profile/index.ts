@@ -51,6 +51,16 @@ export type {
   VerifiedStatus,
 };
 
+export {
+  FX5_POSITIONING_INSTRUCTIONS,
+  getPositioningInstruction,
+  isPositioningInstruction,
+} from './positioning.ts';
+export type {
+  PositioningInstructionFact,
+  PositioningOperand,
+} from './positioning.ts';
+
 /** 默认机型。 */
 export const DEFAULT_CPU_MODEL: CpuModel = 'FX5U';
 

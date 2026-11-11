@@ -27,6 +27,7 @@ import {
   KNOWN_TRAPS,
   MITSUBISHI_FUNCTIONS,
   MITSUBISHI_FUNCTION_BLOCKS,
+  POSITIONING_FUNCTIONS,
   RESERVED_WORDS,
   STANDARD_FB_SIGNATURES,
   STANDARD_FUNCTION_BLOCKS,
@@ -669,6 +670,23 @@ export class Analyzer {
     // 用户自定义 FB：检查是否在工程中定义
     const userFB = this.scope.functions.get(upper) ?? this.globalScope.functions.get(upper);
     if (userFB) return;
+
+    // 定位指令（ST 函数形式，如 ENO:=DRVA(EN,s1,s2,d1,d2);）
+    const pos = POSITIONING_FUNCTIONS[upper];
+    if (pos) {
+      const total = call.args.length + call.outputArgs.length;
+      if (total < pos.min || total > pos.max) {
+        this.add(
+          'error',
+          'E011',
+          `定位指令 '${call.callee}' 参数个数错误：期望 ${pos.min}，实际 ${total}`,
+          call.loc,
+          pou.name,
+          '定位指令 ST 形式见 docs/RAG/知识要点-定位.md',
+        );
+      }
+      return;
+    }
 
     // 未知的调用目标 —— 可能是本工程定义的 FB（跨 POU），仅提示
     this.add(

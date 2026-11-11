@@ -12,6 +12,7 @@
 import {
   FX5_STANDARD_FBS,
   FX5_NATIVE_FBS,
+  FX5_POSITIONING_INSTRUCTIONS,
   FX5U_PROFILE,
   getDeviceFact,
   type DeviceBase,
@@ -21,6 +22,18 @@ import {
 export const STANDARD_FUNCTION_BLOCKS: Record<string, string> = Object.fromEntries(
   FX5_STANDARD_FBS.map((f) => [f.name, f.name]),
 );
+
+/**
+ * 定位指令（ST 中以函数形式调用，返回 ENO）。
+ * 形参个数来自 profile 的手册核实结果；EN/ENO 也计入操作数。
+ */
+export const POSITIONING_FUNCTIONS: Record<string, { min: number; max: number; ret: string | null }> =
+  Object.fromEntries(
+    FX5_POSITIONING_INSTRUCTIONS.map((f) => [
+      f.name,
+      { min: f.operands.length, max: f.operands.length, ret: 'BOOL' },
+    ]),
+  );
 
 /**
  * 三菱专用功能块（标准 IEC 中没有对应物）。
