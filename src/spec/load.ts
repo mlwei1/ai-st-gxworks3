@@ -625,6 +625,10 @@ function parseSequence(
     }
   }
 
+  // 工业版附加定义（模式/气缸监视/手动/停止序列/HMI）
+  const industrial = parseIndustrial(raw.industrial, diagnostics);
+  if (industrial) result.industrial = industrial;
+
   // 引用完整性：initialStep / 转移目标
   if (result.initialStep !== undefined && !ids.has(result.initialStep)) {
     err(diagnostics, 'SPEC_E_SEQUENCE_INITIAL', 'sequence.initialStep', `initialStep '${result.initialStep}' 不在 steps 中`);
@@ -644,6 +648,173 @@ function parseSequence(
   });
 
   return result;
+}
+
+/** 解析 sequence.industrial（工业版：模式/气缸监视/手动/停止序列/HMI）。 */
+function parseIndustrial(
+  raw: unknown,
+  diagnostics: SpecDiagnostic[],
+): import('./schema.ts').IndustrialSpec | undefined {
+  if (raw === undefined) return undefined;
+  const root = 'sequence.industrial';
+  if (!isPlainObject(raw)) {
+    err(diagnostics, 'SPEC_E_INDUSTRIAL', root, 'industrial 必须是对象');
+    return undefined;
+  }
+  const ind: import('./schema.ts').IndustrialSpec = {
+    estop: '',
+    hmi: {
+      start: '',
+      stop: '',
+      reset: '',
+      manual: '',
+      exitManual: '',
+      continueRun: '',
+      restart: '',
+    },
+    cylinders: [],
+    manualButtons: [],
+    stopSequence: [],
+  };
+
+  if (!isNonEmptyString(raw.estop)) err(diagnostics, 'SPEC_E_INDUSTRIAL_ESTOP', `${root}.estop`, 'estop 必须是非空字符串（如 X2）');
+  else ind.estop = String(raw.estop).trim();
+
+  if (isNonEmptyString(raw.alarmOutput)) ind.alarmOutput = String(raw.alarmOutput).trim();
+
+  // HMI
+  if (!isPlainObject(raw.hmi)) {
+    err(diagnostics, 'SPEC_E_INDUSTRIAL_HMI', `${root}.hmi`, 'hmi 必须是对象');
+  } else {
+    for (const k of ['start', 'stop', 'reset', 'manual', 'exitManual', 'continueRun', 'restart'] as const) {
+      const v = raw.hmi[k];
+      if (!isNonEmptyString(v)) err(diagnostics, 'SPEC_E_INDUSTRIAL_HMI_FIELD', `${root}.hmi.${k}`, `hmi.${k} 必须是非空字符串（软元件地址，如 M0）`);
+      else ind.hmi[k] = String(v).trim();
+    }
+    if (isPlainObject(raw.hmi.status)) {
+      const status = raw.hmi.status;
+      const st: NonNullable<import('./schema.ts').IndustrialHmiSpec['status']> = {};
+      for (const k of ['idle', 'auto', 'manual', 'stopping', 'alarm', 'paused'] as const) {
+        if (isNonEmptyString(status[k])) st[k] = String(status[k]).trim();
+      }
+      ind.hmi.status = st;
+    }
+    if (isPlainObject(raw.hmi.data)) {
+      const data = raw.hmi.data;
+      const d: NonNullable<import('./schema.ts').IndustrialHmiSpec['data']> = {};
+      for (const k of ['step', 'mode', 'alarmCode', 'alarmStep'] as const) {
+        if (isNonEmptyString(data[k])) d[k] = String(data[k]).trim();
+      }
+      ind.hmi.data = d;
+    }
+  }
+
+  // 气缸
+  if (!Array.isArray(raw.cylinders) || raw.cylinders.length === 0) {
+    err(diagnostics, 'SPEC_E_INDUSTRIAL_CYLINDERS', `${root}.cylinders`, 'cylinders 必须是至少 1 个元素的数组');
+  } else {
+    raw.cylinders.forEach((cRaw, i) => {
+      const p = `${root}.cylinders[${i}]`;
+      if (!isPlainObject(cRaw)) {
+        err(diagnostics, 'SPEC_E_INDUSTRIAL_CYLINDER', p, 'cylinder 必须是对象');
+        return;
+      }
+      const c: import('./schema.ts').CylinderSpec = {
+        name: String(cRaw.name ?? ''),
+        extendY: String(cRaw.extendY ?? ''),
+        extendedX: String(cRaw.extendedX ?? ''),
+        retractedX: String(cRaw.retractedX ?? ''),
+      };
+      for (const k of ['name', 'extendY', 'extendedX', 'retractedX'] as const) {
+        if (!isNonEmptyString(cRaw[k])) err(diagnostics, 'SPEC_E_INDUSTRIAL_CYLINDER_FIELD', `${p}.${k}`, `${k} 必须是非空字符串`);
+      }
+      if (isNonEmptyString(cRaw.retractY)) c.retractY = String(cRaw.retractY).trim();
+      if (cRaw.valve !== undefined) {
+        if (cRaw.valve !== 'double' && cRaw.valve !== 'single') {
+          err(diagnostics, 'SPEC_E_INDUSTRIAL_CYLINDER_VALVE', `${p}.valve`, "valve 只能是 'double' 或 'single'");
+        } else {
+          c.valve = cRaw.valve;
+        }
+      }
+      if (cRaw.timeoutMs !== undefined) {
+        if (typeof cRaw.timeoutMs !== 'number' || !Number.isFinite(cRaw.timeoutMs) || cRaw.timeoutMs < 100) {
+          err(diagnostics, 'SPEC_E_INDUSTRIAL_CYLINDER_TIMEOUT', `${p}.timeoutMs`, 'timeoutMs 必须是 >=100 的整数毫秒');
+        } else {
+          c.timeoutMs = Math.trunc(cRaw.timeoutMs);
+        }
+      }
+      for (const alarmKey of ['alarmExtend', 'alarmRetract'] as const) {
+        const aRaw = cRaw[alarmKey];
+        if (aRaw !== undefined) {
+          if (!isPlainObject(aRaw) || typeof aRaw.code !== 'number') {
+            err(diagnostics, 'SPEC_E_INDUSTRIAL_ALARM', `${p}.${alarmKey}`, `${alarmKey} 必须是 { code:number, message?:string }`);
+          } else {
+            c[alarmKey] = {
+              code: Math.trunc(aRaw.code),
+              ...(isNonEmptyString(aRaw.message) ? { message: String(aRaw.message) } : {}),
+            };
+          }
+        }
+      }
+      ind.cylinders.push(c);
+    });
+  }
+
+  // 手动按钮
+  if (!Array.isArray(raw.manualButtons) || raw.manualButtons.length === 0) {
+    err(diagnostics, 'SPEC_E_INDUSTRIAL_MANUAL', `${root}.manualButtons`, 'manualButtons 必须是至少 1 个元素的数组');
+  } else {
+    raw.manualButtons.forEach((bRaw, i) => {
+      const p = `${root}.manualButtons[${i}]`;
+      if (!isPlainObject(bRaw) || !isNonEmptyString(bRaw.button) || !isNonEmptyString(bRaw.cylinder)) {
+        err(diagnostics, 'SPEC_E_INDUSTRIAL_MANUAL_BUTTON', p, '必须是 { button:string, cylinder:string }');
+        return;
+      }
+      ind.manualButtons.push({ button: String(bRaw.button).trim(), cylinder: String(bRaw.cylinder).trim() });
+    });
+  }
+
+  // 停止序列
+  if (!Array.isArray(raw.stopSequence) || raw.stopSequence.length === 0) {
+    err(diagnostics, 'SPEC_E_INDUSTRIAL_STOP', `${root}.stopSequence`, 'stopSequence 必须是至少 1 个元素的数组');
+  } else {
+    raw.stopSequence.forEach((sRaw, i) => {
+      const p = `${root}.stopSequence[${i}]`;
+      if (!isPlainObject(sRaw) || !isNonEmptyString(sRaw.id) || !isNonEmptyString(sRaw.until)) {
+        err(diagnostics, 'SPEC_E_INDUSTRIAL_STOP_STEP', p, 'stopSequence 每步必须是 { id, name?, actions, until }');
+        return;
+      }
+      const actions: import('./schema.ts').StepAction[] = [];
+      if (!Array.isArray(sRaw.actions)) {
+        err(diagnostics, 'SPEC_E_INDUSTRIAL_STOP_ACTIONS', `${p}.actions`, 'actions 必须是数组');
+      } else {
+        sRaw.actions.forEach((aRaw, j) => {
+          const ap = `${p}.actions[${j}]`;
+          if (!isPlainObject(aRaw) || !isNonEmptyString(aRaw.target)) {
+            err(diagnostics, 'SPEC_E_INDUSTRIAL_STOP_ACTION', ap, 'action 必须是 { target, value?/expression? }');
+            return;
+          }
+          if (aRaw.value !== undefined && aRaw.value !== 'ON' && aRaw.value !== 'OFF') {
+            err(diagnostics, 'SPEC_E_INDUSTRIAL_STOP_ACTION_VALUE', `${ap}.value`, "value 只能是 'ON' 或 'OFF'");
+            return;
+          }
+          actions.push({
+            target: String(aRaw.target).trim(),
+            ...(aRaw.value !== undefined ? { value: aRaw.value as 'ON' | 'OFF' } : {}),
+            ...(isNonEmptyString(aRaw.expression) ? { expression: String(aRaw.expression).trim() } : {}),
+          });
+        });
+      }
+      ind.stopSequence.push({
+        id: String(sRaw.id).trim(),
+        ...(isNonEmptyString(sRaw.name) ? { name: String(sRaw.name).trim() } : {}),
+        actions,
+        until: String(sRaw.until).trim(),
+      });
+    });
+  }
+
+  return ind;
 }
 
 /**

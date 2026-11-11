@@ -97,6 +97,99 @@ export interface SequenceStep {
   next?: StepTransition | StepTransition[];
 }
 
+/** 气缸故障报警定义（自动/手动动作超时用）。 */
+export interface CylinderAlarmSpec {
+  /** 报警代码（写入报警代码区）。 */
+  code: number;
+  /** HMI 显示文字（注释用）。 */
+  message?: string;
+}
+
+/** 气缸定义（工业步进程序的执行元件 + 磁性开关 + 超时报警）。 */
+export interface CylinderSpec {
+  /** 名称（中文，仅注释/报警文字用）。 */
+  name: string;
+  /** 伸出/前进输出（如 Y0）。 */
+  extendY: string;
+  /** 缩回/后退输出（双电控）；单电控省略。 */
+  retractY?: string;
+  /** 伸出到位磁性开关（如 X10）。 */
+  extendedX: string;
+  /** 原位/缩回到位磁性开关（如 X12）。 */
+  retractedX: string;
+  /** 阀类型：double=双电控（默认），single=单电控弹簧复位。 */
+  valve?: 'double' | 'single';
+  /** 动作超时（ms），默认 5000。 */
+  timeoutMs?: number;
+  /** 伸出方向超时报警。 */
+  alarmExtend?: CylinderAlarmSpec;
+  /** 缩回/复位方向超时报警（单电控即“松开”）。 */
+  alarmRetract?: CylinderAlarmSpec;
+}
+
+/** 手动翻转按钮（每个执行元件一个：按一下到位、再按一下原位）。 */
+export interface ManualButtonSpec {
+  /** HMI 按钮地址（如 M10）。 */
+  button: string;
+  /** 对应的气缸 name。 */
+  cylinder: string;
+}
+
+/** 工业步进程序的 HMI 软元件表。 */
+export interface IndustrialHmiSpec {
+  start: string;
+  stop: string;
+  reset: string;
+  manual: string;
+  /** 退出手动/回待机。 */
+  exitManual: string;
+  /** 报警/急停处理后“继续”。 */
+  continueRun: string;
+  /** 从头开始。 */
+  restart: string;
+  /** 状态指示（可选，默认 M100~M105）。 */
+  status?: {
+    idle?: string;
+    auto?: string;
+    manual?: string;
+    stopping?: string;
+    alarm?: string;
+    paused?: string;
+  };
+  /** 数据区（可选，默认 D0 步号/D1 模式/D2 报警码/D3 报警步号）。 */
+  data?: {
+    step?: string;
+    mode?: string;
+    alarmCode?: string;
+    alarmStep?: string;
+  };
+}
+
+/** 停止序列的一步（按顺序回原点/安全位置）。 */
+export interface StopStepSpec {
+  id: string;
+  name?: string;
+  /** 本步输出动作（与 SequenceStep.actions 相同语义）。 */
+  actions: StepAction[];
+  /** 完成条件（传感器表达式）。 */
+  until: string;
+}
+
+/** 工业步进程序附加定义（spec.sequence.industrial）。 */
+export interface IndustrialSpec {
+  /** 急停信号（任何模式立即冻结；如 X2）。 */
+  estop: string;
+  hmi: IndustrialHmiSpec;
+  /** 气缸列表（含磁性开关与超时报警）。 */
+  cylinders: CylinderSpec[];
+  /** 手动翻转按钮（每缸一个）。 */
+  manualButtons: ManualButtonSpec[];
+  /** 停止序列（停止时按顺序执行；完成后回待机）。 */
+  stopSequence: StopStepSpec[];
+  /** 报警汇总输出（可选，如 M104）。 */
+  alarmOutput?: string;
+}
+
 /** 步进程序定义（spec.sequence）。 */
 export interface SequenceSpec {
   /** 初始步 ID（缺省为 steps 的第一个）。 */
@@ -109,6 +202,8 @@ export interface SequenceSpec {
   faultCondition?: string;
   /** 步列表（至少 1 步）。 */
   steps: SequenceStep[];
+  /** 工业版附加定义（模式/气缸监视/手动/停止序列/HMI）；存在时生成工业骨架。 */
+  industrial?: IndustrialSpec;
 }
 
 /** 安全相关约束。 */
@@ -327,6 +422,127 @@ export const SPEC_JSON_SCHEMA: Record<string, unknown> = {
                   { $ref: '#/definitions/stepTransition' },
                   { type: 'array', minItems: 1, items: { $ref: '#/definitions/stepTransition' } },
                 ],
+              },
+            },
+          },
+        },
+        industrial: {
+          type: 'object',
+          additionalProperties: true,
+          required: ['estop', 'hmi', 'cylinders', 'manualButtons', 'stopSequence'],
+          properties: {
+            estop: { type: 'string', minLength: 1 },
+            alarmOutput: { type: 'string' },
+            hmi: {
+              type: 'object',
+              additionalProperties: true,
+              required: ['start', 'stop', 'reset', 'manual', 'exitManual', 'continueRun', 'restart'],
+              properties: {
+                start: { type: 'string', minLength: 1 },
+                stop: { type: 'string', minLength: 1 },
+                reset: { type: 'string', minLength: 1 },
+                manual: { type: 'string', minLength: 1 },
+                exitManual: { type: 'string', minLength: 1 },
+                continueRun: { type: 'string', minLength: 1 },
+                restart: { type: 'string', minLength: 1 },
+                status: {
+                  type: 'object',
+                  additionalProperties: true,
+                  properties: {
+                    idle: { type: 'string' },
+                    auto: { type: 'string' },
+                    manual: { type: 'string' },
+                    stopping: { type: 'string' },
+                    alarm: { type: 'string' },
+                    paused: { type: 'string' },
+                  },
+                },
+                data: {
+                  type: 'object',
+                  additionalProperties: true,
+                  properties: {
+                    step: { type: 'string' },
+                    mode: { type: 'string' },
+                    alarmCode: { type: 'string' },
+                    alarmStep: { type: 'string' },
+                  },
+                },
+              },
+            },
+            cylinders: {
+              type: 'array',
+              minItems: 1,
+              items: {
+                type: 'object',
+                additionalProperties: true,
+                required: ['name', 'extendY', 'extendedX', 'retractedX'],
+                properties: {
+                  name: { type: 'string', minLength: 1 },
+                  extendY: { type: 'string', minLength: 1 },
+                  retractY: { type: 'string' },
+                  extendedX: { type: 'string', minLength: 1 },
+                  retractedX: { type: 'string', minLength: 1 },
+                  valve: { type: 'string', enum: ['double', 'single'] },
+                  timeoutMs: { type: 'integer', minimum: 100 },
+                  alarmExtend: {
+                    type: 'object',
+                    additionalProperties: true,
+                    required: ['code'],
+                    properties: {
+                      code: { type: 'integer' },
+                      message: { type: 'string' },
+                    },
+                  },
+                  alarmRetract: {
+                    type: 'object',
+                    additionalProperties: true,
+                    required: ['code'],
+                    properties: {
+                      code: { type: 'integer' },
+                      message: { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+            manualButtons: {
+              type: 'array',
+              minItems: 1,
+              items: {
+                type: 'object',
+                additionalProperties: true,
+                required: ['button', 'cylinder'],
+                properties: {
+                  button: { type: 'string', minLength: 1 },
+                  cylinder: { type: 'string', minLength: 1 },
+                },
+              },
+            },
+            stopSequence: {
+              type: 'array',
+              minItems: 1,
+              items: {
+                type: 'object',
+                additionalProperties: true,
+                required: ['id', 'actions', 'until'],
+                properties: {
+                  id: { type: 'string', minLength: 1 },
+                  name: { type: 'string' },
+                  actions: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      additionalProperties: true,
+                      required: ['target'],
+                      properties: {
+                        target: { type: 'string', minLength: 1 },
+                        value: { type: 'string', enum: ['ON', 'OFF'] },
+                        expression: { type: 'string', minLength: 1 },
+                      },
+                    },
+                  },
+                  until: { type: 'string', minLength: 1 },
+                },
               },
             },
           },

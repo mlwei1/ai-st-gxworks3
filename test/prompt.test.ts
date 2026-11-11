@@ -51,6 +51,16 @@ test('提示词：不得含有会破坏模板字面量的反引号', () => {
   assert.ok(!p.includes('`'), '提示词中不应出现反引号');
 });
 
+test('提示词：包含工业步进程序骨架规则（模式/气缸报警/停止序列/HMI）', () => {
+  const p = buildSystemPrompt('FX5U');
+  assert.ok(p.includes('停止中'), '应包含停止中模式');
+  assert.ok(p.includes('气缸动作监视'), '应包含气缸超时监视规则');
+  assert.ok(p.includes('报警'), '应包含报警处理规则');
+  assert.ok(p.includes('停止序列'), '应包含停止序列规则');
+  assert.ok(p.includes('急停'), '应包含急停暂停规则');
+  assert.ok(p.includes('spec.sequence.industrial.hmi'), '应指向工业 HMI 地址表字段');
+});
+
 test('提示词：输出格式说明包含必要字段', () => {
   assert.ok(OUTPUT_FORMAT.includes('pous'));
   assert.ok(OUTPUT_FORMAT.includes('vars'));

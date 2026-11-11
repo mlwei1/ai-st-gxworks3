@@ -1,6 +1,6 @@
 # 工业程序结构设计稿（robot_steps v2）
 
-> 状态：**设计稿 v0.1（未实现）**。基于用户 2026-11-11 的 6 类专业需求 + 7 点确认。
+> 状态：**已实现 v0.1**（生成器 `src/gen/industrial-step.ts` + spec `specs/robot_transfer_steps_v2.json`）。基于用户 2026-11-11 的 6 类专业需求 + 7 点确认。
 > 目标：把 `robot_steps` 从"纯步进演示"升级为**有工业骨架**的示范工程，并沉淀成可复用的生成规则。
 
 ## 1. 总体结构
@@ -209,3 +209,26 @@ Main（扫描任务）
 4. 停止序列默认顺序（本设计：竖直上升→水平左移→夹爪松开）是否可接受？
 5. "继续"前的位置检查：是否要求执行元件位置与冻结步起点一致才允许继续？
 6. 单 PROGRAM 还是 Main + FB 拆分？（本设计：单 PROGRAM，便于修改）
+
+## 11. 实现记录（2026-11-11）
+
+已落地：
+
+- spec 扩展：`sequence.industrial`（estop / hmi / cylinders / manualButtons / stopSequence / alarmOutput），
+  加载校验在 `src/spec/load.ts`，JSON Schema 同步更新；
+- 生成器：`src/gen/industrial-step.ts`，单 PROGRAM Main，按 10 段生成：
+  1) HMI 上升沿　2) 急停暂停　3a) 自动输出映像　3b) 停止序列映像
+  4) 气缸超时检测（每缸两个方向 TON）　5) 模式/HMI 命令　6) 自动步转移
+  7) 停止序列　8) 手动翻转　9) 输出汇总　10) HMI 状态/数据；
+- 示例：`specs/robot_transfer_steps_v2.json` → `out/robot_transfer_steps_v2.st/.xml`；
+  三缸（竖直/水平双电控、夹爪单电控）+ 5s 超时 + 6 种报警码 + 3 个手动翻转按钮；
+- 验证：`test/industrial-step.test.ts` 5 个用例（加载/骨架/方言 0 error/XML 构建/缺字段报错），
+  XML 通过 XSD 校验；
+- 提示词：新增规则 18（工业骨架要求）。
+
+限制（当前版本）：
+
+- 工业版暂不支持 `delayMs` 延时转移（用传感器条件代替）；
+- 手动按钮为“每执行元件一个翻转按钮”模型；多点动/双按钮模型待扩展；
+- HMI 地址表尚未单独导出 CSV（地址仍在 spec 与 ST 注释中）；
+- 生成结果需用户导入 GX Works3 查看/修改；本工具不自动写入 PLC。

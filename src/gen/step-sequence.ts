@@ -16,6 +16,7 @@
 
 import type { SequenceSpec, SequenceStep, StepAction, StepTransition } from '../spec/schema.ts';
 import type { RequirementSpec } from '../spec/schema.ts';
+import { generateIndustrialStepSequence } from './industrial-step.ts';
 
 export interface StepSequenceResult {
   source: string;
@@ -114,6 +115,8 @@ function transitionLines(seq: SequenceSpec, step: SequenceStep, useTimer: boolea
 export function generateStepSequence(spec: RequirementSpec): StepSequenceResult {
   const seq = spec.sequence;
   if (!seq) throw new Error('spec.sequence 为空，无法生成步进程序');
+  // 工业版：带模式/气缸监视/手动/停止序列/HMI 时走工业骨架生成器
+  if (seq.industrial) return generateIndustrialStepSequence(spec);
   validateSequence(seq);
 
   const warnings: string[] = [];
