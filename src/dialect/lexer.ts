@@ -141,6 +141,30 @@ export function tokenize(src: string): Token[] {
       }
       continue;
     }
+    // C 风格块注释 /* ... */：GX Works3 手册明确支持 "/**/" 与 "//" 两种注释
+    // （MELSEC iQ-R/MELSEC iQ-F 结构化文本(ST)编程指南 SH-081465CHN，p13/注释约定）。
+    if (ch === '/' && src[i + 1] === '*') {
+      const startLine = line;
+      const startCol = col(i);
+      i += 2;
+      let closed = false;
+      while (i < n) {
+        if (src[i] === '*' && src[i + 1] === '/') {
+          i += 2;
+          closed = true;
+          break;
+        }
+        if (src[i] === '\n') {
+          line++;
+          lineStart = i + 1;
+        }
+        i++;
+      }
+      if (!closed) {
+        throw new LexError('块注释未闭合（缺少 */）', startLine, startCol);
+      }
+      continue;
+    }
 
     // 字符串
     if (ch === "'") {

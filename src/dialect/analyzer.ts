@@ -124,6 +124,14 @@ export class Analyzer {
     hint?: string,
   ): void {
     if (severity === 'warning' && !this.options.includeWarnings) return;
+    // 同一位置同一诊断只报一次（表达式可能在目标/值两侧被多次访问）
+    if (
+      this.diagnostics.some(
+        (d) => d.code === code && d.line === loc.line && d.column === loc.column,
+      )
+    ) {
+      return;
+    }
     this.diagnostics.push({
       severity,
       code,
@@ -432,6 +440,21 @@ export class Analyzer {
 
   private checkExpression(expr: Expression, pou: POU, isTarget: boolean): void {
     switch (expr.kind) {
+      case 'literal': {
+        // MELSEC iQ-R/MELSEC iQ-F 结构化文本(ST)编程指南（SH-081465CHN）附3：
+        // iQ-F 系列不支持 Unicode 字符串（双引号）常数。
+        if (expr.literalType === 'wstring' && this.options.target !== 'iQ-R') {
+          this.add(
+            'warning',
+            'W010',
+            'iQ-F 不支持 Unicode 字符串常数（双引号），GX Works3 编译可能失败',
+            expr.loc,
+            pou.name,
+            "改用 ASCII 字符串（单引号），例如 'ABC'；Unicode 字符串常数仅 iQ-R 支持",
+          );
+        }
+        break;
+      }
       case 'identifier': {
         if (!this.scope.vars.has(expr.name) && !this.globalScope.vars.has(expr.name)) {
           // 可能是枚举值或结构体类型名，暂不报错
@@ -900,10 +923,10 @@ export class Analyzer {
       this.add(
         'error',
         'E019',
-        `字符串常数引号错误：STRING 类型必须用单引号（双引号是 WSTRING）`,
+        `字符串常数引号错误：ASCII 字符串常数须用单引号（双引号为 Unicode 字符串常数，iQ-F 不支持）`,
         loc,
         pou.name,
-        `改为单引号，例如 'abc'；或用 WSTRING 类型接收 "abc"`,
+        `改为单引号，例如 'abc'；Unicode 字符串常数仅 iQ-R 支持（iQ-F 不支持）`,
       );
       return;
     }
@@ -911,10 +934,10 @@ export class Analyzer {
       this.add(
         'error',
         'E019',
-        `字符串常数引号错误：WSTRING 类型必须用双引号（单引号是 STRING）`,
+        `字符串常数引号错误：Unicode 字符串常数须用双引号（单引号为 ASCII 字符串）`,
         loc,
         pou.name,
-        `改为双引号，例如 "abc"`,
+        `改为双引号，例如 "abc"（Unicode 字符串常数仅 iQ-R 支持）`,
       );
       return;
     }
@@ -956,7 +979,7 @@ export class Analyzer {
       this.add(
         'error',
         'E019',
-        `字符串常数引号错误：STRING 类型必须用单引号（双引号是 WSTRING）`,
+        `字符串常数引号错误：ASCII 字符串常数须用单引号（双引号为 Unicode 字符串常数，iQ-F 不支持）`,
         v.loc,
         pou.name,
         `改为单引号，例如 '${init.value}'`,
@@ -965,7 +988,7 @@ export class Analyzer {
       this.add(
         'error',
         'E019',
-        `字符串常数引号错误：WSTRING 类型必须用双引号（单引号是 STRING）`,
+        `字符串常数引号错误：Unicode 字符串常数须用双引号（单引号为 ASCII 字符串）`,
         v.loc,
         pou.name,
         `改为双引号，例如 "${init.value}"`,
