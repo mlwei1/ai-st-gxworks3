@@ -119,8 +119,8 @@ export const FX5_COMMUNICATION_INSTRUCTIONS: readonly CommInstructionFact[] = [
   {
     name: 'ADPRW',
     stForm: 'ENO:=ADPRW(EN,s1,s2,s3,s4,s5,d2);',
-    verified: 'unverified',
-    source: 'JY997D58901 17.3 MODBUS指令 ADPRW p1073（PDF 1075）',
+    verified: 'verified',
+    source: 'JY997D58901 17.3 MODBUS指令 ADPRW p1073（PDF 1075）；GX Works3 1.128 全部转换 Error:0 验证',
     operands: [
       { name: 'EN', direction: 'IN', type: 'BOOL', comment: '执行条件' },
       { name: 's1', direction: 'IN', type: 'INT', comment: '从站站号（0~F7H）' },
@@ -130,7 +130,7 @@ export const FX5_COMMUNICATION_INSTRUCTIONS: readonly CommInstructionFact[] = [
       { name: 's5', direction: 'IN', type: 'ANY_ELEMENTARY', comment: '功能参数 3（写数据/读数据也复用为 d1）' },
       { name: 'd2', direction: 'OUT', type: 'BOOL[]', comment: '指令执行状态起始位（3 位）' },
     ],
-    note: 'MODBUS 串行主站读写；手册 ST 原文抽取为 "...s5d1..."（逗号缺失），参数个数与顺序待原生验证，暂不生成',
+    note: 'MODBUS 串行主站读写；GX Works3 全部转换 Error:0（7 参形式，docs/evidence/M3/08-adprw-gx-compile.png）；运行时从站响应待实测',
   },
 ] as const;
 

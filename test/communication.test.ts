@@ -17,7 +17,7 @@ const EXPECTED: Record<string, { stForm: string; verified: string; params: numbe
   GP_SOCRCV: { stForm: 'ENO:=GP_SOCRCV(EN,U,s1,s2,d1,d2);', verified: 'verified', params: 6 },
   GP_SOCSND: { stForm: 'ENO:=GP_SOCSND(EN,U,s1,s2,s3,d);', verified: 'verified', params: 6 },
   RS2: { stForm: 'ENO:=RS2(EN,s,n1,n2,n3,d);', verified: 'verified', params: 6 },
-  ADPRW: { stForm: 'ENO:=ADPRW(EN,s1,s2,s3,s4,s5,d2);', verified: 'unverified', params: 7 },
+  ADPRW: { stForm: 'ENO:=ADPRW(EN,s1,s2,s3,s4,s5,d2);', verified: 'verified', params: 7 },
 };
 
 test('通信指令：7 条事实齐全，ST 形式与核实状态与手册一致', () => {
@@ -42,10 +42,10 @@ test('通信指令：RS2 操作数含义（发送/接收字节数、通道）', 
   assert.match(map.d, /接收数据/);
 });
 
-test('通信指令：ADPRW 保留未核实标记（ST 原文逗号缺失）', () => {
+test('通信指令：ADPRW ST 形式已通过 GX 全部转换（Error:0）', () => {
   const adprw = getCommunicationInstruction('ADPRW')!;
-  assert.equal(adprw.verified, 'unverified');
-  assert.match(adprw.note!, /逗号缺失|待原生验证/);
+  assert.equal(adprw.verified, 'verified');
+  assert.match(adprw.note!, /Error:0|运行时/);
   assert.match(adprw.source, /p1073/);
 });
 
