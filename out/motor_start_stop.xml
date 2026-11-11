@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="www.iec.ch/public/TC65SC65BWG7TF10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.000" xsi:schemaLocation="www.iec.ch/public/TC65SC65BWG7TF10 GXW3_IEC61131_10_Ed1_0_ForGXW3.xsd">
+  <FileHeader companyName="MITSUBISHI ELECTRIC CORPORATION" companyURL="http://www.mitsubishielectric.com" productName="GX Works3" productVersion="ver.1.0"/>
+  <ContentHeader name="motor_start_stop" creationDateTime="2026-11-11T13:41:38.014Z" modificationDateTime="2026-11-11T13:41:38.014Z"/>
+  <Types>
+    <GlobalNamespace>
+      <Program name="Main">
+        <Vars accessSpecifier="private">
+          <Variable name="bRun">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bFault">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+        </Vars>
+        <MainBody>
+          <BodyContent xsi:type="ST">
+            <ST>    // 1) 故障锁存：故障输入为 ON 时置位故障标志
+    IF X2 THEN
+        bFault := TRUE;
+    END_IF;
+
+    // 2) 故障复位（manual）：故障消失后按停止或复位按钮复位
+    IF bFault AND NOT X2 THEN
+        IF X1 OR X3 THEN
+            bFault := FALSE;
+        END_IF;
+    END_IF;
+
+    // 3) 启动自锁：启动按钮按下、无停止且无故障时自锁
+    IF X0 AND NOT X1 AND NOT bFault THEN
+        bRun := TRUE;
+    END_IF;
+
+    // 4) 停止优先：停止按钮或故障立即解除自锁
+    IF X1 OR bFault THEN
+        bRun := FALSE;
+    END_IF;
+
+    // 5) 输出驱动
+    Y0 := bRun;</ST>
+          </BodyContent>
+        </MainBody>
+      </Program>
+    </GlobalNamespace>
+  </Types>
+  <Instances>
+    <Configuration name="config1">
+      <Resource name="Main" resourceTypeName="prgFile">
+        <AddData>
+          <Data name="http://www.mitsubishielectric.com/xml/ResourceExecutionType" handleUnknown="implementation">
+            <ResourceExecutionType type="scan"/>
+          </Data>
+        </AddData>
+        <ProgramInstance name="Main" typeName="pou" evaluationOrder="1"/>
+      </Resource>
+      <GlobalVars constant="false" retain="false">
+        <Variable name="bStart">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>启动按钮（常开）</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="X0"/>
+        </Variable>
+        <Variable name="bStop">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>停止按钮（常闭）</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="X1"/>
+        </Variable>
+        <Variable name="bFault">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>故障信号</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="X2"/>
+        </Variable>
+        <Variable name="bMotor">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>电机接触器输出</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="Y0"/>
+        </Variable>
+      </GlobalVars>
+    </Configuration>
+  </Instances>
+</Project>

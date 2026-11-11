@@ -175,24 +175,27 @@ Main（扫描任务）
 | D100 | 气缸超时设定(ms) | 默认 5000 |
 | D110 | 循环计数 | 可选 |
 
-## 8. IO 注释方案（第 7 点回答）
+## 8. IO 注释方案（第 7 点回答）—— 已实现
 
-优先方案：**IEC XML 的全局标签直接带软元件地址与注释**：
+**方案：IEC XML 的全局标签直接带软元件地址与注释**（生成器自动从 spec.io 与 industrial.hmi 生成）：
 
 ```xml
-<GlobalVars>
-  <Variable name="bStartBtn">
-    <Type><BOOL/></Type>
+<GlobalVars constant="false" retain="false">
+  <Variable name="bStart">
+    <AddData>…<CommentText>启动按钮</CommentText>…</AddData>
+    <Type><TypeName>BOOL</TypeName></Type>
     <Address address="X0"/>
-    <Comment>启动按钮</Comment>
   </Variable>
-  ...
+  …
 </GlobalVars>
 ```
 
-- 本工具 XML 发射器已支持 `<Address>` 元素（`src/emit/iecxml.ts`，测试 `test/iecxml.test.ts` 已覆盖）；
-- 待实现时先做一次 GX 导入实测：确认全局标签 + 地址 + 注释能正确落到 GX 标签表；
-- 若 GX 对 Address 支持不佳，回退方案：生成 `device_comments.csv`（GX 软元件注释导入）+ ST 行内注释。
+- 实现位置：`src/gen/generate.ts` 的 `buildGlobalLabels()`（IO 表 → 全局标签；工业 HMI → bHmi*/nHmi* 标签）；
+- 生成的 XML 里 IO 与 HMI 共 **34 个全局标签**（15 个 X/Y + 19 个 M/D），全部带地址与中文注释；
+- GX Works3 实测：XML 导入 **Error:0 Warning:0**，全局标签表出现（新工程自带空 `Global` 表，导入的标签进入 `Global_2`），
+  全部转换 **Error:0 Warning:0**；导入后标签内容见 `docs/evidence/M4/robot-v2-global-labels.txt`，
+  截图 `docs/evidence/M4/13-robot-v2-global-labels.png`；
+- 程序仍可直接使用 X0/Y0/D0 等软元件地址（标签是别名，不影响直接访问）。
 
 ## 9. 产物与验证
 
@@ -222,6 +225,8 @@ Main（扫描任务）
   7) 停止序列　8) 手动翻转　9) 输出汇总　10) HMI 状态/数据；
 - 示例：`specs/robot_transfer_steps_v2.json` → `out/robot_transfer_steps_v2.st/.xml`；
   三缸（竖直/水平双电控、夹爪单电控）+ 5s 超时 + 6 种报警码 + 3 个手动翻转按钮；
+- 全局标签：从 `spec.io` 与 `industrial.hmi` 生成 34 个带软元件地址与注释的全局标签，
+  GX 导入后出现在「全局标签」表（Global_2），见 `docs/evidence/M4/robot-v2-global-labels.txt`；
 - 验证：`test/industrial-step.test.ts` 5 个用例（加载/骨架/方言 0 error/XML 构建/缺字段报错），
   XML 通过 XSD 校验；
 - 提示词：新增规则 18（工业骨架要求）。

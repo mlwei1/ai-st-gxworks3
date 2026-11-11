@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="www.iec.ch/public/TC65SC65BWG7TF10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.000" xsi:schemaLocation="www.iec.ch/public/TC65SC65BWG7TF10 GXW3_IEC61131_10_Ed1_0_ForGXW3.xsd">
   <FileHeader companyName="MITSUBISHI ELECTRIC CORPORATION" companyURL="http://www.mitsubishielectric.com" productName="GX Works3" productVersion="ver.1.0"/>
-  <ContentHeader name="robot_transfer_steps_v2" creationDateTime="2026-11-11T10:29:53.521Z" modificationDateTime="2026-11-11T10:29:53.521Z"/>
+  <ContentHeader name="robot_transfer_steps_v2" creationDateTime="2026-11-11T13:41:33.262Z" modificationDateTime="2026-11-11T13:41:33.262Z"/>
   <Types>
     <GlobalNamespace>
       <Program name="Main">
@@ -1041,6 +1041,448 @@
         <ProgramInstance name="Main" typeName="pou" evaluationOrder="1"/>
       </Resource>
       <GlobalVars constant="false" retain="false">
+        <Variable name="bStart">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>启动按钮</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="X0"/>
+        </Variable>
+        <Variable name="bStop">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>停止按钮</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="X1"/>
+        </Variable>
+        <Variable name="bEStop">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>急停（暂停）</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="X2"/>
+        </Variable>
+        <Variable name="bDownPos">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>竖直缸下降到位</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="X10"/>
+        </Variable>
+        <Variable name="bClampPos">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>夹爪夹紧到位</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="X11"/>
+        </Variable>
+        <Variable name="bUpPos">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>竖直缸上升到位</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="X12"/>
+        </Variable>
+        <Variable name="bRightPos">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>水平右限位</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="X13"/>
+        </Variable>
+        <Variable name="bLeftPos">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>水平左限位</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="X14"/>
+        </Variable>
+        <Variable name="bReleasePos">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>夹爪松开到位</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="X15"/>
+        </Variable>
+        <Variable name="bDown">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>竖直下降电磁阀</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="Y0"/>
+        </Variable>
+        <Variable name="bUp">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>竖直上升电磁阀</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="Y1"/>
+        </Variable>
+        <Variable name="bClamp">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>夹爪电磁阀（ON=夹紧）</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="Y2"/>
+        </Variable>
+        <Variable name="bRight">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>水平右移电磁阀</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="Y3"/>
+        </Variable>
+        <Variable name="bLeft">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>水平左移电磁阀</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="Y4"/>
+        </Variable>
+        <Variable name="bHmiStart">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>触摸屏：启动</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="M0"/>
+        </Variable>
+        <Variable name="bHmiStop">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>触摸屏：停止</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="M1"/>
+        </Variable>
+        <Variable name="bHmiReset">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>触摸屏：复位/清除报警</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="M2"/>
+        </Variable>
+        <Variable name="bHmiManual">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>触摸屏：手动模式</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="M4"/>
+        </Variable>
+        <Variable name="bHmiExitManual">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>触摸屏：退出手动/回待机</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="M3"/>
+        </Variable>
+        <Variable name="bHmiContinue">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>触摸屏：继续（冻结步）</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="M5"/>
+        </Variable>
+        <Variable name="bHmiRestart">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>触摸屏：从头开始</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="M6"/>
+        </Variable>
+        <Variable name="bHmiIdle">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>状态：待机</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="M100"/>
+        </Variable>
+        <Variable name="bHmiAuto">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>状态：自动运行</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="M101"/>
+        </Variable>
+        <Variable name="bHmiManualing">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>状态：手动模式</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="M102"/>
+        </Variable>
+        <Variable name="bHmiStopping">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>状态：停止中</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="M103"/>
+        </Variable>
+        <Variable name="bHmiAlarm">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>状态：报警中</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="M104"/>
+        </Variable>
+        <Variable name="bHmiPaused">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>状态：急停暂停</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="M105"/>
+        </Variable>
+        <Variable name="nHmiStep">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>数据：当前步号</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>INT</TypeName>
+          </Type>
+          <Address address="D0"/>
+        </Variable>
+        <Variable name="nHmiMode">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>数据：当前模式</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>INT</TypeName>
+          </Type>
+          <Address address="D1"/>
+        </Variable>
+        <Variable name="nHmiAlarmCode">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>数据：报警代码</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>INT</TypeName>
+          </Type>
+          <Address address="D2"/>
+        </Variable>
+        <Variable name="nHmiAlarmStep">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>数据：报警冻结步号</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>INT</TypeName>
+          </Type>
+          <Address address="D3"/>
+        </Variable>
+        <Variable name="bHmiManual1">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>触摸屏：手动翻转 竖直缸</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="M10"/>
+        </Variable>
+        <Variable name="bHmiManual2">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>触摸屏：手动翻转 水平缸</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="M11"/>
+        </Variable>
+        <Variable name="bHmiManual3">
+          <AddData>
+            <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
+              <VariableComments>
+                <Comment number="6"><CommentText>触摸屏：手动翻转 夹爪</CommentText></Comment>
+              </VariableComments>
+            </Data>
+          </AddData>
+          <Type>
+            <TypeName>BOOL</TypeName>
+          </Type>
+          <Address address="M12"/>
+        </Variable>
       </GlobalVars>
     </Configuration>
   </Instances>

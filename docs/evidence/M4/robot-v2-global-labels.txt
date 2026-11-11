@@ -1,0 +1,36 @@
+# GX Works3 导入后「全局标签」实际内容（从 v2_labels.gx3 的 LabelData.db 解出）
+# 名称	软元件	注释
+bStart	X0	启动按钮
+bStop	X1	停止按钮
+bEStop	X2	急停（暂停）
+bDownPos	X10	竖直缸下降到位
+bClampPos	X11	夹爪夹紧到位
+bUpPos	X12	竖直缸上升到位
+bRightPos	X13	水平右限位
+bLeftPos	X14	水平左限位
+bReleasePos	X15	夹爪松开到位
+bDown	Y0	竖直下降电磁阀
+bUp	Y1	竖直上升电磁阀
+bClamp	Y2	夹爪电磁阀（ON=夹紧）
+bRight	Y3	水平右移电磁阀
+bLeft	Y4	水平左移电磁阀
+bHmiStart	M0	触摸屏：启动
+bHmiStop	M1	触摸屏：停止
+bHmiReset	M2	触摸屏：复位/清除报警
+bHmiManual	M4	触摸屏：手动模式
+bHmiExitManual	M3	触摸屏：退出手动/回待机
+bHmiContinue	M5	触摸屏：继续（冻结步）
+bHmiRestart	M6	触摸屏：从头开始
+bHmiIdle	M100	状态：待机
+bHmiAuto	M101	状态：自动运行
+bHmiManualing	M102	状态：手动模式
+bHmiStopping	M103	状态：停止中
+bHmiAlarm	M104	状态：报警中
+bHmiPaused	M105	状态：急停暂停
+nHmiStep	D0	数据：当前步号
+nHmiMode	D1	数据：当前模式
+nHmiAlarmCode	D2	数据：报警代码
+nHmiAlarmStep	D3	数据：报警冻结步号
+bHmiManual1	M10	触摸屏：手动翻转 竖直缸
+bHmiManual2	M11	触摸屏：手动翻转 水平缸
+bHmiManual3	M12	触摸屏：手动翻转 夹爪

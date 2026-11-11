@@ -10,6 +10,7 @@ import { join, resolve } from 'node:path';
 
 import { loadSpecFile, parseSpec } from '../src/spec/load.ts';
 import { generateStepSequence } from '../src/gen/step-sequence.ts';
+import { generateFromSpec } from '../src/gen/generate.ts';
 import { parseWithRecovery } from '../src/dialect/recovery.ts';
 import { analyzeST } from '../src/dialect/analyzer.ts';
 import { buildXmlFromStFile } from '../src/pipeline/build.ts';
@@ -66,6 +67,26 @@ test('工业生成：可构建 IEC XML', async () => {
     const text = await (await import('node:fs/promises')).readFile(xml.xmlPath!, 'utf8');
     assert.match(text, /<ST>/);
     assert.ok(text.includes('bAlarm'), 'XML 正文应包含报警逻辑');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('工业生成：XML 全局标签带软元件地址与注释（导入 GX 后可见）', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'dsh-globals-'));
+  try {
+    const r = await generateFromSpec(specPath, { outDir: dir });
+    assert.equal(r.ok, true, r.diagnostics.map((d) => d.message).join('; '));
+    const { readFile } = await import('node:fs/promises');
+    const xml = await readFile(r.xmlPath!, 'utf8');
+    assert.match(xml, /<GlobalVars constant="false" retain="false">/);
+    assert.ok(xml.includes('<Variable name="bStart">'), '应包含 IO 全局标签 bStart');
+    assert.ok(xml.includes('<Address address="X0"/>'), 'bStart 应分配到 X0');
+    assert.ok(xml.includes('启动按钮'), 'bStart 应带注释');
+    assert.ok(xml.includes('<Variable name="bHmiStart">'), '应包含 HMI 全局标签 bHmiStart');
+    assert.ok(xml.includes('<Address address="M0"/>'), 'bHmiStart 应分配到 M0');
+    assert.ok(xml.includes('<Variable name="nHmiStep">'), '应包含步号数据标签');
+    assert.ok(xml.includes('<Address address="D0"/>'), 'nHmiStep 应分配到 D0');
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
