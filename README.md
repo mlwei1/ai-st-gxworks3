@@ -33,7 +33,7 @@ node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_sta
 >
 > **ST 步进程序 / 定位模板（M3+）**：`gen specs/robot_transfer_steps.json`（SFC/STL 风格的 ST 步进）、
 > `gen specs/positioning_drva.json`（DRVA 定位模板）、`gen specs/temperature_two_position.json`（位式温控模板）；均已在 GX Works3 导入 + 全部转换验证 0 error。
-> 详见 [docs/ST步进程序.md](docs/ST步进程序.md)、[docs/定位模板.md](docs/定位模板.md)。
+> 详见 [docs/ST步进程序.md](docs/ST步进程序.md)、[docs/定位模板.md](docs/定位模板.md)。`r`n> 仿真导入/运行步骤见 [docs/仿真操作手册.md](docs/仿真操作手册.md)。
 >
 > **仿真场景断言（M2）**：`sim sim/motor_start_stop.sim.json --observed sim/motor_start_stop.obs.json`
 > 校验「写输入 → 读输出」场景（半自动执行器，详见 [sim/README.md](sim/README.md)）。
