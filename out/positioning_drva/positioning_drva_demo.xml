@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="www.iec.ch/public/TC65SC65BWG7TF10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.000" xsi:schemaLocation="www.iec.ch/public/TC65SC65BWG7TF10 GXW3_IEC61131_10_Ed1_0_ForGXW3.xsd">
+  <FileHeader companyName="MITSUBISHI ELECTRIC CORPORATION" companyURL="http://www.mitsubishielectric.com" productName="GX Works3" productVersion="ver.1.0"/>
+  <ContentHeader name="positioning_drva_demo" creationDateTime="2026-11-11T04:03:03.979Z" modificationDateTime="2026-11-11T04:03:03.979Z"/>
+  <Types>
+    <GlobalNamespace>
+      <Program name="Main">
+        <Vars accessSpecifier="private">
+          <Variable name="bStartLast">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+          </Variable>
+          <Variable name="bMove">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bDriving">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bDone">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bErr">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="FALSE"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="bEno">
+            <Type>
+              <TypeName>BOOL</TypeName>
+            </Type>
+          </Variable>
+          <Variable name="nTarget">
+            <Type>
+              <TypeName>INT</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="10000"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="nSpeed">
+            <Type>
+              <TypeName>WORD</TypeName>
+            </Type>
+            <InitialValue>
+              <SimpleValue value="5000"/>
+            </InitialValue>
+          </Variable>
+          <Variable name="tTimeout">
+            <Type>
+              <TypeName>TON</TypeName>
+            </Type>
+          </Variable>
+        </Vars>
+        <MainBody>
+          <BodyContent xsi:type="ST">
+            <ST>    // 1) 停止/复位（X1）：清除运行、完成、异常
+    IF X1 THEN
+        bMove := FALSE;
+        bDriving := FALSE;
+        bDone := FALSE;
+        bErr := FALSE;
+    END_IF;
+
+    // 2) 启动（X0 上升沿）：仅空闲时允许启动
+    IF X0 AND NOT bStartLast AND NOT bMove THEN
+        bMove := TRUE;
+        bDriving := FALSE;
+        bDone := FALSE;
+        bErr := FALSE;
+    END_IF;
+    bStartLast := X0;
+
+    // 3) DRVA 绝对定位：ENO := DRVA(EN, s1, s2, d1, d2)
+    //    s1=目标地址, s2=指令速度, d1=脉冲输出Y, d2=方向输出Y
+    IF bMove THEN
+        bEno := DRVA(TRUE, nTarget, nSpeed, Y0, Y1);
+
+        // 4) 完成判定：定位驱动中标志先 ON 后 OFF（下降沿表示定位结束）
+        IF SM5500 THEN
+            bDriving := TRUE;
+        END_IF;
+        IF bDriving AND NOT SM5500 THEN
+            bMove := FALSE;
+            bDriving := FALSE;
+            bDone := TRUE;
+        END_IF;
+
+        // 5) 异常：2s 内未进入定位驱动中，或定位出错标志 ON
+        tTimeout(IN := bMove AND NOT bDriving, PT := T#2s);
+        IF tTimeout.Q THEN
+            bMove := FALSE;
+            bErr := TRUE;
+        END_IF;
+        IF SM5532 THEN
+            bMove := FALSE;
+            bErr := TRUE;
+        END_IF;
+    END_IF;</ST>
+          </BodyContent>
+        </MainBody>
+      </Program>
+    </GlobalNamespace>
+  </Types>
+  <Instances>
+    <Configuration name="config1">
+      <Resource name="Main" resourceTypeName="prgFile">
+        <AddData>
+          <Data name="http://www.mitsubishielectric.com/xml/ResourceExecutionType" handleUnknown="implementation">
+            <ResourceExecutionType type="scan"/>
+          </Data>
+        </AddData>
+        <ProgramInstance name="Main" typeName="pou" evaluationOrder="1"/>
+      </Resource>
+      <GlobalVars constant="false" retain="false">
+      </GlobalVars>
+    </Configuration>
+  </Instances>
+</Project>

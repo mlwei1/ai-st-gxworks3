@@ -2,7 +2,7 @@
  * ST 模板库测试（M1-2）。
  *
  * 覆盖：
- *  - 8 个模板各自用最小 spec 实例化 → 无语法错误、analyzer 0 error；
+ *  - 9 个模板各自用最小 spec 实例化 → 无语法错误、analyzer 0 error；
  *  - 关键片段断言（TON、互锁、CASE、REAL 转换、首出等）；
  *  - 参数默认值/覆盖、IO 地址来自 spec、确定性、模板注册表契约。
  */
@@ -65,10 +65,10 @@ function checkSource(src: string): { syntax: string[]; errors: string[] } {
 
 /* -------------------- 注册表契约 -------------------- */
 
-test('注册表：8 个模板、顺序固定、get/require 行为正确', () => {
-  assert.equal(TEMPLATE_NAMES.length, 8);
+test('注册表：9 个模板、顺序固定、get/require 行为正确', () => {
+  assert.equal(TEMPLATE_NAMES.length, 9);
   const list = listTemplates();
-  assert.equal(list.length, 8);
+  assert.equal(list.length, 9);
   assert.deepEqual(
     list.map((t) => t.name),
     [...TEMPLATE_NAMES],
@@ -106,7 +106,7 @@ test('确定性：同一 ctx 两次实例化输出完全一致', () => {
   }
 });
 
-/* -------------------- 8 个模板：语法 + 语义 -------------------- */
+/* -------------------- 9 个模板：语法 + 语义 -------------------- */
 
 for (const name of TEMPLATE_NAMES) {
   test(`模板 ${name}：最小 spec 可实例化，且 0 语法错误 / 0 analyzer error`, () => {

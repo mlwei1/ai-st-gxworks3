@@ -113,7 +113,7 @@ test('spec：未知模板名报错并列出已知模板', () => {
   for (const name of KNOWN_TEMPLATES) assert.ok(d!.message.includes(name));
 });
 
-test('spec：8 个已知模板名全部被接受', () => {
+test('spec：9 个已知模板名全部被接受', () => {
   for (const name of KNOWN_TEMPLATES) {
     const r = parseSpec(validSpec({ template: { name } }));
     assert.equal(r.ok, true, `${name} 应被接受: ${codes(r.diagnostics).join(',')}`);
@@ -299,7 +299,7 @@ test('spec：文件不存在返回 SPEC_E_READ（不抛异常）', async () => {
 });
 
 test('spec：JSON Schema 与已知模板常量可用', () => {
-  assert.equal(KNOWN_TEMPLATES.length, 8);
+  assert.equal(KNOWN_TEMPLATES.length, 9);
   const schema = SPEC_JSON_SCHEMA as { required?: string[]; properties?: Record<string, unknown> };
   assert.deepEqual(schema.required, ['name', 'cpu', 'template', 'io', 'requirements']);
   assert.ok(schema.properties);

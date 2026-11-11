@@ -14,7 +14,7 @@ ST 程序，并在导入前完成语法与三菱方言的静态检查。
 ## 30 秒上手（v0.2）
 
 ```bash
-# 1. Spec → ST + IEC 61131-10 XML（8 个模板可选）
+# 1. Spec → ST + IEC 61131-10 XML（9 个模板可选）
 node --experimental-strip-types --no-warnings src/cli.ts gen specs/motor_start_stop.json -o ./out
 
 # 2. 本地校验（语法 + 三菱方言）
@@ -29,7 +29,11 @@ node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_sta
 ```
 
 > **Spec 驱动生成（M1）**：`gen specs/motor_start_stop.json -o out` 会按模板生成 ST + IEC XML 工程包
-> （`specs/` 下有 3 个示例；`gen --list-templates` 查看 8 个标准模板）。
+> （`specs/` 下有多个示例；`gen --list-templates` 查看 9 个标准/行业模板）。
+>
+> **ST 步进程序 / 定位模板（M3+）**：`gen specs/robot_transfer_steps.json`（SFC/STL 风格的 ST 步进）、
+> `gen specs/positioning_drva.json`（DRVA 定位模板）；均已在 GX Works3 导入 + 全部转换验证 0 error。
+> 详见 [docs/ST步进程序.md](docs/ST步进程序.md)、[docs/定位模板.md](docs/定位模板.md)。
 >
 > **仿真场景断言（M2）**：`sim sim/motor_start_stop.sim.json --observed sim/motor_start_stop.obs.json`
 > 校验「写输入 → 读输出」场景（半自动执行器，详见 [sim/README.md](sim/README.md)）。
@@ -93,25 +97,9 @@ GX Works3 强制「结构化工程」模式，**变量声明与 ST 本体是分�
 |---|---|
 | **ST 解析器** | 自建词法/语法分析，覆盖 POU、VAR 段、STRUCT、CASE/FOR/WHILE/REPEAT、功能块调用 |
 | **三菱方言检查** | 拦截跨品牌写法、隐式类型转换、越界设备地址、非法变量名等 |
-| **Spec 驱动生成（M1）** | 需求规格 JSON → 8 个标准模板 → ST + IEC 61131-10 XML + 标签 CSV |
-| **ST 步进程序（SFC/STL）** | `spec.sequence` 定义工位步进（步/动作/转移条件/分支/延时）→ 生成 ST 步号状态机，等价梯形图 STL/SFC 写法 |'@)
-$t=$t.Replace('> **M3 交付与 MCP**：`deliver` 生成 report.md / trace.json（需求追溯矩阵）/ delivery.json（SHA256 清单）；',
-'> **ST 步进程序**：`specs/robot_transfer_steps.json` → `gen` 生成 SFC/STL 风格 ST 步进程序，详见 [docs/ST步进程序.md](docs/ST步进程序.md)。\n>\n> **M3 交付与 MCP**：`deliver` 生成 report.md / trace.json（需求追溯矩阵）/ delivery.json（SHA256 清单）；')
-$t=$t.Replace('### `deliver` —— 交付工程包（M3）',
-@'
-### `step_sequence` —— ST 步进程序（SFC/STL 的 ST 实现）
-
-在 spec 中加 `sequence` 段并令 `template.name = "step_sequence"`，即可按工位分步生成 ST：
-
-```bash
-ai-st-gxworks3 gen specs/robot_transfer_steps.json -o out/robot_steps
-```
-
-生成物是「步号状态机」：`nStep` + 步转移 `CASE` + 按步输出，等价梯形图 STL 的步进写法（**纯 ST，不含 SFC 对象**）。
-支持：选择分支（多条 `next`）、延时转移（`delayMs`）、表达式动作；并行分支暂不支持。specs/robot_transfer_steps.json 已通过 GX Works3 导入 + 全部转换验证（Error:0，见 [docs/ST步进程序.md](docs/ST步进程序.md)）。
-详见 [docs/ST步进程序.md](docs/ST步进程序.md)。
-
-### `deliver` —— 交付工程包（M3）
+| **Spec 驱动生成（M1）** | 需求规格 JSON → 9 个标准/行业模板 → ST + IEC 61131-10 XML + 标签 CSV |
+| **ST 步进程序（SFC/STL 的 ST 实现）** | `spec.sequence` 定义步/动作/转移/分支/延时 → 生成 `nStep + CASE` 步号状态机（纯 ST） |
+| **定位模板（工业场景）** | `positioning_drva`：DRVA ST 指令 + 完成/超时/出错处理，见 [docs/定位模板.md](docs/定位模板.md) |
 | **仿真场景断言（M2）** | 场景 DSL + 观测文件断言 + CLI `sim`（GX Simulator3 半自动执行） |
 | **交付工程包（M3）** | `deliver`：report.md + 需求追溯矩阵 trace.json + SHA256 交付清单 |
 | **MCP Server（M3）** | `mcp`：stdio JSON-RPC，5 个工具（check/generate/build-xml/sim/deliver），供 AI Agent 调用 |
@@ -242,6 +230,28 @@ export ANTHROPIC_MODEL="deepseek-v4-pro[1m]"
 ```
 
 ---
+
+### `step_sequence` —— ST 步进程序（SFC/STL 的 ST 实现）
+
+在 spec 中加 `sequence` 段并令 `template.name = "step_sequence"`，按工位分步生成 ST：
+
+```bash
+ai-st-gxworks3 gen specs/robot_transfer_steps.json -o out/robot_steps
+```
+
+生成「步号状态机」：`nStep` + 步转移 `CASE` + 按步输出，等价梯形图 STL 的步进写法（**纯 ST，不含 SFC 对象**）。
+支持选择分支（多条 `next`）、延时转移（`delayMs`）、表达式动作；并行分支暂不支持。
+详见 [docs/ST步进程序.md](docs/ST步进程序.md)。
+
+### `positioning_drva` —— 定位模板（工业场景）
+
+```bash
+ai-st-gxworks3 gen specs/positioning_drva.json -o out/positioning_drva
+```
+
+生成 `ENO := DRVA(EN,s1,s2,d1,d2);` 的 ST 调用 + 完成（SM5500 下降沿）/超时/出错处理；
+参数：轴号、目标地址、速度、脉冲/方向 Y。需在 GX 模块参数中配置定位参数后才会实际输出脉冲。
+详见 [docs/定位模板.md](docs/定位模板.md)。
 
 ### `deliver` —— 交付工程包（M3）
 

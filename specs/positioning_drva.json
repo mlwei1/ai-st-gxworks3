@@ -1,0 +1,35 @@
+{
+  "name": "positioning_drva_demo",
+  "title": "单轴绝对定位（DRVA）示例",
+  "cpu": {
+    "series": "FX5U",
+    "model": "FX5U-32MT/ES"
+  },
+  "template": {
+    "name": "positioning_drva",
+    "params": {
+      "axis": 1,
+      "target": 10000,
+      "speed": 5000,
+      "pulseY": 0,
+      "dirY": 1
+    }
+  },
+  "io": [
+    { "device": "X0", "name": "bStart", "type": "BOOL", "comment": "启动定位" },
+    { "device": "X1", "name": "bStop", "type": "BOOL", "comment": "停止/复位" },
+    { "device": "Y0", "name": "bPulse", "type": "BOOL", "comment": "轴1 脉冲输出" },
+    { "device": "Y1", "name": "bDir", "type": "BOOL", "comment": "轴1 方向输出" }
+  ],
+  "requirements": [
+    { "id": "R1", "text": "X0 上升沿启动绝对定位，目标地址 10000、速度 5000" },
+    { "id": "R2", "text": "定位驱动中标志 SM5500 先 ON 后 OFF 时判定完成" },
+    { "id": "R3", "text": "2s 内未进入驱动中或定位出错（SM5532）时置异常并停止" },
+    { "id": "R4", "text": "X1 随时停止/复位，清除完成/异常" },
+    { "id": "R5", "text": "需在 GX Works3 模块参数中完成定位参数配置后才会实际输出脉冲" }
+  ],
+  "meta": {
+    "version": "0.1.0",
+    "createdAt": "2026-11-11"
+  }
+}

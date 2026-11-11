@@ -11,6 +11,7 @@ import { counterBatchTemplate } from './counter_batch.ts';
 import { motorAutoStopTemplate } from './motor_auto_stop.ts';
 import { motorReverseInterlockTemplate } from './motor_reverse_interlock.ts';
 import { motorStartStopTemplate } from './motor_start_stop.ts';
+import { positioningDrvaTemplate } from './positioning_drva.ts';
 import { stateMachineTemplate } from './state_machine.ts';
 import { timerSequenceTemplate } from './timer_sequence.ts';
 import type { StTemplate } from './types.ts';
@@ -21,7 +22,7 @@ export type {
   TemplateParamDef,
 } from './types.ts';
 
-/** 8 个模板的固定名称（`spec.template.name` 的取值集合）。 */
+/** 9 个模板的固定名称（`spec.template.name` 的取值集合）。 */
 export const TEMPLATE_NAMES = [
   'motor_start_stop',
   'motor_auto_stop',
@@ -31,6 +32,7 @@ export const TEMPLATE_NAMES = [
   'state_machine',
   'analog_scale',
   'alarm_first_out',
+  'positioning_drva',
 ] as const;
 
 export type TemplateName = (typeof TEMPLATE_NAMES)[number];
@@ -44,6 +46,7 @@ const TEMPLATES: readonly StTemplate[] = [
   stateMachineTemplate,
   analogScaleTemplate,
   alarmFirstOutTemplate,
+  positioningDrvaTemplate,
 ];
 
 /** 全部模板（顺序与 TEMPLATE_NAMES 一致）。 */
