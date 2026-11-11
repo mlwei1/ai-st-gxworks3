@@ -15,6 +15,9 @@ import { buildXmlFromStFile } from '../src/pipeline/build.ts';
 
 const harnessPath = resolve('sim/temperature_two_position.harness.st');
 
+/** 字面量反引号 r 反引号 n（历史 bug：被 // 注释吞掉整段代码） */
+const LITERAL_ESCAPE = String.fromCharCode(96) + 'r' + String.fromCharCode(96) + 'n';
+
 test('温度 harness：语法/方言检查 0 error', async () => {
   const src = await readFile(harnessPath, 'utf8');
   const { ast, errors } = parseWithRecovery(src);
@@ -32,6 +35,11 @@ test('温度 harness：包含 1 秒时钟、阶段记录与自检', async () => 
   assert.match(src, /D316 := nBits/);
   assert.match(src, /D320 := 0/);
   assert.match(src, /D320 := 1/);
+});
+
+test('温度 harness：源码不含字面量转义序列（防止被 // 注释吞掉）', async () => {
+  const src = await readFile(harnessPath, 'utf8');
+  assert.ok(!src.includes(LITERAL_ESCAPE), '源码中不应出现字面量转义序列');
 });
 
 test('温度 harness：可构建 XML（正文含 harness 逻辑）', async () => {

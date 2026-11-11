@@ -8,7 +8,8 @@
 
 PROGRAM Main
 VAR
-    nPhase : INT := 0;                      // 当前阶段 0..7`r`n    nScan : INT := 0;                       // 扫描计数（诊断用）
+    nPhase : INT := 0;                      // 当前阶段 0..7
+    nScan : INT := 0;                       // 扫描计数（诊断用）
     tTick : TON;                            // 1 秒节拍（TON 在 Simulator3 中正常）
     nTemp : INT;                            // 当前温度（0.1°C）
     nSet : INT := 600;                      // 设定 60.0°C
@@ -22,7 +23,11 @@ VAR
     nBits : INT := 0;                       // Y0/Y1 记录值：bit0=Y0, bit1=Y1
     bChecked : BOOL := FALSE;               // 自检已执行
 END_VAR
-    // ---- 0) 扫描计数（诊断：D0 应持续递增，证明程序在执行） ----`r`n    nScan := nScan + 1;`r`n    D0 := nScan;`r`n`r`n    // ---- 1) 每秒推进阶段，并记录上一阶段结束时的 Y0/Y1 ----
+    // ---- 0) 扫描计数（诊断：D0 应持续递增，证明程序在执行） ----
+    nScan := nScan + 1;
+    D0 := nScan;
+
+    // ---- 1) 每秒推进阶段，并记录上一阶段结束时的 Y0/Y1 ----
     tTick(IN := NOT tTick.Q, PT := T#1s);
     IF tTick.Q THEN
         nBits := 0;
