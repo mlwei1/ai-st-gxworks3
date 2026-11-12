@@ -249,4 +249,7 @@ Main（扫描任务）
 - HMI 地址表尚未单独导出 CSV（地址仍在 spec 与 ST 注释中）；
 - 生成结果需用户导入 GX Works3 查看/修改；本工具不自动写入 PLC。- 中文标签（2026-11-12）：`spec.labels.language` 可选 `zh`/`en`（默认 en；robot_v2 示例用 zh），
   中文标签如 `启动按钮`/`竖直缸下降到位`/`触摸屏启动`；GX Works3 导入 + 全部转换 **Error:0 Warning:0**
-  （证据 `docs/evidence/M4/19-robot-v2-zh-labels-gx-compile.png`，标签清单 `docs/evidence/M4/robot-v2-global-labels-zh.txt`）；
+  （证据 `docs/evidence/M4/19-robot-v2-zh-labels-gx-compile.png`，标签清单 `docs/evidence/M4/robot-v2-global-labels-zh.txt`）；- 局部标签中文化（2026-11-12）：`labels.language=zh` 时主程序局部变量、FB 形参/实例名也切换为
+  「类型前缀 + 中文语义」（b/n/t/x），如 `n模式`、`b启动上升沿`、`fb竖直缸`、`b使能`、`t超时`、`b伸出输出`；
+  GX Works3 导入 + 全部转换 **Error:0 Warning:0**
+  （证据 `docs/evidence/M4/20-robot-v2-zh-all-labels-gx-compile.png`）。

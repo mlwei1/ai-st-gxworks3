@@ -22,6 +22,7 @@ import type {
   SequenceStep,
   StepAction,
 } from '../spec/schema.ts';
+import { renameIdentifiers } from '../emit/label-map.ts';
 
 export interface IndustrialStepResult {
   source: string;
@@ -41,6 +42,8 @@ interface Ctx {
   manualButton: Map<number, string>;
   /** 软元件输出 → 气缸方向（用于校验与命令生成）。 */
   outMap: Map<string, { cyl: number; dir: 'ext' | 'ret' }>;
+  /** 是否使用中文局部标签（含 FB 形参/实例名）。 */
+  zh: boolean;
 }
 
 const MODE = {
@@ -520,6 +523,80 @@ function outputDriveLines(ctx: Ctx): string[] {
   return lines;
 }
 
+/** 中文局部标签重命名表（类型前缀 b/n/t/x + 中文语义，便于阅读）。 */
+function buildZhRenameMap(ctx: Ctx): Map<string, string> {
+  const m = new Map<string, string>();
+  const add = (en: string, zh: string) => m.set(en, zh);
+
+  // 模式/流程
+  add('nMode', 'n模式');
+  add('nStep', 'n步号');
+  add('nStopStep', 'n停止步号');
+  add('bStopReq', 'b停止请求');
+  add('bStopActive', 'b停止序列启动');
+  add('bAlarmAny', 'b存在报警');
+  add('bAlarm', 'b报警');
+  add('nAlarmCode', 'n报警码');
+  add('nAlarmStep', 'n报警步号');
+  add('bEStopPause', 'b急停暂停');
+  add('bCylOK', 'b气缸位置正常');
+
+  // HMI 边沿
+  add('bStartLast', 'b启动上次');
+  add('bStopLast', 'b停止上次');
+  add('bResetLast', 'b复位上次');
+  add('bManualLast', 'b手动上次');
+  add('bExitLast', 'b退出手动上次');
+  add('bContinueLast', 'b继续上次');
+  add('bRestartLast', 'b从头上次');
+  add('bStartEdge', 'b启动上升沿');
+  add('bStopEdge', 'b停止上升沿');
+  add('bResetEdge', 'b复位上升沿');
+  add('bManualEdge', 'b手动上升沿');
+  add('bExitEdge', 'b退出手动上升沿');
+  add('bContinueEdge', 'b继续上升沿');
+  add('bRestartEdge', 'b从头上升沿');
+
+  // FB 形参/内部变量
+  add('bEnable', 'b使能');
+  add('bCmdExtend', 'b伸出命令');
+  add('bCmdRetract', 'b缩回命令');
+  add('xExtended', 'x伸出到位');
+  add('xRetracted', 'x原位到位');
+  add('tTimeout', 't超时');
+  add('nAlarmExt', 'n伸出报警码');
+  add('nAlarmRet', 'n缩回报警码');
+  add('bOutExtend', 'b伸出输出');
+  add('bOutRetract', 'b缩回输出');
+  add('tExt', 't伸出超时');
+  add('tRet', 't缩回超时');
+  add('bCmdClamp', 'b夹紧命令');
+  add('xClamped', 'x夹紧到位');
+  add('xReleased', 'x松开到位');
+  add('nAlarmClamp', 'n夹紧报警码');
+  add('nAlarmRelease', 'n松开报警码');
+  add('bOutClamp', 'b夹紧输出');
+  add('tClamp', 't夹紧超时');
+  add('tRelease', 't松开超时');
+
+  // 每个气缸
+  ctx.cyls.forEach((c, i) => {
+    const n = i + 1;
+    add(`bC${n}Ext`, `b${c.name}伸出命令`);
+    add(`bC${n}Ret`, `b${c.name}缩回命令`);
+    add(`bC${n}Clamp`, `b${c.name}夹紧命令`);
+    add(`bC${n}OutExt`, `b${c.name}伸出输出`);
+    add(`bC${n}OutRet`, `b${c.name}缩回输出`);
+    add(`bC${n}OutClamp`, `b${c.name}夹紧输出`);
+    add(`bC${n}Alarm`, `b${c.name}报警`);
+    add(`nC${n}AlarmCode`, `n${c.name}报警码`);
+    add(`fbCyl${n}`, `fb${c.name}`);
+    add(`bBtn${n}Edge`, `b手动${c.name}上升沿`);
+    add(`bBtn${n}Last`, `b手动${c.name}上次`);
+  });
+  return m;
+}
+
 /** 生成工业版 ST 步进程序（FB 版）。 */
 export function generateIndustrialStepSequence(spec: RequirementSpec): IndustrialStepResult {
   const seq = spec.sequence;
@@ -537,6 +614,7 @@ export function generateIndustrialStepSequence(spec: RequirementSpec): Industria
     stopIndex: new Map(),
     manualButton: new Map(),
     outMap: new Map(),
+    zh: (spec.labels?.language ?? 'en') === 'zh',
   };
   validateAndIndex(ctx);
   ind.manualButtons.forEach((b) => {
@@ -821,5 +899,9 @@ export function generateIndustrialStepSequence(spec: RequirementSpec): Industria
   lines.push('END_PROGRAM');
   lines.push('');
 
-  return { source: lines.join('\n'), warnings };
+  let source = lines.join('\n');
+  // 中文标签模式：主程序/ FB 的局部标签也改为中文（类型前缀 + 中文语义）
+  if (ctx.zh) source = renameIdentifiers(source, buildZhRenameMap(ctx));
+
+  return { source, warnings };
 }

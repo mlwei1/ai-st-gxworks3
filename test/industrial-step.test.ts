@@ -36,16 +36,16 @@ test('工业生成：包含模式/急停/报警/手动/停止序列骨架', asyn
   const { source } = generateStepSequence(loaded.spec!);
   assert.match(source, /FUNCTION_BLOCK FB_Cylinder/);
   assert.match(source, /FUNCTION_BLOCK FB_CylinderSV/);
-  assert.match(source, /nMode : INT := 0/);
+  assert.match(source, /n模式 : INT := 0/);
   assert.match(source, /IF X2 THEN/);
-  assert.match(source, /fbCyl1 : FB_Cylinder/);
-  assert.match(source, /fbCyl3 : FB_CylinderSV/);
-  assert.match(source, /fbCyl1\(bEnable :=/);
-  assert.match(source, /bAlarm => bC1Alarm, nAlarmCode => nC1AlarmCode/);
-  assert.match(source, /bBtn1Edge := M10 AND NOT bBtn1Last/);
-  assert.match(source, /bCylOK :=/);
-  assert.match(source, /nStopStep := 1/);
-  assert.match(source, /M100 := \(nMode = 0\)/);
+  assert.match(source, /fb竖直缸 : FB_Cylinder/);
+  assert.match(source, /fb夹爪 : FB_CylinderSV/);
+  assert.match(source, /fb竖直缸\(b使能 :=/);
+  assert.match(source, /b报警 => b竖直缸报警, n报警码 => n竖直缸报警码/);
+  assert.match(source, /b手动竖直缸上升沿 := M10 AND NOT b手动竖直缸上次/);
+  assert.match(source, /b气缸位置正常 :=/);
+  assert.match(source, /n停止步号 := 1/);
+  assert.match(source, /M100 := \(n模式 = 0\)/);
 });
 
 test('工业生成：语法/方言检查 0 error', async () => {
@@ -70,7 +70,7 @@ test('工业生成：可构建 IEC XML', async () => {
     assert.equal(xml.ok, true, xml.diagnostics.map((d) => d.message).join('; '));
     const text = await (await import('node:fs/promises')).readFile(xml.xmlPath!, 'utf8');
     assert.match(text, /<ST>/);
-    assert.ok(text.includes('bAlarm'), 'XML 正文应包含报警逻辑');
+    assert.ok(text.includes('b报警'), 'XML 正文应包含报警逻辑');
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

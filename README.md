@@ -48,6 +48,8 @@ node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_sta
 >
 > **标签语言可配置**：`spec.labels.language` 支持 `zh`（中文标签，如 `启动按钮`，机器人示例默认）与 `en`（英文，如 `bStart`，正式项目/旧项目默认）；也可用 `gen spec.json --labels en` 临时覆盖。中文标签已实测可被 GX Works3 导入并编译 Error:0。
 >
+> **中文模式也覆盖局部标签**：主程序局部变量、FB 形参/实例名同样中文化，并按数据类型加英文前缀（`b`=BOOL、`n`=INT、`t`=TIME/TON、`x`=输入信号），如 `n模式`、`b启动上升沿`、`fb竖直缸`、`b使能`、`t超时`、`b伸出输出`。
+>
 > **仿真场景断言（M2）**：`sim sim/motor_start_stop.sim.json --observed sim/motor_start_stop.obs.json`
 > 校验「写输入 → 读输出」场景（半自动执行器，详见 [sim/README.md](sim/README.md)）。
 >

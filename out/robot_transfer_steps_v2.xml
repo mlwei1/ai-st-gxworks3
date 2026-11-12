@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="www.iec.ch/public/TC65SC65BWG7TF10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.000" xsi:schemaLocation="www.iec.ch/public/TC65SC65BWG7TF10 GXW3_IEC61131_10_Ed1_0_ForGXW3.xsd">
   <FileHeader companyName="MITSUBISHI ELECTRIC CORPORATION" companyURL="http://www.mitsubishielectric.com" productName="GX Works3" productVersion="ver.1.0"/>
-  <ContentHeader name="robot_transfer_steps_v2" creationDateTime="2026-11-12T05:51:06.373Z" modificationDateTime="2026-11-12T05:51:06.373Z"/>
+  <ContentHeader name="robot_transfer_steps_v2" creationDateTime="2026-11-12T06:18:51.594Z" modificationDateTime="2026-11-12T06:18:51.594Z"/>
   <Types>
     <GlobalNamespace>
       <Program name="Main">
         <Vars accessSpecifier="private">
-          <Variable name="nMode">
+          <Variable name="n模式">
             <Type>
               <TypeName>INT</TypeName>
             </Type>
@@ -14,7 +14,7 @@
               <SimpleValue value="0"/>
             </InitialValue>
           </Variable>
-          <Variable name="nStep">
+          <Variable name="n步号">
             <Type>
               <TypeName>INT</TypeName>
             </Type>
@@ -22,7 +22,7 @@
               <SimpleValue value="0"/>
             </InitialValue>
           </Variable>
-          <Variable name="nStopStep">
+          <Variable name="n停止步号">
             <Type>
               <TypeName>INT</TypeName>
             </Type>
@@ -30,7 +30,7 @@
               <SimpleValue value="0"/>
             </InitialValue>
           </Variable>
-          <Variable name="bStopReq">
+          <Variable name="b停止请求">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -38,7 +38,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bStopActive">
+          <Variable name="b停止序列启动">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -46,7 +46,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bAlarm">
+          <Variable name="b报警">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -54,7 +54,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bAlarmAny">
+          <Variable name="b存在报警">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -62,7 +62,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="nAlarmCode">
+          <Variable name="n报警码">
             <Type>
               <TypeName>INT</TypeName>
             </Type>
@@ -70,7 +70,7 @@
               <SimpleValue value="0"/>
             </InitialValue>
           </Variable>
-          <Variable name="nAlarmStep">
+          <Variable name="n报警步号">
             <Type>
               <TypeName>INT</TypeName>
             </Type>
@@ -78,7 +78,7 @@
               <SimpleValue value="0"/>
             </InitialValue>
           </Variable>
-          <Variable name="bEStopPause">
+          <Variable name="b急停暂停">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -86,7 +86,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bCylOK">
+          <Variable name="b气缸位置正常">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -94,7 +94,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bStartLast">
+          <Variable name="b启动上次">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -102,7 +102,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bStopLast">
+          <Variable name="b停止上次">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -110,7 +110,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bResetLast">
+          <Variable name="b复位上次">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -118,7 +118,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bManualLast">
+          <Variable name="b手动上次">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -126,7 +126,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bExitLast">
+          <Variable name="b退出手动上次">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -134,7 +134,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bContinueLast">
+          <Variable name="b继续上次">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -142,7 +142,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bRestartLast">
+          <Variable name="b从头上次">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -150,7 +150,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bBtn1Last">
+          <Variable name="b手动竖直缸上次">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -158,7 +158,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bBtn2Last">
+          <Variable name="b手动水平缸上次">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -166,7 +166,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bBtn3Last">
+          <Variable name="b手动夹爪上次">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -174,7 +174,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bStartEdge">
+          <Variable name="b启动上升沿">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -182,7 +182,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bStopEdge">
+          <Variable name="b停止上升沿">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -190,7 +190,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bResetEdge">
+          <Variable name="b复位上升沿">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -198,7 +198,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bManualEdge">
+          <Variable name="b手动上升沿">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -206,7 +206,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bExitEdge">
+          <Variable name="b退出手动上升沿">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -214,7 +214,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bContinueEdge">
+          <Variable name="b继续上升沿">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -222,7 +222,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bRestartEdge">
+          <Variable name="b从头上升沿">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -230,7 +230,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bBtn1Edge">
+          <Variable name="b手动竖直缸上升沿">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -238,7 +238,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bBtn2Edge">
+          <Variable name="b手动水平缸上升沿">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -246,7 +246,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bBtn3Edge">
+          <Variable name="b手动夹爪上升沿">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -254,7 +254,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bC1Ext">
+          <Variable name="b竖直缸伸出命令">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -262,7 +262,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bC1Ret">
+          <Variable name="b竖直缸缩回命令">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -270,7 +270,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bC2Ext">
+          <Variable name="b水平缸伸出命令">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -278,7 +278,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bC2Ret">
+          <Variable name="b水平缸缩回命令">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -286,7 +286,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bC3Clamp">
+          <Variable name="b夹爪夹紧命令">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -294,7 +294,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bC1OutExt">
+          <Variable name="b竖直缸伸出输出">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -302,7 +302,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bC1OutRet">
+          <Variable name="b竖直缸缩回输出">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -310,7 +310,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bC1Alarm">
+          <Variable name="b竖直缸报警">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -318,7 +318,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="nC1AlarmCode">
+          <Variable name="n竖直缸报警码">
             <Type>
               <TypeName>INT</TypeName>
             </Type>
@@ -326,7 +326,7 @@
               <SimpleValue value="0"/>
             </InitialValue>
           </Variable>
-          <Variable name="bC2OutExt">
+          <Variable name="b水平缸伸出输出">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -334,7 +334,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bC2OutRet">
+          <Variable name="b水平缸缩回输出">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -342,7 +342,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bC2Alarm">
+          <Variable name="b水平缸报警">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -350,7 +350,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="nC2AlarmCode">
+          <Variable name="n水平缸报警码">
             <Type>
               <TypeName>INT</TypeName>
             </Type>
@@ -358,7 +358,7 @@
               <SimpleValue value="0"/>
             </InitialValue>
           </Variable>
-          <Variable name="bC3OutClamp">
+          <Variable name="b夹爪夹紧输出">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -366,7 +366,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="bC3Alarm">
+          <Variable name="b夹爪报警">
             <Type>
               <TypeName>BOOL</TypeName>
             </Type>
@@ -374,7 +374,7 @@
               <SimpleValue value="FALSE"/>
             </InitialValue>
           </Variable>
-          <Variable name="nC3AlarmCode">
+          <Variable name="n夹爪报警码">
             <Type>
               <TypeName>INT</TypeName>
             </Type>
@@ -382,17 +382,17 @@
               <SimpleValue value="0"/>
             </InitialValue>
           </Variable>
-          <Variable name="fbCyl1">
+          <Variable name="fb竖直缸">
             <Type>
               <TypeName>FB_Cylinder</TypeName>
             </Type>
           </Variable>
-          <Variable name="fbCyl2">
+          <Variable name="fb水平缸">
             <Type>
               <TypeName>FB_Cylinder</TypeName>
             </Type>
           </Variable>
-          <Variable name="fbCyl3">
+          <Variable name="fb夹爪">
             <Type>
               <TypeName>FB_CylinderSV</TypeName>
             </Type>
@@ -401,518 +401,518 @@
         <MainBody>
           <BodyContent xsi:type="ST">
             <ST>    // ---- 1) HMI 命令上升沿 ----
-    bStartEdge := 触摸屏启动 AND NOT bStartLast;
-    bStartLast := 触摸屏启动;
-    bStopEdge := 触摸屏停止 AND NOT bStopLast;
-    bStopLast := 触摸屏停止;
-    bResetEdge := 触摸屏复位 AND NOT bResetLast;
-    bResetLast := 触摸屏复位;
-    bManualEdge := 触摸屏手动 AND NOT bManualLast;
-    bManualLast := 触摸屏手动;
-    bExitEdge := 触摸屏退出手动 AND NOT bExitLast;
-    bExitLast := 触摸屏退出手动;
-    bContinueEdge := 触摸屏继续 AND NOT bContinueLast;
-    bContinueLast := 触摸屏继续;
-    bRestartEdge := 触摸屏从头 AND NOT bRestartLast;
-    bRestartLast := 触摸屏从头;
-    bBtn1Edge := 手动竖直缸 AND NOT bBtn1Last;
-    bBtn1Last := 手动竖直缸;
-    bBtn2Edge := 手动水平缸 AND NOT bBtn2Last;
-    bBtn2Last := 手动水平缸;
-    bBtn3Edge := 手动夹爪 AND NOT bBtn3Last;
-    bBtn3Last := 手动夹爪;
+    b启动上升沿 := 触摸屏启动 AND NOT b启动上次;
+    b启动上次 := 触摸屏启动;
+    b停止上升沿 := 触摸屏停止 AND NOT b停止上次;
+    b停止上次 := 触摸屏停止;
+    b复位上升沿 := 触摸屏复位 AND NOT b复位上次;
+    b复位上次 := 触摸屏复位;
+    b手动上升沿 := 触摸屏手动 AND NOT b手动上次;
+    b手动上次 := 触摸屏手动;
+    b退出手动上升沿 := 触摸屏退出手动 AND NOT b退出手动上次;
+    b退出手动上次 := 触摸屏退出手动;
+    b继续上升沿 := 触摸屏继续 AND NOT b继续上次;
+    b继续上次 := 触摸屏继续;
+    b从头上升沿 := 触摸屏从头 AND NOT b从头上次;
+    b从头上次 := 触摸屏从头;
+    b手动竖直缸上升沿 := 手动竖直缸 AND NOT b手动竖直缸上次;
+    b手动竖直缸上次 := 手动竖直缸;
+    b手动水平缸上升沿 := 手动水平缸 AND NOT b手动水平缸上次;
+    b手动水平缸上次 := 手动水平缸;
+    b手动夹爪上升沿 := 手动夹爪 AND NOT b手动夹爪上次;
+    b手动夹爪上次 := 手动夹爪;
 
     // ---- 2) 急停：任何模式立即暂停，冻结步号 ----
     IF 急停 THEN
-        IF nMode &lt;&gt; 5 THEN
-            nMode := 5;
-            bEStopPause := TRUE;
+        IF n模式 &lt;&gt; 5 THEN
+            n模式 := 5;
+            b急停暂停 := TRUE;
         END_IF;
     END_IF;
 
     // ---- 3) 模式与 HMI 命令 ----
-    bCylOK := ((竖直缸下降到位) OR (竖直缸上升到位)) AND ((水平右限位) OR (水平左限位)) AND ((夹爪夹紧到位) OR (夹爪松开到位));
+    b气缸位置正常 := ((竖直缸下降到位) OR (竖直缸上升到位)) AND ((水平右限位) OR (水平左限位)) AND ((夹爪夹紧到位) OR (夹爪松开到位));
 
     // 待机：启动/切手动
-    IF nMode = 0 THEN
-        IF bStartEdge THEN
-            nStep := 1;
-            nMode := 1;
-            bStopReq := FALSE;
-            bStopActive := FALSE;
-            bAlarm := FALSE;
-            bEStopPause := FALSE;
-            nAlarmCode := 0;
-            nAlarmStep := 0;
+    IF n模式 = 0 THEN
+        IF b启动上升沿 THEN
+            n步号 := 1;
+            n模式 := 1;
+            b停止请求 := FALSE;
+            b停止序列启动 := FALSE;
+            b报警 := FALSE;
+            b急停暂停 := FALSE;
+            n报警码 := 0;
+            n报警步号 := 0;
         END_IF;
-        IF bManualEdge AND NOT 急停 THEN
-            nMode := 2;
-            bC1Ext := FALSE;
-            bC1Ret := FALSE;
-            bC2Ext := FALSE;
-            bC2Ret := FALSE;
-            bC3Clamp := (夹爪夹紧到位);  // 保持当前夹紧状态
+        IF b手动上升沿 AND NOT 急停 THEN
+            n模式 := 2;
+            b竖直缸伸出命令 := FALSE;
+            b竖直缸缩回命令 := FALSE;
+            b水平缸伸出命令 := FALSE;
+            b水平缸缩回命令 := FALSE;
+            b夹爪夹紧命令 := (夹爪夹紧到位);  // 保持当前夹紧状态
         END_IF;
     END_IF;
 
     // 自动：停止请求（当前步完成后进入停止序列）
-    IF nMode = 1 THEN
-        IF bStopEdge THEN
-            bStopReq := TRUE;
+    IF n模式 = 1 THEN
+        IF b停止上升沿 THEN
+            b停止请求 := TRUE;
         END_IF;
     END_IF;
 
     // 报警/急停暂停：切手动处理、停止、从头开始
-    IF (nMode = 4) OR (nMode = 5) THEN
-        IF bManualEdge AND NOT 急停 THEN
-            nMode := 2;
-            bC1Ext := FALSE;
-            bC1Ret := FALSE;
-            bC2Ext := FALSE;
-            bC2Ret := FALSE;
-            bC3Clamp := (夹爪夹紧到位);  // 保持当前夹紧状态
+    IF (n模式 = 4) OR (n模式 = 5) THEN
+        IF b手动上升沿 AND NOT 急停 THEN
+            n模式 := 2;
+            b竖直缸伸出命令 := FALSE;
+            b竖直缸缩回命令 := FALSE;
+            b水平缸伸出命令 := FALSE;
+            b水平缸缩回命令 := FALSE;
+            b夹爪夹紧命令 := (夹爪夹紧到位);  // 保持当前夹紧状态
         END_IF;
-        IF bStopEdge THEN
-            nMode := 3;
-            IF NOT bStopActive THEN
-                nStopStep := 1;
-                bStopActive := TRUE;
+        IF b停止上升沿 THEN
+            n模式 := 3;
+            IF NOT b停止序列启动 THEN
+                n停止步号 := 1;
+                b停止序列启动 := TRUE;
             END_IF;
         END_IF;
-        IF bRestartEdge THEN
-            nMode := 0;
-            nStep := 0;
-            nStopStep := 0;
-            bStopActive := FALSE;
-            bStopReq := FALSE;
-            bAlarm := FALSE;
-            bEStopPause := FALSE;
-            nAlarmCode := 0;
-            nAlarmStep := 0;
-            bC1Ext := FALSE;
-            bC1Ret := FALSE;
-            bC2Ext := FALSE;
-            bC2Ret := FALSE;
-            bC3Clamp := FALSE;
+        IF b从头上升沿 THEN
+            n模式 := 0;
+            n步号 := 0;
+            n停止步号 := 0;
+            b停止序列启动 := FALSE;
+            b停止请求 := FALSE;
+            b报警 := FALSE;
+            b急停暂停 := FALSE;
+            n报警码 := 0;
+            n报警步号 := 0;
+            b竖直缸伸出命令 := FALSE;
+            b竖直缸缩回命令 := FALSE;
+            b水平缸伸出命令 := FALSE;
+            b水平缸缩回命令 := FALSE;
+            b夹爪夹紧命令 := FALSE;
         END_IF;
     END_IF;
 
     // 手动：清故障、退出手动、继续/停止/从头
-    IF nMode = 2 THEN
-        IF bResetEdge AND bCylOK AND NOT 急停 THEN
-            bAlarm := FALSE;
-            bEStopPause := FALSE;
-            nAlarmCode := 0;
-            nAlarmStep := 0;
+    IF n模式 = 2 THEN
+        IF b复位上升沿 AND b气缸位置正常 AND NOT 急停 THEN
+            b报警 := FALSE;
+            b急停暂停 := FALSE;
+            n报警码 := 0;
+            n报警步号 := 0;
         END_IF;
-        IF bExitEdge AND bCylOK AND NOT bAlarm AND NOT bEStopPause AND NOT 急停 THEN
-            nMode := 0;
-            nStep := 0;
-            bStopActive := FALSE;
+        IF b退出手动上升沿 AND b气缸位置正常 AND NOT b报警 AND NOT b急停暂停 AND NOT 急停 THEN
+            n模式 := 0;
+            n步号 := 0;
+            b停止序列启动 := FALSE;
         END_IF;
-        IF bContinueEdge AND bCylOK AND NOT bAlarm AND NOT bEStopPause AND NOT 急停 THEN
-            IF bStopActive THEN
-                nMode := 3;
+        IF b继续上升沿 AND b气缸位置正常 AND NOT b报警 AND NOT b急停暂停 AND NOT 急停 THEN
+            IF b停止序列启动 THEN
+                n模式 := 3;
             ELSE
-                nMode := 1;
+                n模式 := 1;
             END_IF;
-            bStopReq := FALSE;
+            b停止请求 := FALSE;
         END_IF;
-        IF bStopEdge THEN
-            nMode := 3;
-            IF NOT bStopActive THEN
-                nStopStep := 1;
-                bStopActive := TRUE;
+        IF b停止上升沿 THEN
+            n模式 := 3;
+            IF NOT b停止序列启动 THEN
+                n停止步号 := 1;
+                b停止序列启动 := TRUE;
             END_IF;
         END_IF;
-        IF bRestartEdge THEN
-            nMode := 0;
-            nStep := 0;
-            nStopStep := 0;
-            bStopActive := FALSE;
-            bStopReq := FALSE;
-            bAlarm := FALSE;
-            bEStopPause := FALSE;
-            nAlarmCode := 0;
-            nAlarmStep := 0;
-            bC1Ext := FALSE;
-            bC1Ret := FALSE;
-            bC2Ext := FALSE;
-            bC2Ret := FALSE;
-            bC3Clamp := FALSE;
+        IF b从头上升沿 THEN
+            n模式 := 0;
+            n步号 := 0;
+            n停止步号 := 0;
+            b停止序列启动 := FALSE;
+            b停止请求 := FALSE;
+            b报警 := FALSE;
+            b急停暂停 := FALSE;
+            n报警码 := 0;
+            n报警步号 := 0;
+            b竖直缸伸出命令 := FALSE;
+            b竖直缸缩回命令 := FALSE;
+            b水平缸伸出命令 := FALSE;
+            b水平缸缩回命令 := FALSE;
+            b夹爪夹紧命令 := FALSE;
         END_IF;
     END_IF;
 
     // 急停仍按住时禁止任何模式切换
     IF 急停 THEN
-        nMode := 5;
+        n模式 := 5;
     END_IF;
 
     // ---- 4) 手动翻转（仅手动模式） ----
-        IF nMode = 2 THEN
+        IF n模式 = 2 THEN
             // 手动翻转：竖直缸（手动竖直缸）
-            IF bBtn1Edge THEN
+            IF b手动竖直缸上升沿 THEN
                 IF 竖直缸上升到位 THEN
-                    bC1Ext := TRUE;
-                    bC1Ret := FALSE;
+                    b竖直缸伸出命令 := TRUE;
+                    b竖直缸缩回命令 := FALSE;
                 ELSIF 竖直缸下降到位 THEN
-                    bC1Ext := FALSE;
-                    bC1Ret := TRUE;
+                    b竖直缸伸出命令 := FALSE;
+                    b竖直缸缩回命令 := TRUE;
                 ELSE
                     // 位置未知（卡在中间）：默认缩回原位，便于人工恢复
-                    bC1Ext := FALSE;
-                    bC1Ret := TRUE;
+                    b竖直缸伸出命令 := FALSE;
+                    b竖直缸缩回命令 := TRUE;
                 END_IF;
             END_IF;
-            IF bC1Ext AND 竖直缸下降到位 THEN
-                bC1Ext := FALSE;
+            IF b竖直缸伸出命令 AND 竖直缸下降到位 THEN
+                b竖直缸伸出命令 := FALSE;
             END_IF;
-            IF bC1Ret AND 竖直缸上升到位 THEN
-                bC1Ret := FALSE;
+            IF b竖直缸缩回命令 AND 竖直缸上升到位 THEN
+                b竖直缸缩回命令 := FALSE;
             END_IF;
 
             // 手动翻转：水平缸（手动水平缸）
-            IF bBtn2Edge THEN
+            IF b手动水平缸上升沿 THEN
                 IF 水平左限位 THEN
-                    bC2Ext := TRUE;
-                    bC2Ret := FALSE;
+                    b水平缸伸出命令 := TRUE;
+                    b水平缸缩回命令 := FALSE;
                 ELSIF 水平右限位 THEN
-                    bC2Ext := FALSE;
-                    bC2Ret := TRUE;
+                    b水平缸伸出命令 := FALSE;
+                    b水平缸缩回命令 := TRUE;
                 ELSE
                     // 位置未知（卡在中间）：默认缩回原位，便于人工恢复
-                    bC2Ext := FALSE;
-                    bC2Ret := TRUE;
+                    b水平缸伸出命令 := FALSE;
+                    b水平缸缩回命令 := TRUE;
                 END_IF;
             END_IF;
-            IF bC2Ext AND 水平右限位 THEN
-                bC2Ext := FALSE;
+            IF b水平缸伸出命令 AND 水平右限位 THEN
+                b水平缸伸出命令 := FALSE;
             END_IF;
-            IF bC2Ret AND 水平左限位 THEN
-                bC2Ret := FALSE;
+            IF b水平缸缩回命令 AND 水平左限位 THEN
+                b水平缸缩回命令 := FALSE;
             END_IF;
 
             // 手动翻转：夹爪（手动夹爪）
-            IF bBtn3Edge THEN
+            IF b手动夹爪上升沿 THEN
                 IF 夹爪松开到位 THEN
-                    bC3Clamp := TRUE;
+                    b夹爪夹紧命令 := TRUE;
                 ELSIF 夹爪夹紧到位 THEN
-                    bC3Clamp := FALSE;
+                    b夹爪夹紧命令 := FALSE;
                 ELSE
                     // 位置未知（卡在中间）：默认松开回原位，便于人工恢复
-                    bC3Clamp := FALSE;
+                    b夹爪夹紧命令 := FALSE;
                 END_IF;
             END_IF;
 
         END_IF;
 
     // ---- 5) 气缸命令（按模式；双电控默认保持，单电控默认松开） ----
-    IF nMode &lt;&gt; 2 THEN
-    bC1Ext := FALSE;
-    bC1Ret := FALSE;
-    bC2Ext := FALSE;
-    bC2Ret := FALSE;
-    bC3Clamp := FALSE;
+    IF n模式 &lt;&gt; 2 THEN
+    b竖直缸伸出命令 := FALSE;
+    b竖直缸缩回命令 := FALSE;
+    b水平缸伸出命令 := FALSE;
+    b水平缸缩回命令 := FALSE;
+    b夹爪夹紧命令 := FALSE;
     END_IF;
 
-    IF nMode = 1 THEN
-        CASE nStep OF
+    IF n模式 = 1 THEN
+        CASE n步号 OF
             // S1 竖直下降
             1:
-        bC1Ext := TRUE;
+        b竖直缸伸出命令 := TRUE;
             // S2 夹爪夹紧
             2:
-        bC1Ext := TRUE;
-        bC3Clamp := TRUE;
+        b竖直缸伸出命令 := TRUE;
+        b夹爪夹紧命令 := TRUE;
             // S3 竖直上升
             3:
-        bC1Ret := TRUE;
-        bC3Clamp := TRUE;
+        b竖直缸缩回命令 := TRUE;
+        b夹爪夹紧命令 := TRUE;
             // S4 水平右移
             4:
-        bC3Clamp := TRUE;
-        bC2Ext := TRUE;
+        b夹爪夹紧命令 := TRUE;
+        b水平缸伸出命令 := TRUE;
             // S5 右位竖直下降
             5:
-        bC1Ext := TRUE;
-        bC3Clamp := TRUE;
-        bC2Ext := TRUE;
+        b竖直缸伸出命令 := TRUE;
+        b夹爪夹紧命令 := TRUE;
+        b水平缸伸出命令 := TRUE;
             // S6 夹爪松开
             6:
-        bC1Ext := TRUE;
-        bC3Clamp := FALSE;
-        bC2Ext := TRUE;
+        b竖直缸伸出命令 := TRUE;
+        b夹爪夹紧命令 := FALSE;
+        b水平缸伸出命令 := TRUE;
             // S7 松开后上升
             7:
-        bC1Ret := TRUE;
-        bC2Ext := TRUE;
+        b竖直缸缩回命令 := TRUE;
+        b水平缸伸出命令 := TRUE;
             // S8 水平左移回原位
             8:
-        bC2Ret := TRUE;
+        b水平缸缩回命令 := TRUE;
         END_CASE;
-    ELSIF nMode = 3 THEN
-        CASE nStopStep OF
+    ELSIF n模式 = 3 THEN
+        CASE n停止步号 OF
             // T1 竖直上升回原位
             1:
-        bC1Ext := TRUE;
-        bC1Ret := TRUE;
-        bC3Clamp := TRUE;
+        b竖直缸伸出命令 := TRUE;
+        b竖直缸缩回命令 := TRUE;
+        b夹爪夹紧命令 := TRUE;
             // T2 水平左移回原位
             2:
-        bC2Ext := TRUE;
-        bC2Ret := TRUE;
-        bC3Clamp := TRUE;
+        b水平缸伸出命令 := TRUE;
+        b水平缸缩回命令 := TRUE;
+        b夹爪夹紧命令 := TRUE;
             // T3 夹爪松开
             3:
-        bC3Clamp := FALSE;
+        b夹爪夹紧命令 := FALSE;
             // T4 全部输出关闭
             4:
-        bC1Ext := TRUE;
-        bC1Ret := TRUE;
-        bC3Clamp := FALSE;
-        bC2Ext := TRUE;
-        bC2Ret := TRUE;
+        b竖直缸伸出命令 := TRUE;
+        b竖直缸缩回命令 := TRUE;
+        b夹爪夹紧命令 := FALSE;
+        b水平缸伸出命令 := TRUE;
+        b水平缸缩回命令 := TRUE;
         END_CASE;
     END_IF;
 
     // ---- 6) 气缸 FB 调用（输出 + 5s 超时监视） ----
     // 竖直缸（双电控）
-    fbCyl1(bEnable := (nMode = 1) OR (nMode = 2) OR (nMode = 3),
-              bCmdExtend := bC1Ext, bCmdRetract := bC1Ret,
-              xExtended := 竖直缸下降到位, xRetracted := 竖直缸上升到位,
-              tTimeout := T#5000ms,
-              nAlarmExt := 10, nAlarmRet := 11,
-              bOutExtend =&gt; bC1OutExt, bOutRetract =&gt; bC1OutRet,
-              bAlarm =&gt; bC1Alarm, nAlarmCode =&gt; nC1AlarmCode);
+    fb竖直缸(b使能 := (n模式 = 1) OR (n模式 = 2) OR (n模式 = 3),
+              b伸出命令 := b竖直缸伸出命令, b缩回命令 := b竖直缸缩回命令,
+              x伸出到位 := 竖直缸下降到位, x原位到位 := 竖直缸上升到位,
+              t超时 := T#5000ms,
+              n伸出报警码 := 10, n缩回报警码 := 11,
+              b伸出输出 =&gt; b竖直缸伸出输出, b缩回输出 =&gt; b竖直缸缩回输出,
+              b报警 =&gt; b竖直缸报警, n报警码 =&gt; n竖直缸报警码);
 
     // 水平缸（双电控）
-    fbCyl2(bEnable := (nMode = 1) OR (nMode = 2) OR (nMode = 3),
-              bCmdExtend := bC2Ext, bCmdRetract := bC2Ret,
-              xExtended := 水平右限位, xRetracted := 水平左限位,
-              tTimeout := T#5000ms,
-              nAlarmExt := 20, nAlarmRet := 21,
-              bOutExtend =&gt; bC2OutExt, bOutRetract =&gt; bC2OutRet,
-              bAlarm =&gt; bC2Alarm, nAlarmCode =&gt; nC2AlarmCode);
+    fb水平缸(b使能 := (n模式 = 1) OR (n模式 = 2) OR (n模式 = 3),
+              b伸出命令 := b水平缸伸出命令, b缩回命令 := b水平缸缩回命令,
+              x伸出到位 := 水平右限位, x原位到位 := 水平左限位,
+              t超时 := T#5000ms,
+              n伸出报警码 := 20, n缩回报警码 := 21,
+              b伸出输出 =&gt; b水平缸伸出输出, b缩回输出 =&gt; b水平缸缩回输出,
+              b报警 =&gt; b水平缸报警, n报警码 =&gt; n水平缸报警码);
 
     // 夹爪（单电控）
-    fbCyl3(bEnable := (nMode = 1) OR (nMode = 2) OR (nMode = 3),
-              bCmdClamp := bC3Clamp,
-              xClamped := 夹爪夹紧到位, xReleased := 夹爪松开到位,
-              tTimeout := T#5000ms,
-              nAlarmClamp := 30, nAlarmRelease := 31,
-              bOutClamp =&gt; bC3OutClamp, bAlarm =&gt; bC3Alarm, nAlarmCode =&gt; nC3AlarmCode);
+    fb夹爪(b使能 := (n模式 = 1) OR (n模式 = 2) OR (n模式 = 3),
+              b夹紧命令 := b夹爪夹紧命令,
+              x夹紧到位 := 夹爪夹紧到位, x松开到位 := 夹爪松开到位,
+              t超时 := T#5000ms,
+              n夹紧报警码 := 30, n松开报警码 := 31,
+              b夹紧输出 =&gt; b夹爪夹紧输出, b报警 =&gt; b夹爪报警, n报警码 =&gt; n夹爪报警码);
 
 
     // ---- 7) 报警汇总（任一气缸超时 → 冻结步号、等手动处理） ----
-    bAlarmAny := bC1Alarm OR bC2Alarm OR bC3Alarm;
-    IF bAlarmAny AND NOT bAlarm THEN
-        bAlarm := TRUE;
-        nMode := 4;
-        nAlarmStep := nStep;
-        IF bC1Alarm THEN nAlarmCode := nC1AlarmCode;  // 竖直缸
-        ELSIF bC2Alarm THEN nAlarmCode := nC2AlarmCode;  // 水平缸
-        ELSIF bC3Alarm THEN nAlarmCode := nC3AlarmCode;  // 夹爪
+    b存在报警 := b竖直缸报警 OR b水平缸报警 OR b夹爪报警;
+    IF b存在报警 AND NOT b报警 THEN
+        b报警 := TRUE;
+        n模式 := 4;
+        n报警步号 := n步号;
+        IF b竖直缸报警 THEN n报警码 := n竖直缸报警码;  // 竖直缸
+        ELSIF b水平缸报警 THEN n报警码 := n水平缸报警码;  // 水平缸
+        ELSIF b夹爪报警 THEN n报警码 := n夹爪报警码;  // 夹爪
         END_IF;
-    bC1Ext := FALSE;
-    bC1Ret := FALSE;
-    bC2Ext := FALSE;
-    bC2Ret := FALSE;
-    bC3Clamp := FALSE;
+    b竖直缸伸出命令 := FALSE;
+    b竖直缸缩回命令 := FALSE;
+    b水平缸伸出命令 := FALSE;
+    b水平缸缩回命令 := FALSE;
+    b夹爪夹紧命令 := FALSE;
     END_IF;
 
-    // ---- 8) 自动步转移（报警/急停时 nMode 不是自动，流程不跳转） ----
-        IF nMode = 1 THEN
-            CASE nStep OF
+    // ---- 8) 自动步转移（报警/急停时 n模式 不是自动，流程不跳转） ----
+        IF n模式 = 1 THEN
+            CASE n步号 OF
                 // S1 竖直下降
                 1:
                     IF (竖直缸下降到位) THEN
-                        IF bStopReq THEN
-                            nMode := 3;
-                            nStopStep := 1;
-                            bStopActive := TRUE;
-                            bStopReq := FALSE;
+                        IF b停止请求 THEN
+                            n模式 := 3;
+                            n停止步号 := 1;
+                            b停止序列启动 := TRUE;
+                            b停止请求 := FALSE;
                         ELSE
-                            nStep := 2;
+                            n步号 := 2;
                         END_IF;
                     END_IF;
                 // S2 夹爪夹紧
                 2:
                     IF (夹爪夹紧到位) THEN
-                        IF bStopReq THEN
-                            nMode := 3;
-                            nStopStep := 1;
-                            bStopActive := TRUE;
-                            bStopReq := FALSE;
+                        IF b停止请求 THEN
+                            n模式 := 3;
+                            n停止步号 := 1;
+                            b停止序列启动 := TRUE;
+                            b停止请求 := FALSE;
                         ELSE
-                            nStep := 3;
+                            n步号 := 3;
                         END_IF;
                     END_IF;
                 // S3 竖直上升
                 3:
                     IF (竖直缸上升到位) THEN
-                        IF bStopReq THEN
-                            nMode := 3;
-                            nStopStep := 1;
-                            bStopActive := TRUE;
-                            bStopReq := FALSE;
+                        IF b停止请求 THEN
+                            n模式 := 3;
+                            n停止步号 := 1;
+                            b停止序列启动 := TRUE;
+                            b停止请求 := FALSE;
                         ELSE
-                            nStep := 4;
+                            n步号 := 4;
                         END_IF;
                     END_IF;
                 // S4 水平右移
                 4:
                     IF (水平右限位) THEN
-                        IF bStopReq THEN
-                            nMode := 3;
-                            nStopStep := 1;
-                            bStopActive := TRUE;
-                            bStopReq := FALSE;
+                        IF b停止请求 THEN
+                            n模式 := 3;
+                            n停止步号 := 1;
+                            b停止序列启动 := TRUE;
+                            b停止请求 := FALSE;
                         ELSE
-                            nStep := 5;
+                            n步号 := 5;
                         END_IF;
                     END_IF;
                 // S5 右位竖直下降
                 5:
                     IF (竖直缸下降到位) THEN
-                        IF bStopReq THEN
-                            nMode := 3;
-                            nStopStep := 1;
-                            bStopActive := TRUE;
-                            bStopReq := FALSE;
+                        IF b停止请求 THEN
+                            n模式 := 3;
+                            n停止步号 := 1;
+                            b停止序列启动 := TRUE;
+                            b停止请求 := FALSE;
                         ELSE
-                            nStep := 6;
+                            n步号 := 6;
                         END_IF;
                     END_IF;
                 // S6 夹爪松开
                 6:
                     IF (夹爪松开到位) THEN
-                        IF bStopReq THEN
-                            nMode := 3;
-                            nStopStep := 1;
-                            bStopActive := TRUE;
-                            bStopReq := FALSE;
+                        IF b停止请求 THEN
+                            n模式 := 3;
+                            n停止步号 := 1;
+                            b停止序列启动 := TRUE;
+                            b停止请求 := FALSE;
                         ELSE
-                            nStep := 7;
+                            n步号 := 7;
                         END_IF;
                     END_IF;
                 // S7 松开后上升
                 7:
                     IF (竖直缸上升到位) THEN
-                        IF bStopReq THEN
-                            nMode := 3;
-                            nStopStep := 1;
-                            bStopActive := TRUE;
-                            bStopReq := FALSE;
+                        IF b停止请求 THEN
+                            n模式 := 3;
+                            n停止步号 := 1;
+                            b停止序列启动 := TRUE;
+                            b停止请求 := FALSE;
                         ELSE
-                            nStep := 8;
+                            n步号 := 8;
                         END_IF;
                     END_IF;
                 // S8 水平左移回原位
                 8:
                     IF (水平左限位) THEN
-                        IF bStopReq THEN
-                            nMode := 3;
-                            nStopStep := 1;
-                            bStopActive := TRUE;
-                            bStopReq := FALSE;
+                        IF b停止请求 THEN
+                            n模式 := 3;
+                            n停止步号 := 1;
+                            b停止序列启动 := TRUE;
+                            b停止请求 := FALSE;
                         ELSE
-                            nStep := 0;
-                            nMode := 0;
+                            n步号 := 0;
+                            n模式 := 0;
                         END_IF;
                     END_IF;
             END_CASE;
         END_IF;
 
     // ---- 9) 停止序列（按顺序回原点，不直接清输出） ----
-        IF nMode = 3 THEN
-            CASE nStopStep OF
+        IF n模式 = 3 THEN
+            CASE n停止步号 OF
                 // T1 竖直上升回原位
                 1:
                     IF (竖直缸上升到位) THEN
-                        nStopStep := 2;
+                        n停止步号 := 2;
                     END_IF;
                 // T2 水平左移回原位
                 2:
                     IF (水平左限位) THEN
-                        nStopStep := 3;
+                        n停止步号 := 3;
                     END_IF;
                 // T3 夹爪松开
                 3:
                     IF (夹爪松开到位) THEN
-                        nStopStep := 4;
+                        n停止步号 := 4;
                     END_IF;
                 // T4 全部输出关闭
                 4:
                     IF (TRUE) THEN
-                        nStopStep := 5;
+                        n停止步号 := 5;
                     END_IF;
                 ELSE
-                    nMode := 0;
-                    nStep := 0;
-                    nStopStep := 0;
-                    bStopActive := FALSE;
-                    bStopReq := FALSE;
+                    n模式 := 0;
+                    n步号 := 0;
+                    n停止步号 := 0;
+                    b停止序列启动 := FALSE;
+                    b停止请求 := FALSE;
             END_CASE;
         END_IF;
 
     // ---- 输出汇总（Y 只在此处驱动；待机全关，其他模式取 FB 输出） ----
-    IF nMode = 0 THEN
+    IF n模式 = 0 THEN
         竖直下降电磁阀 := FALSE;
         竖直上升电磁阀 := FALSE;
         水平右移电磁阀 := FALSE;
         水平左移电磁阀 := FALSE;
         夹爪电磁阀 := FALSE;
     ELSE
-        竖直下降电磁阀 := bC1OutExt;
-        竖直上升电磁阀 := bC1OutRet;
-        水平右移电磁阀 := bC2OutExt;
-        水平左移电磁阀 := bC2OutRet;
-        夹爪电磁阀 := bC3OutClamp;
+        竖直下降电磁阀 := b竖直缸伸出输出;
+        竖直上升电磁阀 := b竖直缸缩回输出;
+        水平右移电磁阀 := b水平缸伸出输出;
+        水平左移电磁阀 := b水平缸缩回输出;
+        夹爪电磁阀 := b夹爪夹紧输出;
     END_IF;
 
     // ---- 11) HMI 状态/数据 ----
-    状态待机 := (nMode = 0);
-    状态自动 := (nMode = 1);
-    状态手动 := (nMode = 2);
-    状态停止中 := (nMode = 3);
-    状态报警 := bAlarm;
-    状态急停暂停 := bEStopPause;
-    当前步号 := nStep;
-    当前模式 := nMode;
-    报警代码 := nAlarmCode;
-    报警步号 := nAlarmStep;</ST>
+    状态待机 := (n模式 = 0);
+    状态自动 := (n模式 = 1);
+    状态手动 := (n模式 = 2);
+    状态停止中 := (n模式 = 3);
+    状态报警 := b报警;
+    状态急停暂停 := b急停暂停;
+    当前步号 := n步号;
+    当前模式 := n模式;
+    报警代码 := n报警码;
+    报警步号 := n报警步号;</ST>
           </BodyContent>
         </MainBody>
       </Program>
         <FunctionBlock name="FB_Cylinder">
           <Parameters>
             <InputVars>
-              <Variable name="bEnable" orderWithinParamSet="1">
+              <Variable name="b使能" orderWithinParamSet="1">
                 <Type>
                   <TypeName>BOOL</TypeName>
                 </Type>
               </Variable>
-              <Variable name="bCmdExtend" orderWithinParamSet="2">
+              <Variable name="b伸出命令" orderWithinParamSet="2">
                 <Type>
                   <TypeName>BOOL</TypeName>
                 </Type>
               </Variable>
-              <Variable name="bCmdRetract" orderWithinParamSet="3">
+              <Variable name="b缩回命令" orderWithinParamSet="3">
                 <Type>
                   <TypeName>BOOL</TypeName>
                 </Type>
               </Variable>
-              <Variable name="xExtended" orderWithinParamSet="4">
+              <Variable name="x伸出到位" orderWithinParamSet="4">
                 <Type>
                   <TypeName>BOOL</TypeName>
                 </Type>
               </Variable>
-              <Variable name="xRetracted" orderWithinParamSet="5">
+              <Variable name="x原位到位" orderWithinParamSet="5">
                 <Type>
                   <TypeName>BOOL</TypeName>
                 </Type>
               </Variable>
-              <Variable name="tTimeout" orderWithinParamSet="6">
+              <Variable name="t超时" orderWithinParamSet="6">
                 <Type>
                   <TypeName>TIME</TypeName>
                 </Type>
@@ -920,7 +920,7 @@
                   <SimpleValue value="T#5s"/>
                 </InitialValue>
               </Variable>
-              <Variable name="nAlarmExt" orderWithinParamSet="7">
+              <Variable name="n伸出报警码" orderWithinParamSet="7">
                 <Type>
                   <TypeName>INT</TypeName>
                 </Type>
@@ -928,7 +928,7 @@
                   <SimpleValue value="100"/>
                 </InitialValue>
               </Variable>
-              <Variable name="nAlarmRet" orderWithinParamSet="8">
+              <Variable name="n缩回报警码" orderWithinParamSet="8">
                 <Type>
                   <TypeName>INT</TypeName>
                 </Type>
@@ -938,22 +938,22 @@
               </Variable>
             </InputVars>
             <OutputVars retain="false">
-              <Variable name="bOutExtend" orderWithinParamSet="9">
+              <Variable name="b伸出输出" orderWithinParamSet="9">
                 <Type>
                   <TypeName>BOOL</TypeName>
                 </Type>
               </Variable>
-              <Variable name="bOutRetract" orderWithinParamSet="10">
+              <Variable name="b缩回输出" orderWithinParamSet="10">
                 <Type>
                   <TypeName>BOOL</TypeName>
                 </Type>
               </Variable>
-              <Variable name="bAlarm" orderWithinParamSet="11">
+              <Variable name="b报警" orderWithinParamSet="11">
                 <Type>
                   <TypeName>BOOL</TypeName>
                 </Type>
               </Variable>
-              <Variable name="nAlarmCode" orderWithinParamSet="12">
+              <Variable name="n报警码" orderWithinParamSet="12">
                 <Type>
                   <TypeName>INT</TypeName>
                 </Type>
@@ -961,12 +961,12 @@
             </OutputVars>
           </Parameters>
           <Vars accessSpecifier="private">
-            <Variable name="tExt">
+            <Variable name="t伸出超时">
               <Type>
                 <TypeName>TON</TypeName>
               </Type>
             </Variable>
-            <Variable name="tRet">
+            <Variable name="t缩回超时">
               <Type>
                 <TypeName>TON</TypeName>
               </Type>
@@ -974,23 +974,23 @@
           </Vars>
           <MainBody>
             <BodyContent xsi:type="ST">
-              <ST>    // 输出（bEnable=FALSE 时保持输出，配合报警/急停冻结）
-    IF bEnable THEN
-        bOutExtend := bCmdExtend;
-        bOutRetract := bCmdRetract;
+              <ST>    // 输出（b使能=FALSE 时保持输出，配合报警/急停冻结）
+    IF b使能 THEN
+        b伸出输出 := b伸出命令;
+        b缩回输出 := b缩回命令;
     END_IF;
 
     // 超时监视
-    tExt(IN := bEnable AND bCmdExtend AND NOT xExtended, PT := tTimeout);
-    tRet(IN := bEnable AND bCmdRetract AND NOT xRetracted, PT := tTimeout);
+    t伸出超时(IN := b使能 AND b伸出命令 AND NOT x伸出到位, PT := t超时);
+    t缩回超时(IN := b使能 AND b缩回命令 AND NOT x原位到位, PT := t超时);
 
-    bAlarm := FALSE;
-    IF tExt.Q THEN
-        bAlarm := TRUE;
-        nAlarmCode := nAlarmExt;
-    ELSIF tRet.Q THEN
-        bAlarm := TRUE;
-        nAlarmCode := nAlarmRet;
+    b报警 := FALSE;
+    IF t伸出超时.Q THEN
+        b报警 := TRUE;
+        n报警码 := n伸出报警码;
+    ELSIF t缩回超时.Q THEN
+        b报警 := TRUE;
+        n报警码 := n缩回报警码;
     END_IF;</ST>
             </BodyContent>
           </MainBody>
@@ -998,27 +998,27 @@
         <FunctionBlock name="FB_CylinderSV">
           <Parameters>
             <InputVars>
-              <Variable name="bEnable" orderWithinParamSet="1">
+              <Variable name="b使能" orderWithinParamSet="1">
                 <Type>
                   <TypeName>BOOL</TypeName>
                 </Type>
               </Variable>
-              <Variable name="bCmdClamp" orderWithinParamSet="2">
+              <Variable name="b夹紧命令" orderWithinParamSet="2">
                 <Type>
                   <TypeName>BOOL</TypeName>
                 </Type>
               </Variable>
-              <Variable name="xClamped" orderWithinParamSet="3">
+              <Variable name="x夹紧到位" orderWithinParamSet="3">
                 <Type>
                   <TypeName>BOOL</TypeName>
                 </Type>
               </Variable>
-              <Variable name="xReleased" orderWithinParamSet="4">
+              <Variable name="x松开到位" orderWithinParamSet="4">
                 <Type>
                   <TypeName>BOOL</TypeName>
                 </Type>
               </Variable>
-              <Variable name="tTimeout" orderWithinParamSet="5">
+              <Variable name="t超时" orderWithinParamSet="5">
                 <Type>
                   <TypeName>TIME</TypeName>
                 </Type>
@@ -1026,7 +1026,7 @@
                   <SimpleValue value="T#5s"/>
                 </InitialValue>
               </Variable>
-              <Variable name="nAlarmClamp" orderWithinParamSet="6">
+              <Variable name="n夹紧报警码" orderWithinParamSet="6">
                 <Type>
                   <TypeName>INT</TypeName>
                 </Type>
@@ -1034,7 +1034,7 @@
                   <SimpleValue value="100"/>
                 </InitialValue>
               </Variable>
-              <Variable name="nAlarmRelease" orderWithinParamSet="7">
+              <Variable name="n松开报警码" orderWithinParamSet="7">
                 <Type>
                   <TypeName>INT</TypeName>
                 </Type>
@@ -1044,17 +1044,17 @@
               </Variable>
             </InputVars>
             <OutputVars retain="false">
-              <Variable name="bOutClamp" orderWithinParamSet="8">
+              <Variable name="b夹紧输出" orderWithinParamSet="8">
                 <Type>
                   <TypeName>BOOL</TypeName>
                 </Type>
               </Variable>
-              <Variable name="bAlarm" orderWithinParamSet="9">
+              <Variable name="b报警" orderWithinParamSet="9">
                 <Type>
                   <TypeName>BOOL</TypeName>
                 </Type>
               </Variable>
-              <Variable name="nAlarmCode" orderWithinParamSet="10">
+              <Variable name="n报警码" orderWithinParamSet="10">
                 <Type>
                   <TypeName>INT</TypeName>
                 </Type>
@@ -1062,12 +1062,12 @@
             </OutputVars>
           </Parameters>
           <Vars accessSpecifier="private">
-            <Variable name="tClamp">
+            <Variable name="t夹紧超时">
               <Type>
                 <TypeName>TON</TypeName>
               </Type>
             </Variable>
-            <Variable name="tRelease">
+            <Variable name="t松开超时">
               <Type>
                 <TypeName>TON</TypeName>
               </Type>
@@ -1075,22 +1075,22 @@
           </Vars>
           <MainBody>
             <BodyContent xsi:type="ST">
-              <ST>    // 输出（bEnable=FALSE 时保持输出）
-    IF bEnable THEN
-        bOutClamp := bCmdClamp;
+              <ST>    // 输出（b使能=FALSE 时保持输出）
+    IF b使能 THEN
+        b夹紧输出 := b夹紧命令;
     END_IF;
 
     // 超时监视
-    tClamp(IN := bEnable AND bCmdClamp AND NOT xClamped, PT := tTimeout);
-    tRelease(IN := bEnable AND NOT bCmdClamp AND NOT xReleased, PT := tTimeout);
+    t夹紧超时(IN := b使能 AND b夹紧命令 AND NOT x夹紧到位, PT := t超时);
+    t松开超时(IN := b使能 AND NOT b夹紧命令 AND NOT x松开到位, PT := t超时);
 
-    bAlarm := FALSE;
-    IF tClamp.Q THEN
-        bAlarm := TRUE;
-        nAlarmCode := nAlarmClamp;
-    ELSIF tRelease.Q THEN
-        bAlarm := TRUE;
-        nAlarmCode := nAlarmRelease;
+    b报警 := FALSE;
+    IF t夹紧超时.Q THEN
+        b报警 := TRUE;
+        n报警码 := n夹紧报警码;
+    ELSIF t松开超时.Q THEN
+        b报警 := TRUE;
+        n报警码 := n松开报警码;
     END_IF;</ST>
             </BodyContent>
           </MainBody>

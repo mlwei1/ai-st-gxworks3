@@ -150,6 +150,27 @@ function escapeRegExp(s: string): string {
 }
 
 /**
+ * 通用标识符重命名：按 map 替换 ST 源码中的标识符（跳过字符串内容）。
+ *
+ * - 长标识符优先（避免 bAlarm 命中 bAlarmAny）；
+ * - 边界包含字母/数字/下划线/汉字/点（避免命中 FB 成员或子串）。
+ */
+export function renameIdentifiers(source: string, map: Map<string, string>): string {
+  if (map.size === 0) return source;
+  const keys = [...map.keys()]
+    .filter((k) => k.trim().length > 0)
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRegExp);
+  // 边界不含 '.'：允许重命名 FB 成员访问（如 tExt.Q），软元件位访问暂不在规范内
+  const boundary = 'A-Za-z0-9_\\u4e00-\\u9fff';
+  const re = new RegExp(`(?<![${boundary}])(${keys.join('|')})(?![${boundary}])`, 'g');
+  const parts = source.split(/('(?:[^']|'')*'|"(?:[^"]|"")*")/g);
+  return parts
+    .map((part, i) => (i % 2 === 1 ? part : part.replace(re, (m) => map.get(m) ?? m)))
+    .join('');
+}
+
+/**
  * 把 ST 源码里的软元件地址替换为全局标签名。
  *
  * - 只替换 deviceToLabel 中存在的地址（长地址优先，如 X10 先于 X1）；
@@ -157,18 +178,7 @@ function escapeRegExp(s: string): string {
  * - 跳过单引号/双引号字符串内容。
  */
 export function renameDevicesToLabels(source: string, deviceToLabel: Map<string, string>): string {
-  if (deviceToLabel.size === 0) return source;
-  const keys = [...deviceToLabel.keys()]
-    .filter((k) => k.trim().length > 0)
-    .sort((a, b) => b.length - a.length)
-    .map(escapeRegExp);
-  const boundary = 'A-Za-z0-9_\\u4e00-\\u9fff.';
-  const re = new RegExp(`(?<![${boundary}])(${keys.join('|')})(?![${boundary}])`, 'g');
-
-  const parts = source.split(/('(?:[^']|'')*'|"(?:[^"]|"")*")/g);
-  return parts
-    .map((part, i) => (i % 2 === 1 ? part : part.replace(re, (m) => deviceToLabel.get(m) ?? m)))
-    .join('');
+  return renameIdentifiers(source, deviceToLabel);
 }
 
 /**

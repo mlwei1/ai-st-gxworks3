@@ -122,6 +122,10 @@ export async function generateFromSpec(
   }
 
   const spec = loaded.spec;
+  // CLI --labels 覆盖：全局标签与局部标签/ FB 形参语言保持一致
+  if (options.labelLanguage) {
+    spec.labels = { ...(spec.labels ?? {}), language: options.labelLanguage };
+  }
   result.templateName = spec.template.name;
   result.outDir = options.outDir ? resolve(options.outDir) : defaultOutDir(spec);
   await mkdir(result.outDir, { recursive: true });
