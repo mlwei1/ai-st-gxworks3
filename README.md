@@ -41,9 +41,10 @@ node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_sta
 > 手动翻转按钮、停止序列回原点、HMI M/D 地址表的单 PROGRAM ST，
 > 设计说明见 [docs/工业程序结构-robot_steps设计稿.md](docs/工业程序结构-robot_steps设计稿.md)。
 >
-> **全局标签 / IO 注释**：`gen` 会从 spec.io 与工业 HMI 地址表生成带软元件地址和中文注释的全局标签
-> （IEC XML `<GlobalVars>` + `<Address>`），导入 GX Works3 后可在「全局标签」表中查看，
-> 不必再手工补 X/Y/M/D 注释。
+> **全局标签 / IO 注释**：`gen` 会从 spec.io 与工业 HMI 地址表生成带软元件地址和中文注释的全局标签，
+> 并且 **ST 程序正文直接使用标签名**（如 `IF bDownPos THEN bDown := TRUE;`，不再出现 X10/Y0），
+> ST 文件头的 `VAR_GLOBAL` 块给出标签↔软元件映射（便于单独 check/build-xml）；
+> IEC XML 的 `<GlobalVars>` 负责在 GX Works3 中建立全局标签表，导入后编译 Error:0。
 >
 > **仿真场景断言（M2）**：`sim sim/motor_start_stop.sim.json --observed sim/motor_start_stop.obs.json`
 > 校验「写输入 → 读输出」场景（半自动执行器，详见 [sim/README.md](sim/README.md)）。

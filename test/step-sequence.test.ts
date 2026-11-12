@@ -150,12 +150,17 @@ test('步进端到端：gen 示例 spec 生成 ST + XML 且 0 error', async () =
     const st = await readFile(r.stPath!, 'utf8');
     assert.match(st, /PROGRAM Main/);
     assert.match(st, /CASE nStep OF/);
-    assert.match(st, /IF \(X10\) THEN/);
-    assert.match(st, /Y4 := TRUE;/);
+    // 正文使用全局标签（ST 文件头有 VAR_GLOBAL 映射块）
+    assert.match(st, /VAR_GLOBAL/);
+    assert.match(st, /bDownPos : BOOL AT X10;/);
+    assert.match(st, /IF \(bDownPos\) THEN/);
+    assert.match(st, /bLeft := TRUE;/);
     assert.match(st, /nStep := 0; bRun := FALSE;/);
 
     const xml = await readFile(r.xmlPath!, 'utf8');
     assert.match(xml, /IEC61131|<Project/);
+    assert.match(xml, /<GlobalVars/);
+    assert.match(xml, /<Address address="X10"\/>/);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

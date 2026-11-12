@@ -26,77 +26,13 @@ import { parseWithRecovery } from '../dialect/recovery.ts';
 import { analyzeST, type Diagnostic } from '../dialect/analyzer.ts';
 import { astToIecProject } from '../emit/iec-project.ts';
 import { emitIecXml, type IecVar } from '../emit/iecxml.ts';
+import { buildGlobalLabelPlan, prependGlobalVarBlock, renameDevicesToLabels } from '../emit/label-map.ts';
 import { generateLabelCsvFiles } from '../emit/label-csv.ts';
 import { generateWithLlmFallback, type LlmSourceGenerator } from './llm.ts';
 import { generateStepSequence } from './step-sequence.ts';
 import { extractPouBodies } from '../pipeline/pou-text.ts';
 import { compilerErrorsToDiagnostics, type CompilerErrorEntry } from './compiler-feedback.ts';
 import type { DiagnosticLike } from './repair.ts';
-
-/**
- * 从 spec 的 IO 表与工业 HMI 地址表生成全局标签（带软元件地址 + 注释）。
- *
- * 目的：IEC XML 导入 GX Works3 后，工程树「全局标签」里能看到 X/Y/M/D 的
- * 名称与用途注释，而不是只有空白标签表。程序仍可直接使用软元件地址。
- */
-function buildGlobalLabels(spec: RequirementSpec): IecVar[] {
-  const vars: IecVar[] = [];
-  const names = new Set<string>();
-  const addresses = new Set<string>();
-  const push = (v: IecVar) => {
-    const name = v.name.trim();
-    const address = (v.address ?? '').trim();
-    if (!name || names.has(name)) return;
-    // 同一软元件只挂一个标签，避免导入时重复分配
-    if (address && addresses.has(address)) return;
-    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) return;
-    names.add(name);
-    if (address) addresses.add(address);
-    vars.push({ ...v, name, ...(address ? { address } : {}) });
-  };
-
-  for (const io of spec.io ?? []) {
-    push({
-      name: io.name,
-      type: io.type,
-      address: io.device,
-      comment: io.comment ?? `${io.device} ${io.name}`,
-    });
-  }
-
-  const ind = spec.sequence?.industrial;
-  if (ind) {
-    const h = ind.hmi;
-    push({ name: 'bHmiStart', type: 'BOOL', address: h.start, comment: '触摸屏：启动' });
-    push({ name: 'bHmiStop', type: 'BOOL', address: h.stop, comment: '触摸屏：停止' });
-    push({ name: 'bHmiReset', type: 'BOOL', address: h.reset, comment: '触摸屏：复位/清除报警' });
-    push({ name: 'bHmiManual', type: 'BOOL', address: h.manual, comment: '触摸屏：手动模式' });
-    push({ name: 'bHmiExitManual', type: 'BOOL', address: h.exitManual, comment: '触摸屏：退出手动/回待机' });
-    push({ name: 'bHmiContinue', type: 'BOOL', address: h.continueRun, comment: '触摸屏：继续（冻结步）' });
-    push({ name: 'bHmiRestart', type: 'BOOL', address: h.restart, comment: '触摸屏：从头开始' });
-    const st = h.status ?? {};
-    push({ name: 'bHmiIdle', type: 'BOOL', address: st.idle ?? 'M100', comment: '状态：待机' });
-    push({ name: 'bHmiAuto', type: 'BOOL', address: st.auto ?? 'M101', comment: '状态：自动运行' });
-    push({ name: 'bHmiManualing', type: 'BOOL', address: st.manual ?? 'M102', comment: '状态：手动模式' });
-    push({ name: 'bHmiStopping', type: 'BOOL', address: st.stopping ?? 'M103', comment: '状态：停止中' });
-    push({ name: 'bHmiAlarm', type: 'BOOL', address: st.alarm ?? 'M104', comment: '状态：报警中' });
-    push({ name: 'bHmiPaused', type: 'BOOL', address: st.paused ?? 'M105', comment: '状态：急停暂停' });
-    const d = h.data ?? {};
-    push({ name: 'nHmiStep', type: 'INT', address: d.step ?? 'D0', comment: '数据：当前步号' });
-    push({ name: 'nHmiMode', type: 'INT', address: d.mode ?? 'D1', comment: '数据：当前模式' });
-    push({ name: 'nHmiAlarmCode', type: 'INT', address: d.alarmCode ?? 'D2', comment: '数据：报警代码' });
-    push({ name: 'nHmiAlarmStep', type: 'INT', address: d.alarmStep ?? 'D3', comment: '数据：报警冻结步号' });
-    ind.manualButtons.forEach((b, i) => {
-      push({
-        name: `bHmiManual${i + 1}`,
-        type: 'BOOL',
-        address: b.button,
-        comment: `触摸屏：手动翻转 ${b.cylinder}`,
-      });
-    });
-  }
-  return vars;
-}
 
 export interface GenerateOptions {
   /** 输出目录；默认 `<spec 所在目录>/../out/<spec.name>` 或 `out/<spec.name>`。 */
@@ -288,6 +224,14 @@ export async function generateFromSpec(
     await writeArtifacts(result, null);
     return result;
   }
+
+  // 全局标签：把程序正文里的软元件地址替换成标签名（可读性），
+  // 并在 ST 文件头插入 VAR_GLOBAL 块（便于单独 check/build-xml）。
+  const labelPlan = buildGlobalLabelPlan(spec);
+  if (labelPlan.labels.length > 0 && !/\bVAR_GLOBAL\b/.test(stSource)) {
+    stSource = renameDevicesToLabels(stSource, labelPlan.deviceToLabel);
+    stSource = prependGlobalVarBlock(stSource, labelPlan.labels);
+  }
   result.stSource = stSource;
   result.generator = generator;
 
@@ -324,11 +268,6 @@ export async function generateFromSpec(
         bodyTexts: extractPouBodies(stSource),
       });
       result.warnings.push(...mapped.warnings);
-      // 全局标签：IO 表 + 工业 HMI 地址（带软元件地址与注释，导入后在「全局标签」可见）
-      const globalLabels = buildGlobalLabels(spec);
-      if (globalLabels.length > 0) {
-        mapped.project.globalVars = [...(mapped.project.globalVars ?? []), ...globalLabels];
-      }
       xml = emitIecXml(mapped.project);
       result.ok = true;
     } catch (e) {

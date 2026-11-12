@@ -195,7 +195,10 @@ Main（扫描任务）
 - GX Works3 实测：XML 导入 **Error:0 Warning:0**，全局标签表出现（新工程自带空 `Global` 表，导入的标签进入 `Global_2`），
   全部转换 **Error:0 Warning:0**；导入后标签内容见 `docs/evidence/M4/robot-v2-global-labels.txt`，
   截图 `docs/evidence/M4/13-robot-v2-global-labels.png`；
-- 程序仍可直接使用 X0/Y0/D0 等软元件地址（标签是别名，不影响直接访问）。
+- 程序仍可直接使用 X0/Y0/D0 等软元件地址（标签是别名，不影响直接访问）；
+- **ST 正文使用标签名**：生成器会把正文里的软元件地址替换为标签名（如 `IF bDownPos THEN`、
+  `bHmiStart AND NOT bStartLast`），并在 ST 文件头加入 `VAR_GLOBAL` 映射块
+  （`bStart : BOOL AT X0; '启动按钮'`），使 ST 可独立 check/build-xml；XML 导入后编译 Error:0。
 
 ## 9. 产物与验证
 
@@ -227,6 +230,9 @@ Main（扫描任务）
   三缸（竖直/水平双电控、夹爪单电控）+ 5s 超时 + 6 种报警码 + 3 个手动翻转按钮；
 - 全局标签：从 `spec.io` 与 `industrial.hmi` 生成 34 个带软元件地址与注释的全局标签，
   GX 导入后出现在「全局标签」表（Global_2），见 `docs/evidence/M4/robot-v2-global-labels.txt`；
+- ST 正文标签化：`src/emit/label-map.ts` 负责「软元件→标签」映射、正文替换与 `VAR_GLOBAL` 块生成；
+  生成后的 ST 正文 X/Y/M/D 引用数为 **0**（只剩文件头映射块里的 AT 地址）；
+- GX Works3 实测（标签版）：XML 导入 Error:0，全部转换 **Error:0 Warning:0**（见 `docs/evidence/M4/15-robot-v2-labels-gx-compile.png`）；
 - 验证：`test/industrial-step.test.ts` 5 个用例（加载/骨架/方言 0 error/XML 构建/缺字段报错），
   XML 通过 XSD 校验；
 - 提示词：新增规则 18（工业骨架要求）。

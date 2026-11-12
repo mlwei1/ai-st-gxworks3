@@ -1,7 +1,47 @@
 // ============================================================
+// 全局标签（IEC XML <GlobalVars>；此块供本工具 check/build-xml 使用，
+// 导入 GX Works3 用 XML，程序正文引用下列标签名）
+// ============================================================
+VAR_GLOBAL
+    bStart : BOOL AT X0; '启动按钮'
+    bStop : BOOL AT X1; '停止按钮'
+    bEStop : BOOL AT X2; '急停（暂停）'
+    bDownPos : BOOL AT X10; '竖直缸下降到位'
+    bClampPos : BOOL AT X11; '夹爪夹紧到位'
+    bUpPos : BOOL AT X12; '竖直缸上升到位'
+    bRightPos : BOOL AT X13; '水平右限位'
+    bLeftPos : BOOL AT X14; '水平左限位'
+    bReleasePos : BOOL AT X15; '夹爪松开到位'
+    bDown : BOOL AT Y0; '竖直下降电磁阀'
+    bUp : BOOL AT Y1; '竖直上升电磁阀'
+    bClamp : BOOL AT Y2; '夹爪电磁阀（ON=夹紧）'
+    bRight : BOOL AT Y3; '水平右移电磁阀'
+    bLeft : BOOL AT Y4; '水平左移电磁阀'
+    bHmiStart : BOOL AT M0; '触摸屏：启动'
+    bHmiStop : BOOL AT M1; '触摸屏：停止'
+    bHmiReset : BOOL AT M2; '触摸屏：复位/清除报警'
+    bHmiManual : BOOL AT M4; '触摸屏：手动模式'
+    bHmiExitManual : BOOL AT M3; '触摸屏：退出手动/回待机'
+    bHmiContinue : BOOL AT M5; '触摸屏：继续（冻结步）'
+    bHmiRestart : BOOL AT M6; '触摸屏：从头开始'
+    bHmiIdle : BOOL AT M100; '状态：待机'
+    bHmiAuto : BOOL AT M101; '状态：自动运行'
+    bHmiManualing : BOOL AT M102; '状态：手动模式'
+    bHmiStopping : BOOL AT M103; '状态：停止中'
+    bHmiAlarm : BOOL AT M104; '状态：报警中'
+    bHmiPaused : BOOL AT M105; '状态：急停暂停'
+    nHmiStep : INT AT D0; '数据：当前步号'
+    nHmiMode : INT AT D1; '数据：当前模式'
+    nHmiAlarmCode : INT AT D2; '数据：报警代码'
+    nHmiAlarmStep : INT AT D3; '数据：报警冻结步号'
+    bHmiManual1 : BOOL AT M10; '触摸屏：手动翻转 竖直缸'
+    bHmiManual2 : BOOL AT M11; '触摸屏：手动翻转 水平缸'
+    bHmiManual3 : BOOL AT M12; '触摸屏：手动翻转 夹爪'
+END_VAR
+// ============================================================
 // 工业步进程序（自动生成：模式/自动/手动/报警/停止序列/HMI）
 // 规格：robot_transfer_steps_v2
-// 急停：X2；模式：0待机 1自动 2手动 3停止中 4报警 5急停暂停
+// 急停：bEStop；模式：0待机 1自动 2手动 3停止中 4报警 5急停暂停
 // ============================================================
 
 PROGRAM Main
@@ -43,11 +83,11 @@ VAR
     bBtn3Edge : BOOL := FALSE;
 
     // ---- 输出映像（自动/停止序列） ----
-    bOut0 : BOOL := FALSE;                   // Y0
-    bOut1 : BOOL := FALSE;                   // Y2
-    bOut2 : BOOL := FALSE;                   // Y1
-    bOut3 : BOOL := FALSE;                   // Y3
-    bOut4 : BOOL := FALSE;                   // Y4
+    bOut0 : BOOL := FALSE;                   // bDown
+    bOut1 : BOOL := FALSE;                   // bClamp
+    bOut2 : BOOL := FALSE;                   // bUp
+    bOut3 : BOOL := FALSE;                   // bRight
+    bOut4 : BOOL := FALSE;                   // bLeft
 
     // ---- 气缸动作标志/手动命令 ----
     bC1ExtMove : BOOL := FALSE;           // 竖直缸伸出动作中
@@ -74,29 +114,29 @@ VAR
 END_VAR
 
     // ---- 1) HMI 命令上升沿 ----
-    bStartEdge := M0 AND NOT bStartLast;
-    bStartLast := M0;
-    bStopEdge := M1 AND NOT bStopLast;
-    bStopLast := M1;
-    bResetEdge := M2 AND NOT bResetLast;
-    bResetLast := M2;
-    bManualEdge := M4 AND NOT bManualLast;
-    bManualLast := M4;
-    bExitEdge := M3 AND NOT bExitLast;
-    bExitLast := M3;
-    bContinueEdge := M5 AND NOT bContinueLast;
-    bContinueLast := M5;
-    bRestartEdge := M6 AND NOT bRestartLast;
-    bRestartLast := M6;
-    bBtn1Edge := M10 AND NOT bBtn1Last;
-    bBtn1Last := M10;
-    bBtn2Edge := M11 AND NOT bBtn2Last;
-    bBtn2Last := M11;
-    bBtn3Edge := M12 AND NOT bBtn3Last;
-    bBtn3Last := M12;
+    bStartEdge := bHmiStart AND NOT bStartLast;
+    bStartLast := bHmiStart;
+    bStopEdge := bHmiStop AND NOT bStopLast;
+    bStopLast := bHmiStop;
+    bResetEdge := bHmiReset AND NOT bResetLast;
+    bResetLast := bHmiReset;
+    bManualEdge := bHmiManual AND NOT bManualLast;
+    bManualLast := bHmiManual;
+    bExitEdge := bHmiExitManual AND NOT bExitLast;
+    bExitLast := bHmiExitManual;
+    bContinueEdge := bHmiContinue AND NOT bContinueLast;
+    bContinueLast := bHmiContinue;
+    bRestartEdge := bHmiRestart AND NOT bRestartLast;
+    bRestartLast := bHmiRestart;
+    bBtn1Edge := bHmiManual1 AND NOT bBtn1Last;
+    bBtn1Last := bHmiManual1;
+    bBtn2Edge := bHmiManual2 AND NOT bBtn2Last;
+    bBtn2Last := bHmiManual2;
+    bBtn3Edge := bHmiManual3 AND NOT bBtn3Last;
+    bBtn3Last := bHmiManual3;
 
     // ---- 2) 急停：任何模式立即暂停，冻结步号 ----
-    IF X2 THEN
+    IF bEStop THEN
         IF nMode <> 5 THEN
             nMode := 5;
             bEStopPause := TRUE;
@@ -200,7 +240,7 @@ END_VAR
 
     // ---- 4) 气缸动作超时检测（目标磁性开关 5s 未到位 → 报警） ----
     // 竖直缸：伸出/到位检测
-    tC1Ext(IN := (((nMode = 1) OR (nMode = 3)) AND bC1ExtMove AND NOT X10) OR ((nMode = 2) AND bC1ExtCmd AND NOT X10), PT := T#5000ms);
+    tC1Ext(IN := (((nMode = 1) OR (nMode = 3)) AND bC1ExtMove AND NOT bDownPos) OR ((nMode = 2) AND bC1ExtCmd AND NOT bDownPos), PT := T#5000ms);
     IF tC1Ext.Q THEN
         nMode := 4;
         bAlarm := TRUE;
@@ -216,7 +256,7 @@ END_VAR
     END_IF;
 
     // 竖直缸：缩回/原位检测
-    tC1Ret(IN := (((nMode = 1) OR (nMode = 3)) AND bC1RetMove AND NOT X12) OR ((nMode = 2) AND bC1RetCmd AND NOT X12), PT := T#5000ms);
+    tC1Ret(IN := (((nMode = 1) OR (nMode = 3)) AND bC1RetMove AND NOT bUpPos) OR ((nMode = 2) AND bC1RetCmd AND NOT bUpPos), PT := T#5000ms);
     IF tC1Ret.Q THEN
         nMode := 4;
         bAlarm := TRUE;
@@ -232,7 +272,7 @@ END_VAR
     END_IF;
 
     // 水平缸：伸出/到位检测
-    tC2Ext(IN := (((nMode = 1) OR (nMode = 3)) AND bC2ExtMove AND NOT X13) OR ((nMode = 2) AND bC2ExtCmd AND NOT X13), PT := T#5000ms);
+    tC2Ext(IN := (((nMode = 1) OR (nMode = 3)) AND bC2ExtMove AND NOT bRightPos) OR ((nMode = 2) AND bC2ExtCmd AND NOT bRightPos), PT := T#5000ms);
     IF tC2Ext.Q THEN
         nMode := 4;
         bAlarm := TRUE;
@@ -248,7 +288,7 @@ END_VAR
     END_IF;
 
     // 水平缸：缩回/原位检测
-    tC2Ret(IN := (((nMode = 1) OR (nMode = 3)) AND bC2RetMove AND NOT X14) OR ((nMode = 2) AND bC2RetCmd AND NOT X14), PT := T#5000ms);
+    tC2Ret(IN := (((nMode = 1) OR (nMode = 3)) AND bC2RetMove AND NOT bLeftPos) OR ((nMode = 2) AND bC2RetCmd AND NOT bLeftPos), PT := T#5000ms);
     IF tC2Ret.Q THEN
         nMode := 4;
         bAlarm := TRUE;
@@ -264,7 +304,7 @@ END_VAR
     END_IF;
 
     // 夹爪：夹紧/到位检测
-    tC3Ext(IN := (((nMode = 1) OR (nMode = 3)) AND bC3ExtMove AND NOT X11) OR ((nMode = 2) AND bC3ClampMove AND NOT X11), PT := T#5000ms);
+    tC3Ext(IN := (((nMode = 1) OR (nMode = 3)) AND bC3ExtMove AND NOT bClampPos) OR ((nMode = 2) AND bC3ClampMove AND NOT bClampPos), PT := T#5000ms);
     IF tC3Ext.Q THEN
         nMode := 4;
         bAlarm := TRUE;
@@ -281,7 +321,7 @@ END_VAR
     END_IF;
 
     // 夹爪：松开/回原位检测
-    tC3Ret(IN := bC3RelMove AND NOT X15 AND ((nMode = 1) OR (nMode = 3) OR (nMode = 2)), PT := T#5000ms);
+    tC3Ret(IN := bC3RelMove AND NOT bReleasePos AND ((nMode = 1) OR (nMode = 3) OR (nMode = 2)), PT := T#5000ms);
     IF tC3Ret.Q THEN
         nMode := 4;
         bAlarm := TRUE;
@@ -299,7 +339,7 @@ END_VAR
 
 
     // ---- 5) 模式与 HMI 命令 ----
-    bCylOK := ((X10) OR (X12)) AND ((X13) OR (X14)) AND ((X11) OR (X15));
+    bCylOK := ((bDownPos) OR (bUpPos)) AND ((bRightPos) OR (bLeftPos)) AND ((bClampPos) OR (bReleasePos));
 
     // 待机：启动/切手动
     IF nMode = 0 THEN
@@ -313,13 +353,13 @@ END_VAR
             nAlarmCode := 0;
             nAlarmStep := 0;
         END_IF;
-        IF bManualEdge AND NOT X2 THEN
+        IF bManualEdge AND NOT bEStop THEN
             nMode := 2;
             bC1ExtCmd := FALSE;
             bC1RetCmd := FALSE;
             bC2ExtCmd := FALSE;
             bC2RetCmd := FALSE;
-            bC3Clamp := (X11);
+            bC3Clamp := (bClampPos);
             bC3ClampMove := FALSE;
             bC3RelMove := FALSE;
         END_IF;
@@ -334,13 +374,13 @@ END_VAR
 
     // 报警/急停暂停：切手动处理、停止、从头开始
     IF (nMode = 4) OR (nMode = 5) THEN
-        IF bManualEdge AND NOT X2 THEN
+        IF bManualEdge AND NOT bEStop THEN
             nMode := 2;
             bC1ExtCmd := FALSE;
             bC1RetCmd := FALSE;
             bC2ExtCmd := FALSE;
             bC2RetCmd := FALSE;
-            bC3Clamp := (X11);
+            bC3Clamp := (bClampPos);
             bC3ClampMove := FALSE;
             bC3RelMove := FALSE;
         END_IF;
@@ -352,11 +392,11 @@ END_VAR
             END_IF;
         END_IF;
         IF bRestartEdge THEN
-            Y0 := FALSE;
-            Y2 := FALSE;
-            Y1 := FALSE;
-            Y3 := FALSE;
-            Y4 := FALSE;
+            bDown := FALSE;
+            bClamp := FALSE;
+            bUp := FALSE;
+            bRight := FALSE;
+            bLeft := FALSE;
             bC1ExtCmd := FALSE;
             bC1RetCmd := FALSE;
             bC2ExtCmd := FALSE;
@@ -377,23 +417,23 @@ END_VAR
 
     // 手动：清故障、退出手动、继续/停止/从头
     IF nMode = 2 THEN
-        IF bResetEdge AND bCylOK AND NOT X2 THEN
+        IF bResetEdge AND bCylOK AND NOT bEStop THEN
             bAlarm := FALSE;
             bEStopPause := FALSE;
             nAlarmCode := 0;
             nAlarmStep := 0;
         END_IF;
-        IF bExitEdge AND bCylOK AND NOT bAlarm AND NOT bEStopPause AND NOT X2 THEN
-            Y0 := FALSE;
-            Y2 := FALSE;
-            Y1 := FALSE;
-            Y3 := FALSE;
-            Y4 := FALSE;
+        IF bExitEdge AND bCylOK AND NOT bAlarm AND NOT bEStopPause AND NOT bEStop THEN
+            bDown := FALSE;
+            bClamp := FALSE;
+            bUp := FALSE;
+            bRight := FALSE;
+            bLeft := FALSE;
             nMode := 0;
             nStep := 0;
             bStopActive := FALSE;
         END_IF;
-        IF bContinueEdge AND bCylOK AND NOT bAlarm AND NOT bEStopPause AND NOT X2 THEN
+        IF bContinueEdge AND bCylOK AND NOT bAlarm AND NOT bEStopPause AND NOT bEStop THEN
             IF bStopActive THEN
                 nMode := 3;
             ELSE
@@ -409,11 +449,11 @@ END_VAR
             END_IF;
         END_IF;
         IF bRestartEdge THEN
-            Y0 := FALSE;
-            Y2 := FALSE;
-            Y1 := FALSE;
-            Y3 := FALSE;
-            Y4 := FALSE;
+            bDown := FALSE;
+            bClamp := FALSE;
+            bUp := FALSE;
+            bRight := FALSE;
+            bLeft := FALSE;
             bC1ExtCmd := FALSE;
             bC1RetCmd := FALSE;
             bC2ExtCmd := FALSE;
@@ -433,7 +473,7 @@ END_VAR
     END_IF;
 
     // 急停仍按住时禁止任何模式切换
-    IF X2 THEN
+    IF bEStop THEN
         nMode := 5;
     END_IF;
 
@@ -442,7 +482,7 @@ END_VAR
             CASE nStep OF
                 // S1 竖直下降
                 1:
-                    IF (X10) THEN
+                    IF (bDownPos) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -454,7 +494,7 @@ END_VAR
                     END_IF;
                 // S2 夹爪夹紧
                 2:
-                    IF (X11) THEN
+                    IF (bClampPos) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -466,7 +506,7 @@ END_VAR
                     END_IF;
                 // S3 竖直上升
                 3:
-                    IF (X12) THEN
+                    IF (bUpPos) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -478,7 +518,7 @@ END_VAR
                     END_IF;
                 // S4 水平右移
                 4:
-                    IF (X13) THEN
+                    IF (bRightPos) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -490,7 +530,7 @@ END_VAR
                     END_IF;
                 // S5 右位竖直下降
                 5:
-                    IF (X10) THEN
+                    IF (bDownPos) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -502,7 +542,7 @@ END_VAR
                     END_IF;
                 // S6 夹爪松开
                 6:
-                    IF (X15) THEN
+                    IF (bReleasePos) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -514,7 +554,7 @@ END_VAR
                     END_IF;
                 // S7 松开后上升
                 7:
-                    IF (X12) THEN
+                    IF (bUpPos) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -526,18 +566,18 @@ END_VAR
                     END_IF;
                 // S8 水平左移回原位
                 8:
-                    IF (X14) THEN
+                    IF (bLeftPos) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
                             bStopActive := TRUE;
                             bStopReq := FALSE;
                         ELSE
-                            Y0 := FALSE;
-                            Y2 := FALSE;
-                            Y1 := FALSE;
-                            Y3 := FALSE;
-                            Y4 := FALSE;
+                            bDown := FALSE;
+                            bClamp := FALSE;
+                            bUp := FALSE;
+                            bRight := FALSE;
+                            bLeft := FALSE;
                             nStep := 0;
                             nMode := 0;
                         END_IF;
@@ -550,17 +590,17 @@ END_VAR
             CASE nStopStep OF
                 // T1 竖直上升回原位
                 1:
-                    IF (X12) THEN
+                    IF (bUpPos) THEN
                         nStopStep := 2;
                     END_IF;
                 // T2 水平左移回原位
                 2:
-                    IF (X14) THEN
+                    IF (bLeftPos) THEN
                         nStopStep := 3;
                     END_IF;
                 // T3 夹爪松开
                 3:
-                    IF (X15) THEN
+                    IF (bReleasePos) THEN
                         nStopStep := 4;
                     END_IF;
                 // T4 全部输出关闭
@@ -569,11 +609,11 @@ END_VAR
                         nStopStep := 5;
                     END_IF;
                 ELSE
-                    Y0 := FALSE;
-                    Y2 := FALSE;
-                    Y1 := FALSE;
-                    Y3 := FALSE;
-                    Y4 := FALSE;
+                    bDown := FALSE;
+                    bClamp := FALSE;
+                    bUp := FALSE;
+                    bRight := FALSE;
+                    bLeft := FALSE;
                     nMode := 0;
                     nStep := 0;
                     nStopStep := 0;
@@ -584,12 +624,12 @@ END_VAR
 
     // ---- 8) 手动翻转（仅手动模式） ----
         IF nMode = 2 THEN
-            // 手动翻转：竖直缸（M10）
+            // 手动翻转：竖直缸（bHmiManual1）
             IF bBtn1Edge THEN
-                IF X12 THEN
+                IF bUpPos THEN
                     bC1ExtCmd := TRUE;
                     bC1RetCmd := FALSE;
-                ELSIF X10 THEN
+                ELSIF bDownPos THEN
                     bC1ExtCmd := FALSE;
                     bC1RetCmd := TRUE;
                 ELSE
@@ -598,19 +638,19 @@ END_VAR
                     bC1RetCmd := TRUE;
                 END_IF;
             END_IF;
-            IF bC1ExtCmd AND X10 THEN
+            IF bC1ExtCmd AND bDownPos THEN
                 bC1ExtCmd := FALSE;
             END_IF;
-            IF bC1RetCmd AND X12 THEN
+            IF bC1RetCmd AND bUpPos THEN
                 bC1RetCmd := FALSE;
             END_IF;
 
-            // 手动翻转：水平缸（M11）
+            // 手动翻转：水平缸（bHmiManual2）
             IF bBtn2Edge THEN
-                IF X14 THEN
+                IF bLeftPos THEN
                     bC2ExtCmd := TRUE;
                     bC2RetCmd := FALSE;
-                ELSIF X13 THEN
+                ELSIF bRightPos THEN
                     bC2ExtCmd := FALSE;
                     bC2RetCmd := TRUE;
                 ELSE
@@ -619,19 +659,19 @@ END_VAR
                     bC2RetCmd := TRUE;
                 END_IF;
             END_IF;
-            IF bC2ExtCmd AND X13 THEN
+            IF bC2ExtCmd AND bRightPos THEN
                 bC2ExtCmd := FALSE;
             END_IF;
-            IF bC2RetCmd AND X14 THEN
+            IF bC2RetCmd AND bLeftPos THEN
                 bC2RetCmd := FALSE;
             END_IF;
 
-            // 手动翻转：夹爪（M12）
+            // 手动翻转：夹爪（bHmiManual3）
             IF bBtn3Edge THEN
-                IF X15 THEN
+                IF bReleasePos THEN
                     bC3Clamp := TRUE;
                     bC3ClampMove := TRUE;
-                ELSIF X11 THEN
+                ELSIF bClampPos THEN
                     bC3Clamp := FALSE;
                     bC3RelMove := TRUE;
                 ELSE
@@ -640,10 +680,10 @@ END_VAR
                     bC3RelMove := TRUE;
                 END_IF;
             END_IF;
-            IF bC3ClampMove AND X11 THEN
+            IF bC3ClampMove AND bClampPos THEN
                 bC3ClampMove := FALSE;
             END_IF;
-            IF bC3RelMove AND X15 THEN
+            IF bC3RelMove AND bReleasePos THEN
                 bC3RelMove := FALSE;
             END_IF;
 
@@ -651,29 +691,29 @@ END_VAR
 
     // ---- 输出汇总（同一输出只在此处驱动；报警/急停/待机保持输出不变） ----
     IF (nMode = 1) OR (nMode = 3) THEN
-        Y0 := bOut0;
-        Y2 := bOut1;
-        Y1 := bOut2;
-        Y3 := bOut3;
-        Y4 := bOut4;
+        bDown := bOut0;
+        bClamp := bOut1;
+        bUp := bOut2;
+        bRight := bOut3;
+        bLeft := bOut4;
     ELSIF nMode = 2 THEN
-        Y0 := bC1ExtCmd;
-        Y1 := bC1RetCmd;
-        Y3 := bC2ExtCmd;
-        Y4 := bC2RetCmd;
-        Y2 := bC3Clamp;
+        bDown := bC1ExtCmd;
+        bUp := bC1RetCmd;
+        bRight := bC2ExtCmd;
+        bLeft := bC2RetCmd;
+        bClamp := bC3Clamp;
     END_IF;
 
     // ---- 10) HMI 状态/数据 ----
-    M100 := (nMode = 0);
-    M101 := (nMode = 1);
-    M102 := (nMode = 2);
-    M103 := (nMode = 3);
-    M104 := bAlarm;
-    M105 := bEStopPause;
-    D0 := nStep;
-    D1 := nMode;
-    D2 := nAlarmCode;
-    D3 := nAlarmStep;
+    bHmiIdle := (nMode = 0);
+    bHmiAuto := (nMode = 1);
+    bHmiManualing := (nMode = 2);
+    bHmiStopping := (nMode = 3);
+    bHmiAlarm := bAlarm;
+    bHmiPaused := bEStopPause;
+    nHmiStep := nStep;
+    nHmiMode := nMode;
+    nHmiAlarmCode := nAlarmCode;
+    nHmiAlarmStep := nAlarmStep;
 
 END_PROGRAM
