@@ -181,3 +181,15 @@ node --experimental-strip-types --no-warnings src/cli.ts generate \
 ```
 
 `--vars` 传入的已有变量清单会进提示词，AI 会优先复用同名标签。
+
+## XML 中的 FUNCTION_BLOCK（2026-11-12 实测）
+
+IEC 61131-10 XML **可以包含 FunctionBlock 定义**，本工具支持 `FUNCTION_BLOCK` + 实例调用：
+
+- 生成：ST 中写 `FUNCTION_BLOCK FB_Cylinder ... END_FUNCTION_BLOCK` 与
+  `fbVert : FB_Cylinder;`，`build-xml` 会输出 `<FunctionBlock>`（Parameters/InputVars/OutputVars/Vars/MainBody）；
+- 调用：程序正文写 `fbVert(bEnable := TRUE, bExtend := X0, ...);`
+- GX Works3 实测：XML 导入 **Error:0 Warning:0**，全部转换 **Error:0 Warning:0**；
+  证据 `docs/evidence/M4/16-fb-xml-import.png`、`docs/evidence/M4/17-fb-xml-compile.png`。
+
+注意：FB 形参目前只支持 VAR_INPUT / VAR_OUTPUT / VAR（本发射器限制），且 XML 中 FB 与 Program 共享命名空间。
