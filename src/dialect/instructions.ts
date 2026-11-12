@@ -273,7 +273,8 @@ export const SYSTEM_BITS: Record<string, string> = {
 export function isValidIdentifier(name: string): boolean {
   if (!name) return false;
   if (RESERVED_WORDS.has(name.toUpperCase())) return false;
-  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) return false;
+  // 允许中文标签（GX Works3 支持中文标签名；2026-11-12 实测可导入编译）
+  if (!/^[A-Za-z_\u4e00-\u9fff][A-Za-z0-9_\u4e00-\u9fff]*$/.test(name)) return false;
   // 全角字符检测
   for (const ch of name) {
     const c = ch.codePointAt(0)!;

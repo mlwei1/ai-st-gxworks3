@@ -220,6 +220,16 @@ export interface SpecMeta {
   createdAt?: string;
 }
 
+/** 标签语言（全局标签/ST 正文标识符）。 */
+export const LABEL_LANGUAGES = ['en', 'zh'] as const;
+export type LabelLanguage = (typeof LABEL_LANGUAGES)[number];
+
+/** 标签生成选项。 */
+export interface LabelOptions {
+  /** en=英文标识符（默认，兼容旧行为）；zh=中文标签（GX Works3 实测支持）。 */
+  language?: LabelLanguage;
+}
+
 /** 需求规格根对象。 */
 export interface RequirementSpec {
   /** 唯一标识，合法标识符，如 "motor_start_stop"。 */
@@ -233,6 +243,8 @@ export interface RequirementSpec {
   safety?: SafetySpec;
   /** 步进程序（SFC/STL 的 ST 实现）；存在时 template.name 应为 step_sequence。 */
   sequence?: SequenceSpec;
+  /** 标签生成选项（英文/中文标签）。 */
+  labels?: LabelOptions;
   /** 预留：仿真/验收测试用例。 */
   tests?: unknown[];
   meta?: SpecMeta;
@@ -547,6 +559,13 @@ export const SPEC_JSON_SCHEMA: Record<string, unknown> = {
             },
           },
         },
+      },
+    },
+    labels: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        language: { type: 'string', enum: [...LABEL_LANGUAGES] },
       },
     },
     tests: { type: 'array' },

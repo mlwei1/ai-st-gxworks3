@@ -45,6 +45,8 @@ export interface GenerateOptions {
   llmGenerate?: LlmSourceGenerator;
   /** GX Works3 编译错误列表（半自动回灌），需同时启用 LLM。 */
   compilerErrors?: CompilerErrorEntry[];
+  /** 标签语言覆盖：en=英文标签（默认），zh=中文标签。 */
+  labelLanguage?: 'en' | 'zh';
 }
 
 export interface GenerateResult {
@@ -227,7 +229,7 @@ export async function generateFromSpec(
 
   // 全局标签：把程序正文里的软元件地址替换成标签名（可读性），
   // 并在 ST 文件头插入 VAR_GLOBAL 块（便于单独 check/build-xml）。
-  const labelPlan = buildGlobalLabelPlan(spec);
+  const labelPlan = buildGlobalLabelPlan(spec, options.labelLanguage);
   if (labelPlan.labels.length > 0 && !/\bVAR_GLOBAL\b/.test(stSource)) {
     stSource = renameDevicesToLabels(stSource, labelPlan.deviceToLabel);
     stSource = prependGlobalVarBlock(stSource, labelPlan.labels);

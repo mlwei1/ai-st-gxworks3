@@ -817,6 +817,27 @@ function parseIndustrial(
   return ind;
 }
 
+/** 解析标签生成选项（英文/中文标签）。 */
+function parseLabels(
+  raw: unknown,
+  diagnostics: SpecDiagnostic[],
+): import('./schema.ts').LabelOptions | null {
+  if (raw === undefined) return null;
+  if (!isPlainObject(raw)) {
+    err(diagnostics, 'SPEC_E_LABELS', 'labels', 'labels 必须是对象，如 { "language": "zh" }');
+    return null;
+  }
+  const out: import('./schema.ts').LabelOptions = {};
+  if (raw.language !== undefined) {
+    if (raw.language !== 'en' && raw.language !== 'zh') {
+      err(diagnostics, 'SPEC_E_LABELS_LANGUAGE', 'labels.language', "labels.language 只能是 'en' 或 'zh'");
+    } else {
+      out.language = raw.language;
+    }
+  }
+  return out;
+}
+
 /**
  * 校验并规范化一个 spec 对象。
  * 注意：内部使用；外部请用 `parseSpec` / `loadSpecFile`。
@@ -863,6 +884,7 @@ export function validateSpec(root: unknown): SpecLoadResult {
   const safety = parseSafety(root.safety, series, diagnostics);
   const meta = parseMeta(root.meta, diagnostics);
   const sequence = parseSequence(root.sequence, series, diagnostics);
+  const labels = parseLabels(root.labels, diagnostics);
 
   // step_sequence 与 sequence 段必须成对出现
   if (sequence !== null && template !== null && template.name !== 'step_sequence') {
@@ -910,6 +932,7 @@ export function validateSpec(root: unknown): SpecLoadResult {
   if (vars !== null) spec.vars = vars;
   if (safety !== null) spec.safety = safety;
   if (sequence !== null) spec.sequence = sequence;
+  if (labels !== null) spec.labels = labels;
   if (tests !== undefined) spec.tests = tests;
   if (meta !== null) spec.meta = meta;
 

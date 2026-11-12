@@ -3,40 +3,40 @@
 // 导入 GX Works3 用 XML，程序正文引用下列标签名）
 // ============================================================
 VAR_GLOBAL
-    bStart : BOOL AT X0; '启动按钮'
-    bStop : BOOL AT X1; '停止按钮'
-    bEStop : BOOL AT X2; '急停（暂停）'
-    bDownPos : BOOL AT X10; '竖直缸下降到位'
-    bClampPos : BOOL AT X11; '夹爪夹紧到位'
-    bUpPos : BOOL AT X12; '竖直缸上升到位'
-    bRightPos : BOOL AT X13; '水平右限位'
-    bLeftPos : BOOL AT X14; '水平左限位'
-    bReleasePos : BOOL AT X15; '夹爪松开到位'
-    bDown : BOOL AT Y0; '竖直下降电磁阀'
-    bUp : BOOL AT Y1; '竖直上升电磁阀'
-    bClamp : BOOL AT Y2; '夹爪电磁阀（ON=夹紧）'
-    bRight : BOOL AT Y3; '水平右移电磁阀'
-    bLeft : BOOL AT Y4; '水平左移电磁阀'
-    bHmiStart : BOOL AT M0; '触摸屏：启动'
-    bHmiStop : BOOL AT M1; '触摸屏：停止'
-    bHmiReset : BOOL AT M2; '触摸屏：复位/清除报警'
-    bHmiManual : BOOL AT M4; '触摸屏：手动模式'
-    bHmiExitManual : BOOL AT M3; '触摸屏：退出手动/回待机'
-    bHmiContinue : BOOL AT M5; '触摸屏：继续（冻结步）'
-    bHmiRestart : BOOL AT M6; '触摸屏：从头开始'
-    bHmiIdle : BOOL AT M100; '状态：待机'
-    bHmiAuto : BOOL AT M101; '状态：自动运行'
-    bHmiManualing : BOOL AT M102; '状态：手动模式'
-    bHmiStopping : BOOL AT M103; '状态：停止中'
-    bHmiAlarm : BOOL AT M104; '状态：报警中'
-    bHmiPaused : BOOL AT M105; '状态：急停暂停'
-    nHmiStep : INT AT D0; '数据：当前步号'
-    nHmiMode : INT AT D1; '数据：当前模式'
-    nHmiAlarmCode : INT AT D2; '数据：报警代码'
-    nHmiAlarmStep : INT AT D3; '数据：报警冻结步号'
-    bHmiManual1 : BOOL AT M10; '触摸屏：手动翻转 竖直缸'
-    bHmiManual2 : BOOL AT M11; '触摸屏：手动翻转 水平缸'
-    bHmiManual3 : BOOL AT M12; '触摸屏：手动翻转 夹爪'
+    启动按钮 : BOOL AT X0; '启动按钮'
+    停止按钮 : BOOL AT X1; '停止按钮'
+    急停 : BOOL AT X2; '急停（暂停）'
+    竖直缸下降到位 : BOOL AT X10; '竖直缸下降到位'
+    夹爪夹紧到位 : BOOL AT X11; '夹爪夹紧到位'
+    竖直缸上升到位 : BOOL AT X12; '竖直缸上升到位'
+    水平右限位 : BOOL AT X13; '水平右限位'
+    水平左限位 : BOOL AT X14; '水平左限位'
+    夹爪松开到位 : BOOL AT X15; '夹爪松开到位'
+    竖直下降电磁阀 : BOOL AT Y0; '竖直下降电磁阀'
+    竖直上升电磁阀 : BOOL AT Y1; '竖直上升电磁阀'
+    夹爪电磁阀 : BOOL AT Y2; '夹爪电磁阀（ON=夹紧）'
+    水平右移电磁阀 : BOOL AT Y3; '水平右移电磁阀'
+    水平左移电磁阀 : BOOL AT Y4; '水平左移电磁阀'
+    触摸屏启动 : BOOL AT M0; '触摸屏：启动'
+    触摸屏停止 : BOOL AT M1; '触摸屏：停止'
+    触摸屏复位 : BOOL AT M2; '触摸屏：复位/清除报警'
+    触摸屏手动 : BOOL AT M4; '触摸屏：手动模式'
+    触摸屏退出手动 : BOOL AT M3; '触摸屏：退出手动/回待机'
+    触摸屏继续 : BOOL AT M5; '触摸屏：继续（冻结步）'
+    触摸屏从头 : BOOL AT M6; '触摸屏：从头开始'
+    状态待机 : BOOL AT M100; '状态：待机'
+    状态自动 : BOOL AT M101; '状态：自动运行'
+    状态手动 : BOOL AT M102; '状态：手动模式'
+    状态停止中 : BOOL AT M103; '状态：停止中'
+    状态报警 : BOOL AT M104; '状态：报警中'
+    状态急停暂停 : BOOL AT M105; '状态：急停暂停'
+    当前步号 : INT AT D0; '数据：当前步号'
+    当前模式 : INT AT D1; '数据：当前模式'
+    报警代码 : INT AT D2; '数据：报警代码'
+    报警步号 : INT AT D3; '数据：报警冻结步号'
+    手动竖直缸 : BOOL AT M10; '触摸屏：手动翻转 竖直缸'
+    手动水平缸 : BOOL AT M11; '触摸屏：手动翻转 水平缸'
+    手动夹爪 : BOOL AT M12; '触摸屏：手动翻转 夹爪'
 END_VAR
 // ============================================================
 // 气缸功能块（双电控）：输出 + 双向超时报警
@@ -126,7 +126,7 @@ END_FUNCTION_BLOCK
 // ============================================================
 // 工业步进主程序（FB 版：模式/自动/手动/报警/停止序列/HMI）
 // 规格：robot_transfer_steps_v2
-// 急停：bEStop；模式：0待机 1自动 2手动 3停止中 4报警 5急停暂停
+// 急停：急停；模式：0待机 1自动 2手动 3停止中 4报警 5急停暂停
 // ============================================================
 
 PROGRAM Main
@@ -195,29 +195,29 @@ VAR
 END_VAR
 
     // ---- 1) HMI 命令上升沿 ----
-    bStartEdge := bHmiStart AND NOT bStartLast;
-    bStartLast := bHmiStart;
-    bStopEdge := bHmiStop AND NOT bStopLast;
-    bStopLast := bHmiStop;
-    bResetEdge := bHmiReset AND NOT bResetLast;
-    bResetLast := bHmiReset;
-    bManualEdge := bHmiManual AND NOT bManualLast;
-    bManualLast := bHmiManual;
-    bExitEdge := bHmiExitManual AND NOT bExitLast;
-    bExitLast := bHmiExitManual;
-    bContinueEdge := bHmiContinue AND NOT bContinueLast;
-    bContinueLast := bHmiContinue;
-    bRestartEdge := bHmiRestart AND NOT bRestartLast;
-    bRestartLast := bHmiRestart;
-    bBtn1Edge := bHmiManual1 AND NOT bBtn1Last;
-    bBtn1Last := bHmiManual1;
-    bBtn2Edge := bHmiManual2 AND NOT bBtn2Last;
-    bBtn2Last := bHmiManual2;
-    bBtn3Edge := bHmiManual3 AND NOT bBtn3Last;
-    bBtn3Last := bHmiManual3;
+    bStartEdge := 触摸屏启动 AND NOT bStartLast;
+    bStartLast := 触摸屏启动;
+    bStopEdge := 触摸屏停止 AND NOT bStopLast;
+    bStopLast := 触摸屏停止;
+    bResetEdge := 触摸屏复位 AND NOT bResetLast;
+    bResetLast := 触摸屏复位;
+    bManualEdge := 触摸屏手动 AND NOT bManualLast;
+    bManualLast := 触摸屏手动;
+    bExitEdge := 触摸屏退出手动 AND NOT bExitLast;
+    bExitLast := 触摸屏退出手动;
+    bContinueEdge := 触摸屏继续 AND NOT bContinueLast;
+    bContinueLast := 触摸屏继续;
+    bRestartEdge := 触摸屏从头 AND NOT bRestartLast;
+    bRestartLast := 触摸屏从头;
+    bBtn1Edge := 手动竖直缸 AND NOT bBtn1Last;
+    bBtn1Last := 手动竖直缸;
+    bBtn2Edge := 手动水平缸 AND NOT bBtn2Last;
+    bBtn2Last := 手动水平缸;
+    bBtn3Edge := 手动夹爪 AND NOT bBtn3Last;
+    bBtn3Last := 手动夹爪;
 
     // ---- 2) 急停：任何模式立即暂停，冻结步号 ----
-    IF bEStop THEN
+    IF 急停 THEN
         IF nMode <> 5 THEN
             nMode := 5;
             bEStopPause := TRUE;
@@ -225,7 +225,7 @@ END_VAR
     END_IF;
 
     // ---- 3) 模式与 HMI 命令 ----
-    bCylOK := ((bDownPos) OR (bUpPos)) AND ((bRightPos) OR (bLeftPos)) AND ((bClampPos) OR (bReleasePos));
+    bCylOK := ((竖直缸下降到位) OR (竖直缸上升到位)) AND ((水平右限位) OR (水平左限位)) AND ((夹爪夹紧到位) OR (夹爪松开到位));
 
     // 待机：启动/切手动
     IF nMode = 0 THEN
@@ -239,13 +239,13 @@ END_VAR
             nAlarmCode := 0;
             nAlarmStep := 0;
         END_IF;
-        IF bManualEdge AND NOT bEStop THEN
+        IF bManualEdge AND NOT 急停 THEN
             nMode := 2;
             bC1Ext := FALSE;
             bC1Ret := FALSE;
             bC2Ext := FALSE;
             bC2Ret := FALSE;
-            bC3Clamp := (bClampPos);  // 保持当前夹紧状态
+            bC3Clamp := (夹爪夹紧到位);  // 保持当前夹紧状态
         END_IF;
     END_IF;
 
@@ -258,13 +258,13 @@ END_VAR
 
     // 报警/急停暂停：切手动处理、停止、从头开始
     IF (nMode = 4) OR (nMode = 5) THEN
-        IF bManualEdge AND NOT bEStop THEN
+        IF bManualEdge AND NOT 急停 THEN
             nMode := 2;
             bC1Ext := FALSE;
             bC1Ret := FALSE;
             bC2Ext := FALSE;
             bC2Ret := FALSE;
-            bC3Clamp := (bClampPos);  // 保持当前夹紧状态
+            bC3Clamp := (夹爪夹紧到位);  // 保持当前夹紧状态
         END_IF;
         IF bStopEdge THEN
             nMode := 3;
@@ -293,18 +293,18 @@ END_VAR
 
     // 手动：清故障、退出手动、继续/停止/从头
     IF nMode = 2 THEN
-        IF bResetEdge AND bCylOK AND NOT bEStop THEN
+        IF bResetEdge AND bCylOK AND NOT 急停 THEN
             bAlarm := FALSE;
             bEStopPause := FALSE;
             nAlarmCode := 0;
             nAlarmStep := 0;
         END_IF;
-        IF bExitEdge AND bCylOK AND NOT bAlarm AND NOT bEStopPause AND NOT bEStop THEN
+        IF bExitEdge AND bCylOK AND NOT bAlarm AND NOT bEStopPause AND NOT 急停 THEN
             nMode := 0;
             nStep := 0;
             bStopActive := FALSE;
         END_IF;
-        IF bContinueEdge AND bCylOK AND NOT bAlarm AND NOT bEStopPause AND NOT bEStop THEN
+        IF bContinueEdge AND bCylOK AND NOT bAlarm AND NOT bEStopPause AND NOT 急停 THEN
             IF bStopActive THEN
                 nMode := 3;
             ELSE
@@ -338,18 +338,18 @@ END_VAR
     END_IF;
 
     // 急停仍按住时禁止任何模式切换
-    IF bEStop THEN
+    IF 急停 THEN
         nMode := 5;
     END_IF;
 
     // ---- 4) 手动翻转（仅手动模式） ----
         IF nMode = 2 THEN
-            // 手动翻转：竖直缸（bHmiManual1）
+            // 手动翻转：竖直缸（手动竖直缸）
             IF bBtn1Edge THEN
-                IF bUpPos THEN
+                IF 竖直缸上升到位 THEN
                     bC1Ext := TRUE;
                     bC1Ret := FALSE;
-                ELSIF bDownPos THEN
+                ELSIF 竖直缸下降到位 THEN
                     bC1Ext := FALSE;
                     bC1Ret := TRUE;
                 ELSE
@@ -358,19 +358,19 @@ END_VAR
                     bC1Ret := TRUE;
                 END_IF;
             END_IF;
-            IF bC1Ext AND bDownPos THEN
+            IF bC1Ext AND 竖直缸下降到位 THEN
                 bC1Ext := FALSE;
             END_IF;
-            IF bC1Ret AND bUpPos THEN
+            IF bC1Ret AND 竖直缸上升到位 THEN
                 bC1Ret := FALSE;
             END_IF;
 
-            // 手动翻转：水平缸（bHmiManual2）
+            // 手动翻转：水平缸（手动水平缸）
             IF bBtn2Edge THEN
-                IF bLeftPos THEN
+                IF 水平左限位 THEN
                     bC2Ext := TRUE;
                     bC2Ret := FALSE;
-                ELSIF bRightPos THEN
+                ELSIF 水平右限位 THEN
                     bC2Ext := FALSE;
                     bC2Ret := TRUE;
                 ELSE
@@ -379,18 +379,18 @@ END_VAR
                     bC2Ret := TRUE;
                 END_IF;
             END_IF;
-            IF bC2Ext AND bRightPos THEN
+            IF bC2Ext AND 水平右限位 THEN
                 bC2Ext := FALSE;
             END_IF;
-            IF bC2Ret AND bLeftPos THEN
+            IF bC2Ret AND 水平左限位 THEN
                 bC2Ret := FALSE;
             END_IF;
 
-            // 手动翻转：夹爪（bHmiManual3）
+            // 手动翻转：夹爪（手动夹爪）
             IF bBtn3Edge THEN
-                IF bReleasePos THEN
+                IF 夹爪松开到位 THEN
                     bC3Clamp := TRUE;
-                ELSIF bClampPos THEN
+                ELSIF 夹爪夹紧到位 THEN
                     bC3Clamp := FALSE;
                 ELSE
                     // 位置未知（卡在中间）：默认松开回原位，便于人工恢复
@@ -473,7 +473,7 @@ END_VAR
     // 竖直缸（双电控）
     fbCyl1(bEnable := (nMode = 1) OR (nMode = 2) OR (nMode = 3),
               bCmdExtend := bC1Ext, bCmdRetract := bC1Ret,
-              xExtended := bDownPos, xRetracted := bUpPos,
+              xExtended := 竖直缸下降到位, xRetracted := 竖直缸上升到位,
               tTimeout := T#5000ms,
               nAlarmExt := 10, nAlarmRet := 11,
               bOutExtend => bC1OutExt, bOutRetract => bC1OutRet,
@@ -482,7 +482,7 @@ END_VAR
     // 水平缸（双电控）
     fbCyl2(bEnable := (nMode = 1) OR (nMode = 2) OR (nMode = 3),
               bCmdExtend := bC2Ext, bCmdRetract := bC2Ret,
-              xExtended := bRightPos, xRetracted := bLeftPos,
+              xExtended := 水平右限位, xRetracted := 水平左限位,
               tTimeout := T#5000ms,
               nAlarmExt := 20, nAlarmRet := 21,
               bOutExtend => bC2OutExt, bOutRetract => bC2OutRet,
@@ -491,7 +491,7 @@ END_VAR
     // 夹爪（单电控）
     fbCyl3(bEnable := (nMode = 1) OR (nMode = 2) OR (nMode = 3),
               bCmdClamp := bC3Clamp,
-              xClamped := bClampPos, xReleased := bReleasePos,
+              xClamped := 夹爪夹紧到位, xReleased := 夹爪松开到位,
               tTimeout := T#5000ms,
               nAlarmClamp := 30, nAlarmRelease := 31,
               bOutClamp => bC3OutClamp, bAlarm => bC3Alarm, nAlarmCode => nC3AlarmCode);
@@ -519,7 +519,7 @@ END_VAR
             CASE nStep OF
                 // S1 竖直下降
                 1:
-                    IF (bDownPos) THEN
+                    IF (竖直缸下降到位) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -531,7 +531,7 @@ END_VAR
                     END_IF;
                 // S2 夹爪夹紧
                 2:
-                    IF (bClampPos) THEN
+                    IF (夹爪夹紧到位) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -543,7 +543,7 @@ END_VAR
                     END_IF;
                 // S3 竖直上升
                 3:
-                    IF (bUpPos) THEN
+                    IF (竖直缸上升到位) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -555,7 +555,7 @@ END_VAR
                     END_IF;
                 // S4 水平右移
                 4:
-                    IF (bRightPos) THEN
+                    IF (水平右限位) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -567,7 +567,7 @@ END_VAR
                     END_IF;
                 // S5 右位竖直下降
                 5:
-                    IF (bDownPos) THEN
+                    IF (竖直缸下降到位) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -579,7 +579,7 @@ END_VAR
                     END_IF;
                 // S6 夹爪松开
                 6:
-                    IF (bReleasePos) THEN
+                    IF (夹爪松开到位) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -591,7 +591,7 @@ END_VAR
                     END_IF;
                 // S7 松开后上升
                 7:
-                    IF (bUpPos) THEN
+                    IF (竖直缸上升到位) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -603,7 +603,7 @@ END_VAR
                     END_IF;
                 // S8 水平左移回原位
                 8:
-                    IF (bLeftPos) THEN
+                    IF (水平左限位) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -622,17 +622,17 @@ END_VAR
             CASE nStopStep OF
                 // T1 竖直上升回原位
                 1:
-                    IF (bUpPos) THEN
+                    IF (竖直缸上升到位) THEN
                         nStopStep := 2;
                     END_IF;
                 // T2 水平左移回原位
                 2:
-                    IF (bLeftPos) THEN
+                    IF (水平左限位) THEN
                         nStopStep := 3;
                     END_IF;
                 // T3 夹爪松开
                 3:
-                    IF (bReleasePos) THEN
+                    IF (夹爪松开到位) THEN
                         nStopStep := 4;
                     END_IF;
                 // T4 全部输出关闭
@@ -651,29 +651,29 @@ END_VAR
 
     // ---- 输出汇总（Y 只在此处驱动；待机全关，其他模式取 FB 输出） ----
     IF nMode = 0 THEN
-        bDown := FALSE;
-        bUp := FALSE;
-        bRight := FALSE;
-        bLeft := FALSE;
-        bClamp := FALSE;
+        竖直下降电磁阀 := FALSE;
+        竖直上升电磁阀 := FALSE;
+        水平右移电磁阀 := FALSE;
+        水平左移电磁阀 := FALSE;
+        夹爪电磁阀 := FALSE;
     ELSE
-        bDown := bC1OutExt;
-        bUp := bC1OutRet;
-        bRight := bC2OutExt;
-        bLeft := bC2OutRet;
-        bClamp := bC3OutClamp;
+        竖直下降电磁阀 := bC1OutExt;
+        竖直上升电磁阀 := bC1OutRet;
+        水平右移电磁阀 := bC2OutExt;
+        水平左移电磁阀 := bC2OutRet;
+        夹爪电磁阀 := bC3OutClamp;
     END_IF;
 
     // ---- 11) HMI 状态/数据 ----
-    bHmiIdle := (nMode = 0);
-    bHmiAuto := (nMode = 1);
-    bHmiManualing := (nMode = 2);
-    bHmiStopping := (nMode = 3);
-    bHmiAlarm := bAlarm;
-    bHmiPaused := bEStopPause;
-    nHmiStep := nStep;
-    nHmiMode := nMode;
-    nHmiAlarmCode := nAlarmCode;
-    nHmiAlarmStep := nAlarmStep;
+    状态待机 := (nMode = 0);
+    状态自动 := (nMode = 1);
+    状态手动 := (nMode = 2);
+    状态停止中 := (nMode = 3);
+    状态报警 := bAlarm;
+    状态急停暂停 := bEStopPause;
+    当前步号 := nStep;
+    当前模式 := nMode;
+    报警代码 := nAlarmCode;
+    报警步号 := nAlarmStep;
 
 END_PROGRAM

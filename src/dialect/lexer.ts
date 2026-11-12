@@ -269,7 +269,7 @@ export function tokenize(src: string): Token[] {
     }
 
     // 标识符 / 关键字
-    if (/[A-Za-z_]/.test(ch)) {
+    if (/[A-Za-z_\u4e00-\u9fff]/.test(ch)) {
       const start = i;
 
       // K/H 前缀的数值字面量（K=十进制, H=十六进制）。
@@ -289,7 +289,7 @@ export function tokenize(src: string): Token[] {
         continue;
       }
 
-      while (i < n && /[A-Za-z0-9_]/.test(src[i])) i++;
+      while (i < n && /[A-Za-z0-9_\u4e00-\u9fff]/.test(src[i])) i++;
       const text = src.slice(start, i);
       push(KEYWORDS.has(text.toLowerCase()) ? 'keyword' : 'identifier', text, start);
       continue;

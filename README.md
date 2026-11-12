@@ -46,6 +46,8 @@ node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_sta
 > ST 文件头的 `VAR_GLOBAL` 块给出标签↔软元件映射（便于单独 check/build-xml）；
 > IEC XML 的 `<GlobalVars>` 负责在 GX Works3 中建立全局标签表，导入后编译 Error:0。
 >
+> **标签语言可配置**：`spec.labels.language` 支持 `zh`（中文标签，如 `启动按钮`，机器人示例默认）与 `en`（英文，如 `bStart`，正式项目/旧项目默认）；也可用 `gen spec.json --labels en` 临时覆盖。中文标签已实测可被 GX Works3 导入并编译 Error:0。
+>
 > **仿真场景断言（M2）**：`sim sim/motor_start_stop.sim.json --observed sim/motor_start_stop.obs.json`
 > 校验「写输入 → 读输出」场景（半自动执行器，详见 [sim/README.md](sim/README.md)）。
 >

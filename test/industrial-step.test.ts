@@ -27,6 +27,7 @@ test('工业 spec：industrial 段能加载并规范化', async () => {
   assert.equal(seq.industrial!.cylinders[2].valve, 'single');
   assert.equal(seq.industrial!.stopSequence.length, 4);
   assert.equal(seq.industrial!.hmi.start, 'M0');
+  assert.equal(loaded.spec!.labels?.language, 'zh', 'robot_steps_v2 应配置中文标签');
 });
 
 test('工业生成：包含模式/急停/报警/手动/停止序列骨架', async () => {
@@ -83,13 +84,28 @@ test('工业生成：XML 全局标签带软元件地址与注释（导入 GX 后
     const { readFile } = await import('node:fs/promises');
     const xml = await readFile(r.xmlPath!, 'utf8');
     assert.match(xml, /<GlobalVars constant="false" retain="false">/);
-    assert.ok(xml.includes('<Variable name="bStart">'), '应包含 IO 全局标签 bStart');
-    assert.ok(xml.includes('<Address address="X0"/>'), 'bStart 应分配到 X0');
-    assert.ok(xml.includes('启动按钮'), 'bStart 应带注释');
-    assert.ok(xml.includes('<Variable name="bHmiStart">'), '应包含 HMI 全局标签 bHmiStart');
-    assert.ok(xml.includes('<Address address="M0"/>'), 'bHmiStart 应分配到 M0');
-    assert.ok(xml.includes('<Variable name="nHmiStep">'), '应包含步号数据标签');
-    assert.ok(xml.includes('<Address address="D0"/>'), 'nHmiStep 应分配到 D0');
+    assert.ok(xml.includes('<Variable name="启动按钮">'), '应包含中文 IO 全局标签 启动按钮');
+    assert.ok(xml.includes('<Address address="X0"/>'), '启动按钮 应分配到 X0');
+    assert.ok(xml.includes('<Variable name="触摸屏启动">'), '应包含中文 HMI 全局标签 触摸屏启动');
+    assert.ok(xml.includes('<Address address="M0"/>'), '触摸屏启动 应分配到 M0');
+    assert.ok(xml.includes('<Variable name="当前步号">'), '应包含中文步号数据标签');
+    assert.ok(xml.includes('<Address address="D0"/>'), '当前步号 应分配到 D0');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('标签语言：可覆盖为英文（正式项目用）', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'dsh-labels-en-'));
+  try {
+    const r = await generateFromSpec(specPath, { outDir: dir, labelLanguage: 'en' });
+    assert.equal(r.ok, true);
+    const { readFile } = await import('node:fs/promises');
+    const st = await readFile(r.stPath!, 'utf8');
+    assert.match(st, /^VAR_GLOBAL/m);
+    assert.match(st, /bStart : BOOL AT X0;/);
+    assert.match(st, /bHmiStart : BOOL AT M0;/);
+    assert.ok(!st.includes('启动按钮 : BOOL'), '英文模式下不应出现中文标签名');
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

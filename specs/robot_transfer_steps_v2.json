@@ -3,6 +3,7 @@
   "title": "搬运机械手工业步进程序 v2（模式/手动/报警/停止序列/HMI）",
   "cpu": { "series": "FX5U", "model": "FX5U-32MT/ES" },
   "template": { "name": "step_sequence" },
+  "labels": { "language": "zh" },
   "io": [
     { "device": "X0", "name": "bStart", "type": "BOOL", "comment": "启动按钮" },
     { "device": "X1", "name": "bStop", "type": "BOOL", "comment": "停止按钮" },

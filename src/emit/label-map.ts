@@ -5,16 +5,49 @@
  * 1. 生成 IEC XML 的 <GlobalVars>（带 <Address> 与注释）；
  * 2. 生成 ST 时把程序正文里的 X0/Y0/M0/D0 等软元件地址替换成标签名，
  *    并在 ST 文件头部写入 VAR_GLOBAL 声明块（便于单独 check/build-xml）。
+ *
+ * 标签语言（spec.labels.language，或 gen --labels）：
+ * - en：英文标识符（io.name / bHmiStart …），默认，兼容旧项目；
+ * - zh：中文标签名（从 io.comment 派生 / 触摸屏启动 …），GX Works3 实测可导入编译。
  */
 
 import type { IecVar } from './iecxml.ts';
-import type { RequirementSpec } from '../spec/schema.ts';
+import type { LabelLanguage, RequirementSpec } from '../spec/schema.ts';
 
 export interface GlobalLabelPlan {
   /** 要写入 XML/ST 的全局标签（带 address/comment）。 */
   labels: IecVar[];
-  /** 软元件地址 → 标签名（如 X0 → bStart）。 */
+  /** 软元件地址 → 标签名（如 X0 → bStart / 启动按钮）。 */
   deviceToLabel: Map<string, string>;
+}
+
+const IDENT_RE = /^[A-Za-z_\u4e00-\u9fff][A-Za-z0-9_\u4e00-\u9fff]*$/;
+
+/** 从中文注释派生合法标签名：去掉括号说明与标点空白。 */
+function fromComment(comment: string | undefined, fallback: string): string {
+  if (!comment) return fallback;
+  let s = comment;
+  const cut = s.search(/[（(]/);
+  if (cut > 0) s = s.slice(0, cut);
+  s = s.replace(/[:：/／,，.。;；、\-—\s]/g, '');
+  s = s.replace(/[^A-Za-z0-9_\u4e00-\u9fff]/g, '');
+  if (!s) return fallback;
+  if (!/^[A-Za-z_\u4e00-\u9fff]/.test(s)) s = `l_${s}`;
+  return s;
+}
+
+/** 保证标签名唯一（重名追加 2、3…）。 */
+function uniqueName(base: string, used: Set<string>): string {
+  let name = IDENT_RE.test(base) ? base : `l_${base.replace(/[^A-Za-z0-9_\u4e00-\u9fff]/g, '') || 'label'}`;
+  if (!used.has(name)) {
+    used.add(name);
+    return name;
+  }
+  let i = 2;
+  while (used.has(`${name}${i}`)) i++;
+  name = `${name}${i}`;
+  used.add(name);
+  return name;
 }
 
 /**
@@ -22,60 +55,90 @@ export interface GlobalLabelPlan {
  *
  * 同一名称或同一软元件只保留首个（避免 GX 导入时重复分配）。
  */
-export function buildGlobalLabelPlan(spec: RequirementSpec): GlobalLabelPlan {
+export function buildGlobalLabelPlan(spec: RequirementSpec, language?: LabelLanguage): GlobalLabelPlan {
+  const lang: LabelLanguage = language ?? spec.labels?.language ?? 'en';
+  const zh = lang === 'zh';
   const labels: IecVar[] = [];
   const deviceToLabel = new Map<string, string>();
-  const names = new Set<string>();
+  const used = new Set<string>();
 
-  const push = (v: IecVar) => {
-    const name = v.name.trim();
+  const push = (v: { name: string; type: string; address?: string; comment?: string }) => {
     const address = (v.address ?? '').trim();
-    if (!name || names.has(name)) return;
-    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) return;
-    if (address && deviceToLabel.has(address)) return;
-    names.add(name);
-    if (address) deviceToLabel.set(address, name);
-    labels.push({ ...v, name, ...(address ? { address } : {}) });
+    if (!address || deviceToLabel.has(address)) return;
+    const name = uniqueName(v.name.trim(), used);
+    deviceToLabel.set(address, name);
+    labels.push({ name, type: v.type, address, ...(v.comment ? { comment: v.comment } : {}) });
   };
 
   for (const io of spec.io ?? []) {
-    push({
-      name: io.name,
-      type: io.type,
-      address: io.device,
-      comment: io.comment ?? `${io.device} ${io.name}`,
-    });
+    const name = zh ? fromComment(io.comment, io.name) : io.name;
+    push({ name, type: io.type, address: io.device, comment: io.comment ?? `${io.device} ${io.name}` });
   }
 
   const ind = spec.sequence?.industrial;
   if (ind) {
     const h = ind.hmi;
-    push({ name: 'bHmiStart', type: 'BOOL', address: h.start, comment: '触摸屏：启动' });
-    push({ name: 'bHmiStop', type: 'BOOL', address: h.stop, comment: '触摸屏：停止' });
-    push({ name: 'bHmiReset', type: 'BOOL', address: h.reset, comment: '触摸屏：复位/清除报警' });
-    push({ name: 'bHmiManual', type: 'BOOL', address: h.manual, comment: '触摸屏：手动模式' });
-    push({ name: 'bHmiExitManual', type: 'BOOL', address: h.exitManual, comment: '触摸屏：退出手动/回待机' });
-    push({ name: 'bHmiContinue', type: 'BOOL', address: h.continueRun, comment: '触摸屏：继续（冻结步）' });
-    push({ name: 'bHmiRestart', type: 'BOOL', address: h.restart, comment: '触摸屏：从头开始' });
-    const st = h.status ?? {};
-    push({ name: 'bHmiIdle', type: 'BOOL', address: st.idle ?? 'M100', comment: '状态：待机' });
-    push({ name: 'bHmiAuto', type: 'BOOL', address: st.auto ?? 'M101', comment: '状态：自动运行' });
-    push({ name: 'bHmiManualing', type: 'BOOL', address: st.manual ?? 'M102', comment: '状态：手动模式' });
-    push({ name: 'bHmiStopping', type: 'BOOL', address: st.stopping ?? 'M103', comment: '状态：停止中' });
-    push({ name: 'bHmiAlarm', type: 'BOOL', address: st.alarm ?? 'M104', comment: '状态：报警中' });
-    push({ name: 'bHmiPaused', type: 'BOOL', address: st.paused ?? 'M105', comment: '状态：急停暂停' });
-    const d = h.data ?? {};
-    push({ name: 'nHmiStep', type: 'INT', address: d.step ?? 'D0', comment: '数据：当前步号' });
-    push({ name: 'nHmiMode', type: 'INT', address: d.mode ?? 'D1', comment: '数据：当前模式' });
-    push({ name: 'nHmiAlarmCode', type: 'INT', address: d.alarmCode ?? 'D2', comment: '数据：报警代码' });
-    push({ name: 'nHmiAlarmStep', type: 'INT', address: d.alarmStep ?? 'D3', comment: '数据：报警冻结步号' });
+    const zhNames = {
+      start: '触摸屏启动',
+      stop: '触摸屏停止',
+      reset: '触摸屏复位',
+      manual: '触摸屏手动',
+      exitManual: '触摸屏退出手动',
+      continueRun: '触摸屏继续',
+      restart: '触摸屏从头',
+      idle: '状态待机',
+      auto: '状态自动',
+      manualing: '状态手动',
+      stopping: '状态停止中',
+      alarm: '状态报警',
+      paused: '状态急停暂停',
+      step: '当前步号',
+      mode: '当前模式',
+      alarmCode: '报警代码',
+      alarmStep: '报警步号',
+    };
+    const enNames = {
+      start: 'bHmiStart',
+      stop: 'bHmiStop',
+      reset: 'bHmiReset',
+      manual: 'bHmiManual',
+      exitManual: 'bHmiExitManual',
+      continueRun: 'bHmiContinue',
+      restart: 'bHmiRestart',
+      idle: 'bHmiIdle',
+      auto: 'bHmiAuto',
+      manualing: 'bHmiManualing',
+      stopping: 'bHmiStopping',
+      alarm: 'bHmiAlarm',
+      paused: 'bHmiPaused',
+      step: 'nHmiStep',
+      mode: 'nHmiMode',
+      alarmCode: 'nHmiAlarmCode',
+      alarmStep: 'nHmiAlarmStep',
+    };
+    const n = zh ? zhNames : enNames;
+    const status = h.status ?? {};
+    const data = h.data ?? {};
+    push({ name: n.start, type: 'BOOL', address: h.start, comment: '触摸屏：启动' });
+    push({ name: n.stop, type: 'BOOL', address: h.stop, comment: '触摸屏：停止' });
+    push({ name: n.reset, type: 'BOOL', address: h.reset, comment: '触摸屏：复位/清除报警' });
+    push({ name: n.manual, type: 'BOOL', address: h.manual, comment: '触摸屏：手动模式' });
+    push({ name: n.exitManual, type: 'BOOL', address: h.exitManual, comment: '触摸屏：退出手动/回待机' });
+    push({ name: n.continueRun, type: 'BOOL', address: h.continueRun, comment: '触摸屏：继续（冻结步）' });
+    push({ name: n.restart, type: 'BOOL', address: h.restart, comment: '触摸屏：从头开始' });
+    push({ name: n.idle, type: 'BOOL', address: status.idle ?? 'M100', comment: '状态：待机' });
+    push({ name: n.auto, type: 'BOOL', address: status.auto ?? 'M101', comment: '状态：自动运行' });
+    push({ name: n.manualing, type: 'BOOL', address: status.manual ?? 'M102', comment: '状态：手动模式' });
+    push({ name: n.stopping, type: 'BOOL', address: status.stopping ?? 'M103', comment: '状态：停止中' });
+    push({ name: n.alarm, type: 'BOOL', address: status.alarm ?? 'M104', comment: '状态：报警中' });
+    push({ name: n.paused, type: 'BOOL', address: status.paused ?? 'M105', comment: '状态：急停暂停' });
+    push({ name: n.step, type: 'INT', address: data.step ?? 'D0', comment: '数据：当前步号' });
+    push({ name: n.mode, type: 'INT', address: data.mode ?? 'D1', comment: '数据：当前模式' });
+    push({ name: n.alarmCode, type: 'INT', address: data.alarmCode ?? 'D2', comment: '数据：报警代码' });
+    push({ name: n.alarmStep, type: 'INT', address: data.alarmStep ?? 'D3', comment: '数据：报警冻结步号' });
     ind.manualButtons.forEach((b, i) => {
-      push({
-        name: `bHmiManual${i + 1}`,
-        type: 'BOOL',
-        address: b.button,
-        comment: `触摸屏：手动翻转 ${b.cylinder}`,
-      });
+      const name = zh ? `手动${b.cylinder.replace(/[^A-Za-z0-9_\u4e00-\u9fff]/g, '') || i + 1}` : `bHmiManual${i + 1}`;
+      push({ name, type: 'BOOL', address: b.button, comment: `触摸屏：手动翻转 ${b.cylinder}` });
     });
   }
 
@@ -99,7 +162,8 @@ export function renameDevicesToLabels(source: string, deviceToLabel: Map<string,
     .filter((k) => k.trim().length > 0)
     .sort((a, b) => b.length - a.length)
     .map(escapeRegExp);
-  const re = new RegExp(`(?<![A-Za-z0-9_.])(${keys.join('|')})(?![0-9A-Za-z_.])`, 'g');
+  const boundary = 'A-Za-z0-9_\\u4e00-\\u9fff.';
+  const re = new RegExp(`(?<![${boundary}])(${keys.join('|')})(?![${boundary}])`, 'g');
 
   const parts = source.split(/('(?:[^']|'')*'|"(?:[^"]|"")*")/g);
   return parts

@@ -247,4 +247,6 @@ Main（扫描任务）
 - 工业版暂不支持 `delayMs` 延时转移（用传感器条件代替）；
 - 手动按钮为“每执行元件一个翻转按钮”模型；多点动/双按钮模型待扩展；
 - HMI 地址表尚未单独导出 CSV（地址仍在 spec 与 ST 注释中）；
-- 生成结果需用户导入 GX Works3 查看/修改；本工具不自动写入 PLC。
+- 生成结果需用户导入 GX Works3 查看/修改；本工具不自动写入 PLC。- 中文标签（2026-11-12）：`spec.labels.language` 可选 `zh`/`en`（默认 en；robot_v2 示例用 zh），
+  中文标签如 `启动按钮`/`竖直缸下降到位`/`触摸屏启动`；GX Works3 导入 + 全部转换 **Error:0 Warning:0**
+  （证据 `docs/evidence/M4/19-robot-v2-zh-labels-gx-compile.png`，标签清单 `docs/evidence/M4/robot-v2-global-labels-zh.txt`）；

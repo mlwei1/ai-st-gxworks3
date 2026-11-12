@@ -484,7 +484,13 @@ async function cmdGen(args: Args): Promise<number> {
     }
   }
 
-  const result = await generateFromSpec(resolve(specPath), { outDir, useLlm, compilerErrors });
+  const result = await generateFromSpec(resolve(specPath), {
+    outDir,
+    useLlm,
+    compilerErrors,
+    labelLanguage:
+      args.labels === 'en' || args.labels === 'zh' ? (args.labels as 'en' | 'zh') : undefined,
+  });
 
   if (result.specDiagnostics.length > 0) {
     console.error(formatSpecDiagnostics(result.specDiagnostics));

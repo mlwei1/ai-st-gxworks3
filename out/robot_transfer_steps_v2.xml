@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="www.iec.ch/public/TC65SC65BWG7TF10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="1.000" xsi:schemaLocation="www.iec.ch/public/TC65SC65BWG7TF10 GXW3_IEC61131_10_Ed1_0_ForGXW3.xsd">
   <FileHeader companyName="MITSUBISHI ELECTRIC CORPORATION" companyURL="http://www.mitsubishielectric.com" productName="GX Works3" productVersion="ver.1.0"/>
-  <ContentHeader name="robot_transfer_steps_v2" creationDateTime="2026-11-12T04:19:12.565Z" modificationDateTime="2026-11-12T04:19:12.565Z"/>
+  <ContentHeader name="robot_transfer_steps_v2" creationDateTime="2026-11-12T05:51:06.373Z" modificationDateTime="2026-11-12T05:51:06.373Z"/>
   <Types>
     <GlobalNamespace>
       <Program name="Main">
@@ -401,29 +401,29 @@
         <MainBody>
           <BodyContent xsi:type="ST">
             <ST>    // ---- 1) HMI 命令上升沿 ----
-    bStartEdge := bHmiStart AND NOT bStartLast;
-    bStartLast := bHmiStart;
-    bStopEdge := bHmiStop AND NOT bStopLast;
-    bStopLast := bHmiStop;
-    bResetEdge := bHmiReset AND NOT bResetLast;
-    bResetLast := bHmiReset;
-    bManualEdge := bHmiManual AND NOT bManualLast;
-    bManualLast := bHmiManual;
-    bExitEdge := bHmiExitManual AND NOT bExitLast;
-    bExitLast := bHmiExitManual;
-    bContinueEdge := bHmiContinue AND NOT bContinueLast;
-    bContinueLast := bHmiContinue;
-    bRestartEdge := bHmiRestart AND NOT bRestartLast;
-    bRestartLast := bHmiRestart;
-    bBtn1Edge := bHmiManual1 AND NOT bBtn1Last;
-    bBtn1Last := bHmiManual1;
-    bBtn2Edge := bHmiManual2 AND NOT bBtn2Last;
-    bBtn2Last := bHmiManual2;
-    bBtn3Edge := bHmiManual3 AND NOT bBtn3Last;
-    bBtn3Last := bHmiManual3;
+    bStartEdge := 触摸屏启动 AND NOT bStartLast;
+    bStartLast := 触摸屏启动;
+    bStopEdge := 触摸屏停止 AND NOT bStopLast;
+    bStopLast := 触摸屏停止;
+    bResetEdge := 触摸屏复位 AND NOT bResetLast;
+    bResetLast := 触摸屏复位;
+    bManualEdge := 触摸屏手动 AND NOT bManualLast;
+    bManualLast := 触摸屏手动;
+    bExitEdge := 触摸屏退出手动 AND NOT bExitLast;
+    bExitLast := 触摸屏退出手动;
+    bContinueEdge := 触摸屏继续 AND NOT bContinueLast;
+    bContinueLast := 触摸屏继续;
+    bRestartEdge := 触摸屏从头 AND NOT bRestartLast;
+    bRestartLast := 触摸屏从头;
+    bBtn1Edge := 手动竖直缸 AND NOT bBtn1Last;
+    bBtn1Last := 手动竖直缸;
+    bBtn2Edge := 手动水平缸 AND NOT bBtn2Last;
+    bBtn2Last := 手动水平缸;
+    bBtn3Edge := 手动夹爪 AND NOT bBtn3Last;
+    bBtn3Last := 手动夹爪;
 
     // ---- 2) 急停：任何模式立即暂停，冻结步号 ----
-    IF bEStop THEN
+    IF 急停 THEN
         IF nMode &lt;&gt; 5 THEN
             nMode := 5;
             bEStopPause := TRUE;
@@ -431,7 +431,7 @@
     END_IF;
 
     // ---- 3) 模式与 HMI 命令 ----
-    bCylOK := ((bDownPos) OR (bUpPos)) AND ((bRightPos) OR (bLeftPos)) AND ((bClampPos) OR (bReleasePos));
+    bCylOK := ((竖直缸下降到位) OR (竖直缸上升到位)) AND ((水平右限位) OR (水平左限位)) AND ((夹爪夹紧到位) OR (夹爪松开到位));
 
     // 待机：启动/切手动
     IF nMode = 0 THEN
@@ -445,13 +445,13 @@
             nAlarmCode := 0;
             nAlarmStep := 0;
         END_IF;
-        IF bManualEdge AND NOT bEStop THEN
+        IF bManualEdge AND NOT 急停 THEN
             nMode := 2;
             bC1Ext := FALSE;
             bC1Ret := FALSE;
             bC2Ext := FALSE;
             bC2Ret := FALSE;
-            bC3Clamp := (bClampPos);  // 保持当前夹紧状态
+            bC3Clamp := (夹爪夹紧到位);  // 保持当前夹紧状态
         END_IF;
     END_IF;
 
@@ -464,13 +464,13 @@
 
     // 报警/急停暂停：切手动处理、停止、从头开始
     IF (nMode = 4) OR (nMode = 5) THEN
-        IF bManualEdge AND NOT bEStop THEN
+        IF bManualEdge AND NOT 急停 THEN
             nMode := 2;
             bC1Ext := FALSE;
             bC1Ret := FALSE;
             bC2Ext := FALSE;
             bC2Ret := FALSE;
-            bC3Clamp := (bClampPos);  // 保持当前夹紧状态
+            bC3Clamp := (夹爪夹紧到位);  // 保持当前夹紧状态
         END_IF;
         IF bStopEdge THEN
             nMode := 3;
@@ -499,18 +499,18 @@
 
     // 手动：清故障、退出手动、继续/停止/从头
     IF nMode = 2 THEN
-        IF bResetEdge AND bCylOK AND NOT bEStop THEN
+        IF bResetEdge AND bCylOK AND NOT 急停 THEN
             bAlarm := FALSE;
             bEStopPause := FALSE;
             nAlarmCode := 0;
             nAlarmStep := 0;
         END_IF;
-        IF bExitEdge AND bCylOK AND NOT bAlarm AND NOT bEStopPause AND NOT bEStop THEN
+        IF bExitEdge AND bCylOK AND NOT bAlarm AND NOT bEStopPause AND NOT 急停 THEN
             nMode := 0;
             nStep := 0;
             bStopActive := FALSE;
         END_IF;
-        IF bContinueEdge AND bCylOK AND NOT bAlarm AND NOT bEStopPause AND NOT bEStop THEN
+        IF bContinueEdge AND bCylOK AND NOT bAlarm AND NOT bEStopPause AND NOT 急停 THEN
             IF bStopActive THEN
                 nMode := 3;
             ELSE
@@ -544,18 +544,18 @@
     END_IF;
 
     // 急停仍按住时禁止任何模式切换
-    IF bEStop THEN
+    IF 急停 THEN
         nMode := 5;
     END_IF;
 
     // ---- 4) 手动翻转（仅手动模式） ----
         IF nMode = 2 THEN
-            // 手动翻转：竖直缸（bHmiManual1）
+            // 手动翻转：竖直缸（手动竖直缸）
             IF bBtn1Edge THEN
-                IF bUpPos THEN
+                IF 竖直缸上升到位 THEN
                     bC1Ext := TRUE;
                     bC1Ret := FALSE;
-                ELSIF bDownPos THEN
+                ELSIF 竖直缸下降到位 THEN
                     bC1Ext := FALSE;
                     bC1Ret := TRUE;
                 ELSE
@@ -564,19 +564,19 @@
                     bC1Ret := TRUE;
                 END_IF;
             END_IF;
-            IF bC1Ext AND bDownPos THEN
+            IF bC1Ext AND 竖直缸下降到位 THEN
                 bC1Ext := FALSE;
             END_IF;
-            IF bC1Ret AND bUpPos THEN
+            IF bC1Ret AND 竖直缸上升到位 THEN
                 bC1Ret := FALSE;
             END_IF;
 
-            // 手动翻转：水平缸（bHmiManual2）
+            // 手动翻转：水平缸（手动水平缸）
             IF bBtn2Edge THEN
-                IF bLeftPos THEN
+                IF 水平左限位 THEN
                     bC2Ext := TRUE;
                     bC2Ret := FALSE;
-                ELSIF bRightPos THEN
+                ELSIF 水平右限位 THEN
                     bC2Ext := FALSE;
                     bC2Ret := TRUE;
                 ELSE
@@ -585,18 +585,18 @@
                     bC2Ret := TRUE;
                 END_IF;
             END_IF;
-            IF bC2Ext AND bRightPos THEN
+            IF bC2Ext AND 水平右限位 THEN
                 bC2Ext := FALSE;
             END_IF;
-            IF bC2Ret AND bLeftPos THEN
+            IF bC2Ret AND 水平左限位 THEN
                 bC2Ret := FALSE;
             END_IF;
 
-            // 手动翻转：夹爪（bHmiManual3）
+            // 手动翻转：夹爪（手动夹爪）
             IF bBtn3Edge THEN
-                IF bReleasePos THEN
+                IF 夹爪松开到位 THEN
                     bC3Clamp := TRUE;
-                ELSIF bClampPos THEN
+                ELSIF 夹爪夹紧到位 THEN
                     bC3Clamp := FALSE;
                 ELSE
                     // 位置未知（卡在中间）：默认松开回原位，便于人工恢复
@@ -679,7 +679,7 @@
     // 竖直缸（双电控）
     fbCyl1(bEnable := (nMode = 1) OR (nMode = 2) OR (nMode = 3),
               bCmdExtend := bC1Ext, bCmdRetract := bC1Ret,
-              xExtended := bDownPos, xRetracted := bUpPos,
+              xExtended := 竖直缸下降到位, xRetracted := 竖直缸上升到位,
               tTimeout := T#5000ms,
               nAlarmExt := 10, nAlarmRet := 11,
               bOutExtend =&gt; bC1OutExt, bOutRetract =&gt; bC1OutRet,
@@ -688,7 +688,7 @@
     // 水平缸（双电控）
     fbCyl2(bEnable := (nMode = 1) OR (nMode = 2) OR (nMode = 3),
               bCmdExtend := bC2Ext, bCmdRetract := bC2Ret,
-              xExtended := bRightPos, xRetracted := bLeftPos,
+              xExtended := 水平右限位, xRetracted := 水平左限位,
               tTimeout := T#5000ms,
               nAlarmExt := 20, nAlarmRet := 21,
               bOutExtend =&gt; bC2OutExt, bOutRetract =&gt; bC2OutRet,
@@ -697,7 +697,7 @@
     // 夹爪（单电控）
     fbCyl3(bEnable := (nMode = 1) OR (nMode = 2) OR (nMode = 3),
               bCmdClamp := bC3Clamp,
-              xClamped := bClampPos, xReleased := bReleasePos,
+              xClamped := 夹爪夹紧到位, xReleased := 夹爪松开到位,
               tTimeout := T#5000ms,
               nAlarmClamp := 30, nAlarmRelease := 31,
               bOutClamp =&gt; bC3OutClamp, bAlarm =&gt; bC3Alarm, nAlarmCode =&gt; nC3AlarmCode);
@@ -725,7 +725,7 @@
             CASE nStep OF
                 // S1 竖直下降
                 1:
-                    IF (bDownPos) THEN
+                    IF (竖直缸下降到位) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -737,7 +737,7 @@
                     END_IF;
                 // S2 夹爪夹紧
                 2:
-                    IF (bClampPos) THEN
+                    IF (夹爪夹紧到位) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -749,7 +749,7 @@
                     END_IF;
                 // S3 竖直上升
                 3:
-                    IF (bUpPos) THEN
+                    IF (竖直缸上升到位) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -761,7 +761,7 @@
                     END_IF;
                 // S4 水平右移
                 4:
-                    IF (bRightPos) THEN
+                    IF (水平右限位) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -773,7 +773,7 @@
                     END_IF;
                 // S5 右位竖直下降
                 5:
-                    IF (bDownPos) THEN
+                    IF (竖直缸下降到位) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -785,7 +785,7 @@
                     END_IF;
                 // S6 夹爪松开
                 6:
-                    IF (bReleasePos) THEN
+                    IF (夹爪松开到位) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -797,7 +797,7 @@
                     END_IF;
                 // S7 松开后上升
                 7:
-                    IF (bUpPos) THEN
+                    IF (竖直缸上升到位) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -809,7 +809,7 @@
                     END_IF;
                 // S8 水平左移回原位
                 8:
-                    IF (bLeftPos) THEN
+                    IF (水平左限位) THEN
                         IF bStopReq THEN
                             nMode := 3;
                             nStopStep := 1;
@@ -828,17 +828,17 @@
             CASE nStopStep OF
                 // T1 竖直上升回原位
                 1:
-                    IF (bUpPos) THEN
+                    IF (竖直缸上升到位) THEN
                         nStopStep := 2;
                     END_IF;
                 // T2 水平左移回原位
                 2:
-                    IF (bLeftPos) THEN
+                    IF (水平左限位) THEN
                         nStopStep := 3;
                     END_IF;
                 // T3 夹爪松开
                 3:
-                    IF (bReleasePos) THEN
+                    IF (夹爪松开到位) THEN
                         nStopStep := 4;
                     END_IF;
                 // T4 全部输出关闭
@@ -857,30 +857,30 @@
 
     // ---- 输出汇总（Y 只在此处驱动；待机全关，其他模式取 FB 输出） ----
     IF nMode = 0 THEN
-        bDown := FALSE;
-        bUp := FALSE;
-        bRight := FALSE;
-        bLeft := FALSE;
-        bClamp := FALSE;
+        竖直下降电磁阀 := FALSE;
+        竖直上升电磁阀 := FALSE;
+        水平右移电磁阀 := FALSE;
+        水平左移电磁阀 := FALSE;
+        夹爪电磁阀 := FALSE;
     ELSE
-        bDown := bC1OutExt;
-        bUp := bC1OutRet;
-        bRight := bC2OutExt;
-        bLeft := bC2OutRet;
-        bClamp := bC3OutClamp;
+        竖直下降电磁阀 := bC1OutExt;
+        竖直上升电磁阀 := bC1OutRet;
+        水平右移电磁阀 := bC2OutExt;
+        水平左移电磁阀 := bC2OutRet;
+        夹爪电磁阀 := bC3OutClamp;
     END_IF;
 
     // ---- 11) HMI 状态/数据 ----
-    bHmiIdle := (nMode = 0);
-    bHmiAuto := (nMode = 1);
-    bHmiManualing := (nMode = 2);
-    bHmiStopping := (nMode = 3);
-    bHmiAlarm := bAlarm;
-    bHmiPaused := bEStopPause;
-    nHmiStep := nStep;
-    nHmiMode := nMode;
-    nHmiAlarmCode := nAlarmCode;
-    nHmiAlarmStep := nAlarmStep;</ST>
+    状态待机 := (nMode = 0);
+    状态自动 := (nMode = 1);
+    状态手动 := (nMode = 2);
+    状态停止中 := (nMode = 3);
+    状态报警 := bAlarm;
+    状态急停暂停 := bEStopPause;
+    当前步号 := nStep;
+    当前模式 := nMode;
+    报警代码 := nAlarmCode;
+    报警步号 := nAlarmStep;</ST>
           </BodyContent>
         </MainBody>
       </Program>
@@ -1108,7 +1108,7 @@
         <ProgramInstance name="Main" typeName="pou" evaluationOrder="1"/>
       </Resource>
       <GlobalVars constant="false" retain="false">
-        <Variable name="bStart">
+        <Variable name="启动按钮">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1121,7 +1121,7 @@
           </Type>
           <Address address="X0"/>
         </Variable>
-        <Variable name="bStop">
+        <Variable name="停止按钮">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1134,7 +1134,7 @@
           </Type>
           <Address address="X1"/>
         </Variable>
-        <Variable name="bEStop">
+        <Variable name="急停">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1147,7 +1147,7 @@
           </Type>
           <Address address="X2"/>
         </Variable>
-        <Variable name="bDownPos">
+        <Variable name="竖直缸下降到位">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1160,7 +1160,7 @@
           </Type>
           <Address address="X10"/>
         </Variable>
-        <Variable name="bClampPos">
+        <Variable name="夹爪夹紧到位">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1173,7 +1173,7 @@
           </Type>
           <Address address="X11"/>
         </Variable>
-        <Variable name="bUpPos">
+        <Variable name="竖直缸上升到位">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1186,7 +1186,7 @@
           </Type>
           <Address address="X12"/>
         </Variable>
-        <Variable name="bRightPos">
+        <Variable name="水平右限位">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1199,7 +1199,7 @@
           </Type>
           <Address address="X13"/>
         </Variable>
-        <Variable name="bLeftPos">
+        <Variable name="水平左限位">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1212,7 +1212,7 @@
           </Type>
           <Address address="X14"/>
         </Variable>
-        <Variable name="bReleasePos">
+        <Variable name="夹爪松开到位">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1225,7 +1225,7 @@
           </Type>
           <Address address="X15"/>
         </Variable>
-        <Variable name="bDown">
+        <Variable name="竖直下降电磁阀">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1238,7 +1238,7 @@
           </Type>
           <Address address="Y0"/>
         </Variable>
-        <Variable name="bUp">
+        <Variable name="竖直上升电磁阀">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1251,7 +1251,7 @@
           </Type>
           <Address address="Y1"/>
         </Variable>
-        <Variable name="bClamp">
+        <Variable name="夹爪电磁阀">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1264,7 +1264,7 @@
           </Type>
           <Address address="Y2"/>
         </Variable>
-        <Variable name="bRight">
+        <Variable name="水平右移电磁阀">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1277,7 +1277,7 @@
           </Type>
           <Address address="Y3"/>
         </Variable>
-        <Variable name="bLeft">
+        <Variable name="水平左移电磁阀">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1290,7 +1290,7 @@
           </Type>
           <Address address="Y4"/>
         </Variable>
-        <Variable name="bHmiStart">
+        <Variable name="触摸屏启动">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1303,7 +1303,7 @@
           </Type>
           <Address address="M0"/>
         </Variable>
-        <Variable name="bHmiStop">
+        <Variable name="触摸屏停止">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1316,7 +1316,7 @@
           </Type>
           <Address address="M1"/>
         </Variable>
-        <Variable name="bHmiReset">
+        <Variable name="触摸屏复位">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1329,7 +1329,7 @@
           </Type>
           <Address address="M2"/>
         </Variable>
-        <Variable name="bHmiManual">
+        <Variable name="触摸屏手动">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1342,7 +1342,7 @@
           </Type>
           <Address address="M4"/>
         </Variable>
-        <Variable name="bHmiExitManual">
+        <Variable name="触摸屏退出手动">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1355,7 +1355,7 @@
           </Type>
           <Address address="M3"/>
         </Variable>
-        <Variable name="bHmiContinue">
+        <Variable name="触摸屏继续">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1368,7 +1368,7 @@
           </Type>
           <Address address="M5"/>
         </Variable>
-        <Variable name="bHmiRestart">
+        <Variable name="触摸屏从头">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1381,7 +1381,7 @@
           </Type>
           <Address address="M6"/>
         </Variable>
-        <Variable name="bHmiIdle">
+        <Variable name="状态待机">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1394,7 +1394,7 @@
           </Type>
           <Address address="M100"/>
         </Variable>
-        <Variable name="bHmiAuto">
+        <Variable name="状态自动">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1407,7 +1407,7 @@
           </Type>
           <Address address="M101"/>
         </Variable>
-        <Variable name="bHmiManualing">
+        <Variable name="状态手动">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1420,7 +1420,7 @@
           </Type>
           <Address address="M102"/>
         </Variable>
-        <Variable name="bHmiStopping">
+        <Variable name="状态停止中">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1433,7 +1433,7 @@
           </Type>
           <Address address="M103"/>
         </Variable>
-        <Variable name="bHmiAlarm">
+        <Variable name="状态报警">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1446,7 +1446,7 @@
           </Type>
           <Address address="M104"/>
         </Variable>
-        <Variable name="bHmiPaused">
+        <Variable name="状态急停暂停">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1459,7 +1459,7 @@
           </Type>
           <Address address="M105"/>
         </Variable>
-        <Variable name="nHmiStep">
+        <Variable name="当前步号">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1472,7 +1472,7 @@
           </Type>
           <Address address="D0"/>
         </Variable>
-        <Variable name="nHmiMode">
+        <Variable name="当前模式">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1485,7 +1485,7 @@
           </Type>
           <Address address="D1"/>
         </Variable>
-        <Variable name="nHmiAlarmCode">
+        <Variable name="报警代码">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1498,7 +1498,7 @@
           </Type>
           <Address address="D2"/>
         </Variable>
-        <Variable name="nHmiAlarmStep">
+        <Variable name="报警步号">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1511,7 +1511,7 @@
           </Type>
           <Address address="D3"/>
         </Variable>
-        <Variable name="bHmiManual1">
+        <Variable name="手动竖直缸">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1524,7 +1524,7 @@
           </Type>
           <Address address="M10"/>
         </Variable>
-        <Variable name="bHmiManual2">
+        <Variable name="手动水平缸">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
@@ -1537,7 +1537,7 @@
           </Type>
           <Address address="M11"/>
         </Variable>
-        <Variable name="bHmiManual3">
+        <Variable name="手动夹爪">
           <AddData>
             <Data name="http://www.mitsubishielectric.com/xml/VariableComments" handleUnknown="implementation">
               <VariableComments>
