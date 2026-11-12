@@ -33,14 +33,17 @@ test('工业生成：包含模式/急停/报警/手动/停止序列骨架', asyn
   const loaded = await loadSpecFile(specPath);
   assert.equal(loaded.ok, true);
   const { source } = generateStepSequence(loaded.spec!);
+  assert.match(source, /FUNCTION_BLOCK FB_Cylinder/);
+  assert.match(source, /FUNCTION_BLOCK FB_CylinderSV/);
   assert.match(source, /nMode : INT := 0/);
   assert.match(source, /IF X2 THEN/);
-  assert.match(source, /nAlarmCode := 10/);
-  assert.match(source, /tC1Ext\(IN :=/);
+  assert.match(source, /fbCyl1 : FB_Cylinder/);
+  assert.match(source, /fbCyl3 : FB_CylinderSV/);
+  assert.match(source, /fbCyl1\(bEnable :=/);
+  assert.match(source, /bAlarm => bC1Alarm, nAlarmCode => nC1AlarmCode/);
   assert.match(source, /bBtn1Edge := M10 AND NOT bBtn1Last/);
   assert.match(source, /bCylOK :=/);
   assert.match(source, /nStopStep := 1/);
-  assert.match(source, /Y2 := bC3Clamp/);
   assert.match(source, /M100 := \(nMode = 0\)/);
 });
 

@@ -38,7 +38,7 @@ node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_sta
 >
 > **工业版步进程序（v0.4）**：`gen specs/robot_transfer_steps_v2.json -o out` 生成带
 > 待机/自动/手动/停止中/报警/急停暂停六模式、气缸 5s 卡缸报警（步号冻结）、
-> 手动翻转按钮、停止序列回原点、HMI M/D 地址表的单 PROGRAM ST，
+> 手动翻转按钮、停止序列回原点、HMI M/D 地址表；气缸超时逻辑封装为 `FB_Cylinder`（双电控）/ `FB_CylinderSV`（单电控）两个 FB，主程序只做模式与命令协调，
 > 设计说明见 [docs/工业程序结构-robot_steps设计稿.md](docs/工业程序结构-robot_steps设计稿.md)。
 >
 > **全局标签 / IO 注释**：`gen` 会从 spec.io 与工业 HMI 地址表生成带软元件地址和中文注释的全局标签，

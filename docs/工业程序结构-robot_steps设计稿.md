@@ -232,7 +232,12 @@ Main（扫描任务）
   GX 导入后出现在「全局标签」表（Global_2），见 `docs/evidence/M4/robot-v2-global-labels.txt`；
 - ST 正文标签化：`src/emit/label-map.ts` 负责「软元件→标签」映射、正文替换与 `VAR_GLOBAL` 块生成；
   生成后的 ST 正文 X/Y/M/D 引用数为 **0**（只剩文件头映射块里的 AT 地址）；
-- GX Works3 实测（标签版）：XML 导入 Error:0，全部转换 **Error:0 Warning:0**（见 `docs/evidence/M4/15-robot-v2-labels-gx-compile.png`）；
+- FB 重构（2026-11-12）：气缸重复逻辑封装为
+  `FB_Cylinder`（双电控：伸出/缩回输出 + 双向 5s 超时）与
+  `FB_CylinderSV`（单电控弹簧复位：夹紧/松开 + 双向超时）；
+  主程序只保留模式/步序/手动/HMI/报警汇总，3 个气缸各 1 次 FB 调用；
+  XML 含 2 个 `<FunctionBlock>`，GX 导入 + 全部转换 **Error:0 Warning:0**
+  （证据 `docs/evidence/M4/18-robot-v2-fb-gx-compile.png`）；- GX Works3 实测（标签版）：XML 导入 Error:0，全部转换 **Error:0 Warning:0**（见 `docs/evidence/M4/15-robot-v2-labels-gx-compile.png`）；
 - 验证：`test/industrial-step.test.ts` 5 个用例（加载/骨架/方言 0 error/XML 构建/缺字段报错），
   XML 通过 XSD 校验；
 - 提示词：新增规则 18（工业骨架要求）。

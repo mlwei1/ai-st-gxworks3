@@ -2,71 +2,458 @@
   "tool": "ai-st-gxworks3",
   "format": "IEC61131-10",
   "spec": {
-    "name": "motor_start_stop",
+    "name": "robot_transfer_steps_v2",
     "cpu": {
       "series": "FX5U",
       "model": "FX5U-32MT/ES"
     },
     "template": {
-      "name": "motor_start_stop",
-      "params": {
-        "autoStopSeconds": 10,
-        "faultReset": true
-      }
+      "name": "step_sequence"
     },
     "io": [
       {
         "device": "X0",
         "name": "bStart",
         "type": "BOOL",
-        "comment": "启动按钮（常开）"
+        "comment": "启动按钮"
       },
       {
         "device": "X1",
         "name": "bStop",
         "type": "BOOL",
-        "comment": "停止按钮（常闭）"
+        "comment": "停止按钮"
       },
       {
         "device": "X2",
-        "name": "bFault",
+        "name": "bEStop",
         "type": "BOOL",
-        "comment": "故障信号"
+        "comment": "急停（暂停）"
+      },
+      {
+        "device": "X10",
+        "name": "bDownPos",
+        "type": "BOOL",
+        "comment": "竖直缸下降到位"
+      },
+      {
+        "device": "X11",
+        "name": "bClampPos",
+        "type": "BOOL",
+        "comment": "夹爪夹紧到位"
+      },
+      {
+        "device": "X12",
+        "name": "bUpPos",
+        "type": "BOOL",
+        "comment": "竖直缸上升到位"
+      },
+      {
+        "device": "X13",
+        "name": "bRightPos",
+        "type": "BOOL",
+        "comment": "水平右限位"
+      },
+      {
+        "device": "X14",
+        "name": "bLeftPos",
+        "type": "BOOL",
+        "comment": "水平左限位"
+      },
+      {
+        "device": "X15",
+        "name": "bReleasePos",
+        "type": "BOOL",
+        "comment": "夹爪松开到位"
       },
       {
         "device": "Y0",
-        "name": "bMotor",
+        "name": "bDown",
         "type": "BOOL",
-        "comment": "电机接触器输出"
+        "comment": "竖直下降电磁阀"
+      },
+      {
+        "device": "Y1",
+        "name": "bUp",
+        "type": "BOOL",
+        "comment": "竖直上升电磁阀"
+      },
+      {
+        "device": "Y2",
+        "name": "bClamp",
+        "type": "BOOL",
+        "comment": "夹爪电磁阀（ON=夹紧）"
+      },
+      {
+        "device": "Y3",
+        "name": "bRight",
+        "type": "BOOL",
+        "comment": "水平右移电磁阀"
+      },
+      {
+        "device": "Y4",
+        "name": "bLeft",
+        "type": "BOOL",
+        "comment": "水平左移电磁阀"
       }
     ],
     "requirements": [
       {
         "id": "R1",
-        "text": "按下启动按钮 X0 后，电机输出 Y0 置 ON 并自保持"
+        "text": "待机按启动 X0 从初始步开始自动流程"
       },
       {
         "id": "R2",
-        "text": "按下停止按钮 X1 时，电机输出 Y0 立即 OFF"
+        "text": "自动运行中按停止 X1 后，当前步完成后进入停止序列回原点（不是直接清输出）"
       },
       {
         "id": "R3",
-        "text": "故障信号 X2 为 ON 时，Y0 立即 OFF 且不允许再启动"
+        "text": "气缸输出后 5s 内目标磁性开关未到位 → 报警，步号冻结、流程不跳转，等待手动处理"
       },
       {
         "id": "R4",
-        "text": "故障消失后需重新按下启动按钮方可再次运行"
+        "text": "自动运行中不能切手动；待机可切手动；停止中除报警外不能切手动"
       },
       {
         "id": "R5",
-        "text": "连续运行达到 autoStopSeconds 秒后自动停止（模板参数）"
+        "text": "报警/急停后可切手动，触摸屏翻转按钮恢复机构，清报警后可选继续/停止/从头"
+      },
+      {
+        "id": "R6",
+        "text": "继续从冻结步继续；停止执行停止序列；从头复位后待机"
+      },
+      {
+        "id": "R7",
+        "text": "任何情况下按急停 X2 都是暂停，冻结当前步等待手动处理"
+      },
+      {
+        "id": "R8",
+        "text": "触摸屏交互使用软元件地址（M/D 区），地址表见 industrial.hmi"
       }
     ],
-    "sequence": null
+    "sequence": {
+      "steps": [
+        {
+          "id": "S1",
+          "name": "竖直下降",
+          "actions": [
+            {
+              "target": "Y0",
+              "value": "ON"
+            }
+          ],
+          "next": {
+            "to": "S2",
+            "condition": "X10"
+          }
+        },
+        {
+          "id": "S2",
+          "name": "夹爪夹紧",
+          "actions": [
+            {
+              "target": "Y0",
+              "value": "ON"
+            },
+            {
+              "target": "Y2",
+              "value": "ON"
+            }
+          ],
+          "next": {
+            "to": "S3",
+            "condition": "X11"
+          }
+        },
+        {
+          "id": "S3",
+          "name": "竖直上升",
+          "actions": [
+            {
+              "target": "Y1",
+              "value": "ON"
+            },
+            {
+              "target": "Y2",
+              "value": "ON"
+            }
+          ],
+          "next": {
+            "to": "S4",
+            "condition": "X12"
+          }
+        },
+        {
+          "id": "S4",
+          "name": "水平右移",
+          "actions": [
+            {
+              "target": "Y2",
+              "value": "ON"
+            },
+            {
+              "target": "Y3",
+              "value": "ON"
+            }
+          ],
+          "next": {
+            "to": "S5",
+            "condition": "X13"
+          }
+        },
+        {
+          "id": "S5",
+          "name": "右位竖直下降",
+          "actions": [
+            {
+              "target": "Y0",
+              "value": "ON"
+            },
+            {
+              "target": "Y2",
+              "value": "ON"
+            },
+            {
+              "target": "Y3",
+              "value": "ON"
+            }
+          ],
+          "next": {
+            "to": "S6",
+            "condition": "X10"
+          }
+        },
+        {
+          "id": "S6",
+          "name": "夹爪松开",
+          "actions": [
+            {
+              "target": "Y0",
+              "value": "ON"
+            },
+            {
+              "target": "Y2",
+              "value": "OFF"
+            },
+            {
+              "target": "Y3",
+              "value": "ON"
+            }
+          ],
+          "next": {
+            "to": "S7",
+            "condition": "X15"
+          }
+        },
+        {
+          "id": "S7",
+          "name": "松开后上升",
+          "actions": [
+            {
+              "target": "Y1",
+              "value": "ON"
+            },
+            {
+              "target": "Y3",
+              "value": "ON"
+            }
+          ],
+          "next": {
+            "to": "S8",
+            "condition": "X12"
+          }
+        },
+        {
+          "id": "S8",
+          "name": "水平左移回原位",
+          "actions": [
+            {
+              "target": "Y4",
+              "value": "ON"
+            }
+          ],
+          "next": {
+            "to": "END",
+            "condition": "X14"
+          }
+        }
+      ],
+      "initialStep": "S1",
+      "industrial": {
+        "estop": "X2",
+        "hmi": {
+          "start": "M0",
+          "stop": "M1",
+          "reset": "M2",
+          "manual": "M4",
+          "exitManual": "M3",
+          "continueRun": "M5",
+          "restart": "M6",
+          "status": {
+            "idle": "M100",
+            "auto": "M101",
+            "manual": "M102",
+            "stopping": "M103",
+            "alarm": "M104",
+            "paused": "M105"
+          },
+          "data": {
+            "step": "D0",
+            "mode": "D1",
+            "alarmCode": "D2",
+            "alarmStep": "D3"
+          }
+        },
+        "cylinders": [
+          {
+            "name": "竖直缸",
+            "extendY": "Y0",
+            "extendedX": "X10",
+            "retractedX": "X12",
+            "retractY": "Y1",
+            "valve": "double",
+            "timeoutMs": 5000,
+            "alarmExtend": {
+              "code": 10,
+              "message": "竖直缸下降超时（卡缸）"
+            },
+            "alarmRetract": {
+              "code": 11,
+              "message": "竖直缸上升超时（卡缸）"
+            }
+          },
+          {
+            "name": "水平缸",
+            "extendY": "Y3",
+            "extendedX": "X13",
+            "retractedX": "X14",
+            "retractY": "Y4",
+            "valve": "double",
+            "timeoutMs": 5000,
+            "alarmExtend": {
+              "code": 20,
+              "message": "水平缸右移超时（卡缸）"
+            },
+            "alarmRetract": {
+              "code": 21,
+              "message": "水平缸左移超时（卡缸）"
+            }
+          },
+          {
+            "name": "夹爪",
+            "extendY": "Y2",
+            "extendedX": "X11",
+            "retractedX": "X15",
+            "valve": "single",
+            "timeoutMs": 5000,
+            "alarmExtend": {
+              "code": 30,
+              "message": "夹爪夹紧超时（卡缸）"
+            },
+            "alarmRetract": {
+              "code": 31,
+              "message": "夹爪松开超时（卡缸）"
+            }
+          }
+        ],
+        "manualButtons": [
+          {
+            "button": "M10",
+            "cylinder": "竖直缸"
+          },
+          {
+            "button": "M11",
+            "cylinder": "水平缸"
+          },
+          {
+            "button": "M12",
+            "cylinder": "夹爪"
+          }
+        ],
+        "stopSequence": [
+          {
+            "id": "T1",
+            "name": "竖直上升回原位",
+            "actions": [
+              {
+                "target": "Y0",
+                "value": "OFF"
+              },
+              {
+                "target": "Y1",
+                "value": "ON"
+              },
+              {
+                "target": "Y2",
+                "value": "ON"
+              }
+            ],
+            "until": "X12"
+          },
+          {
+            "id": "T2",
+            "name": "水平左移回原位",
+            "actions": [
+              {
+                "target": "Y3",
+                "value": "OFF"
+              },
+              {
+                "target": "Y4",
+                "value": "ON"
+              },
+              {
+                "target": "Y2",
+                "value": "ON"
+              }
+            ],
+            "until": "X14"
+          },
+          {
+            "id": "T3",
+            "name": "夹爪松开",
+            "actions": [
+              {
+                "target": "Y2",
+                "value": "OFF"
+              }
+            ],
+            "until": "X15"
+          },
+          {
+            "id": "T4",
+            "name": "全部输出关闭",
+            "actions": [
+              {
+                "target": "Y0",
+                "value": "OFF"
+              },
+              {
+                "target": "Y1",
+                "value": "OFF"
+              },
+              {
+                "target": "Y2",
+                "value": "OFF"
+              },
+              {
+                "target": "Y3",
+                "value": "OFF"
+              },
+              {
+                "target": "Y4",
+                "value": "OFF"
+              }
+            ],
+            "until": "TRUE"
+          }
+        ],
+        "alarmOutput": "M104"
+      }
+    }
   },
-  "templateName": "motor_start_stop",
+  "templateName": "step_sequence",
   "generator": "template",
-  "generatedAt": "2026-11-12T04:03:22.182Z",
+  "generatedAt": "2026-11-12T04:19:12.614Z",
   "ok": true,
   "attempts": 1,
   "diagnostics": [],

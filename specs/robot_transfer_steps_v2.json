@@ -172,7 +172,8 @@
           "name": "竖直上升回原位",
           "actions": [
             { "target": "Y0", "value": "OFF" },
-            { "target": "Y1", "value": "ON" }
+            { "target": "Y1", "value": "ON" },
+            { "target": "Y2", "value": "ON" }
           ],
           "until": "X12"
         },
@@ -181,7 +182,8 @@
           "name": "水平左移回原位",
           "actions": [
             { "target": "Y3", "value": "OFF" },
-            { "target": "Y4", "value": "ON" }
+            { "target": "Y4", "value": "ON" },
+            { "target": "Y2", "value": "ON" }
           ],
           "until": "X14"
         },
