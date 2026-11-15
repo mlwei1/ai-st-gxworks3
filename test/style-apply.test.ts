@@ -9,8 +9,14 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 import { loadSpecFile } from '../src/spec/load.ts';
-import { loadStyleFile, mergeStyleIntoSpec, resolveStyleDirectory } from '../src/style/index.ts';
+import {
+  createStyleTemplate,
+  loadStyleFile,
+  mergeStyleIntoSpec,
+  resolveStyleDirectory,
+} from '../src/style/index.ts';
 import type { StyleProfile } from '../src/style/index.ts';
+import { checkSpecAgainstStyle, profileHmiAddresses } from '../src/style/check-spec.ts';
 import { generateFromSpec } from '../src/gen/generate.ts';
 
 const specPath = resolve('specs/robot_transfer_steps_v2.json');
@@ -109,6 +115,50 @@ test('应用：--style 目录按 scope 排序合并（user < company < project�
       r.sources.map((s) => s.split(/[\\/]/).pop()),
       ['a_user.json', 'b_company.json', 'c_project.json'],
     );
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('check-spec：robot 示例与档案一致（无偏差）', async () => {
+  const loaded = await loadSpecFile(specPath);
+  const style = (await loadStyleFile(profilePath)).profile!;
+  const diags = checkSpecAgainstStyle(loaded.spec!, style);
+  assert.equal(diags.length, 0, diags.map((d) => d.message).join('; '));
+  const hmi = profileHmiAddresses(style);
+  assert.equal(hmi.start?.address, 'M0');
+  assert.equal(hmi.idle?.address, 'M100');
+  assert.equal(hmi.step?.address, 'D0');
+});
+
+test('check-spec：HMI/超时/手动按钮/报警码偏差会报告', async () => {
+  const loaded = await loadSpecFile(specPath);
+  const style = (await loadStyleFile(profilePath)).profile!;
+  const spec = loaded.spec!;
+  const ind = spec.sequence!.industrial!;
+  ind.hmi.start = 'M50';
+  ind.cylinders[0].timeoutMs = 3000;
+  ind.manualButtons = ind.manualButtons.filter((b) => b.cylinder !== '水平缸');
+  ind.cylinders[0].alarmExtend = { code: 99 };
+  const diags = checkSpecAgainstStyle(spec, style);
+  const codes = diags.map((d) => d.code);
+  assert.ok(codes.includes('STYLE_SPEC_HMI'), codes.join(','));
+  assert.ok(codes.includes('STYLE_SPEC_TIMEOUT'), codes.join(','));
+  assert.ok(codes.includes('STYLE_SPEC_MANUAL'), codes.join(','));
+  assert.ok(codes.includes('STYLE_SPEC_ALARM'), codes.join(','));
+});
+
+test('style init 模板：字段齐全且可加载/校验', async () => {
+  const p = createStyleTemplate('alice', 'user');
+  assert.equal(p.labels?.language, 'zh');
+  assert.equal((p.codeStructure?.modes as string[]).length, 6);
+  assert.ok((p.reviewChecklist ?? []).length >= 3);
+  const dir = await mkdtemp(join(tmpdir(), 'dsh-style-init-'));
+  try {
+    const file = join(dir, 'alice.json');
+    await writeFile(file, JSON.stringify(p), 'utf8');
+    const loaded = await loadStyleFile(file);
+    assert.equal(loaded.ok, true, loaded.diagnostics.map((d) => d.message).join('; '));
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

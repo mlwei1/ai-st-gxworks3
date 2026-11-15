@@ -40,6 +40,16 @@ style merge profiles/user.json profiles/company.json -o profiles/merged.json
 gen specs/xxx.json --style profiles/users/alice
 ```
 
+## 新建与检查
+
+```bash
+# 生成空白档案模板（再按 questions.md 补充 HMI/报警码/停止序列习惯）
+style init --out profiles/users/alice.json --name alice --scope user
+
+# 检查 spec 是否偏离档案习惯（HMI 地址/超时/报警码/手动按钮）
+style check-spec specs/xxx.json --style profiles/users/alice
+```
+
 ## 从用户修改提取候选
 
 ```bash

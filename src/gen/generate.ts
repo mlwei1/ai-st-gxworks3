@@ -40,6 +40,7 @@ import { extractPouBodies } from '../pipeline/pou-text.ts';
 import { compilerErrorsToDiagnostics, type CompilerErrorEntry } from './compiler-feedback.ts';
 import type { DiagnosticLike } from './repair.ts';
 import { mergeStyleIntoSpec, type StyleProfile } from '../style/index.ts';
+import { checkSpecAgainstStyle } from '../style/check-spec.ts';
 
 export interface GenerateOptions {
   /** 输出目录；默认 `<spec 所在目录>/../out/<spec.name>` 或 `out/<spec.name>`。 */
@@ -140,6 +141,10 @@ export async function generateFromSpec(
     const applied = mergeStyleIntoSpec(spec, options.style);
     if (applied.applied.length > 0) {
       result.warnings.push(`已应用编程习惯档案 ${options.style.name}：${applied.applied.join('、')}`);
+    }
+    // 习惯一致性校验：只提示 spec 与档案的偏差，不阻断生成
+    for (const d of checkSpecAgainstStyle(spec, options.style)) {
+      result.warnings.push(`习惯校验：${d.message}`);
     }
   }
   // CLI --labels 覆盖：全局标签与局部标签/ FB 形参语言保持一致

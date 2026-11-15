@@ -342,3 +342,34 @@ export function mergeStyleIntoSpec(
 
   return { applied };
 }
+
+/** 新建档案时的空白模板（`style init` 使用）。 */
+export function createStyleTemplate(
+  name: string,
+  scope: StyleProfile['scope'] = 'user',
+  title?: string,
+): StyleProfile {
+  return {
+    schemaVersion: 1,
+    name,
+    title: title ?? `${name} 的编程习惯`,
+    scope,
+    description: '由 style init 生成；请按实际习惯修改，问题清单见 profiles/questions.md。',
+    labels: { language: 'zh' },
+    naming: {
+      prefixes: { BOOL: 'b', INT: 'n', TIME: 't', INPUT_BOOL: 'x', FB_INSTANCE: 'fb' },
+      examples: ['n模式', 'b启动上升沿', 't超时', 'x伸出到位', 'fb竖直缸'],
+    },
+    defaults: { cylinderTimeoutMs: 5000 },
+    codeStructure: {
+      modes: ['待机', '自动', '手动', '停止中', '报警', '急停暂停'],
+    },
+    reviewChecklist: [
+      '模式互斥与报警冻结是否符合习惯',
+      '停止序列是否安全（夹紧保持到松开步）',
+      '标签语言/命名前缀是否一致',
+      '生成物 XML 导入 GX 全部转换 Error:0',
+    ],
+    notes: ['模板：请补充 HMI 地址规划、报警码分配、停止序列等习惯。'],
+  };
+}

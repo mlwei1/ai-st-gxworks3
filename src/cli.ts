@@ -42,6 +42,9 @@ import { generateST, loadLLMConfig } from './ai/client.ts';
 import { buildSystemPrompt } from './ai/prompt.ts';
 import { loadStyleFile, resolveStyleDirectory, resolveStyleFiles } from './style/index.ts';
 import type { StyleProfile } from './style/index.ts';
+import { createStyleTemplate } from './style/index.ts';
+import { checkSpecAgainstStyle } from './style/check-spec.ts';
+import { loadSpecFile } from './spec/load.ts';
 import { extractStyleCandidates, renderCandidateMarkdown, type StyleCandidate } from './style/diff-candidates.ts';
 import { adoptCandidates } from './style/adopt.ts';
 import { styleErrors, validateStyleProfile } from './style/validate.ts';
@@ -670,6 +673,9 @@ async function cmdStyle(args: Args): Promise<number> {
     console.log(`  style diff <a.json> <b.json> [--json]         比较两个档案的字段差异`);
     console.log(`  style candidates --generated gen.st --actual user.st [-o outdir]`);
     console.log(`                                                 对比生成物与用户修改，提取候选规则`);
+    console.log(`  style check-spec <spec.json> --style p.json   用档案检查 spec 偏差（HMI/超时/报警码/手动按钮）`);
+    console.log(`  style init --out p.json [--name 名称] [--scope user|company|project]`);
+    console.log(`                                                 生成空白习惯档案模板`);
     console.log(`  style adopt --profile p.json --candidates candidates.json [-o out.json] [--min high|medium] [--force] [--dry-run]`);
     console.log(`                                                 把候选规则采纳进档案（有冲突时默认拒绝写盘）`);
     return 0;
@@ -846,6 +852,66 @@ async function cmdStyle(args: Args): Promise<number> {
     } else {
       console.log(text);
     }
+    return 0;
+  }
+
+  if (action === 'check-spec') {
+    const specArg = typeof args.spec === 'string' ? args.spec : rest[0];
+    const styleArg = typeof args.style === 'string' ? args.style : rest[1];
+    if (!specArg || !styleArg) {
+      console.error('用法: ai-st-gxworks3 style check-spec <spec.json> --style <profile.json|目录>');
+      return 2;
+    }
+    const specRes = await loadSpecFile(resolve(specArg));
+    if (!specRes.ok || !specRes.spec) {
+      console.error(`✖ spec 校验失败：${specRes.diagnostics.map((d) => d.message).join('; ')}`);
+      return 1;
+    }
+    const styleRes = await loadStyleArg(styleArg);
+    if (!styleRes.ok || !styleRes.profile) {
+      console.error(`✖ 档案校验失败：${styleRes.diagnostics.map((d) => d.message).join('; ')}`);
+      return 1;
+    }
+    const diags = checkSpecAgainstStyle(specRes.spec, styleRes.profile);
+    if (diags.length === 0) {
+      console.log('✓ spec 与习惯档案一致');
+      return 0;
+    }
+    console.log(`spec 与习惯档案有 ${diags.length} 处偏差（仅提示，不阻断生成）：`);
+    for (const d of diags) console.log(`  ▲ ${d.code}: ${d.message}`);
+    return 0;
+  }
+
+  if (action === 'init') {
+    const out = typeof args.out === 'string' ? args.out : rest[0];
+    const name =
+      typeof args.name === 'string'
+        ? args.name
+        : out
+          ? basename(out).replace(/\.json$/i, '')
+          : undefined;
+    const scopeArg = typeof args.scope === 'string' ? args.scope : undefined;
+    const scope = scopeArg === 'company' || scopeArg === 'project' ? scopeArg : 'user';
+    if (!out || !name) {
+      console.error(
+        '用法: ai-st-gxworks3 style init --out profiles/users/alice.json [--name alice] [--scope user|company|project] [--force]',
+      );
+      return 2;
+    }
+    const target = resolve(out);
+    if (args.force !== true) {
+      try {
+        await stat(target);
+        console.error(`✖ 文件已存在：${out}（加 --force 覆盖）`);
+        return 1;
+      } catch {
+        // 不存在则继续
+      }
+    }
+    const profile = createStyleTemplate(name, scope);
+    await writeFile(target, JSON.stringify(profile, null, 2) + '\n', 'utf8');
+    console.log(`✓ 已生成档案模板 ${out}（name=${name}, scope=${scope}）`);
+    console.log('  下一步：按 profiles/questions.md 补充 HMI/报警码/停止序列习惯，再用 style check 校验');
     return 0;
   }
 
