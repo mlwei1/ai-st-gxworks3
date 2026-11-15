@@ -9,8 +9,8 @@
  *   prompt    打印将要使用的系统提示词（调试用）
  */
 
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { basename, dirname, resolve } from 'node:path';
+import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises';
+import { basename, dirname, join, resolve } from 'node:path';
 
 import { analyzeST, type Diagnostic } from './dialect/analyzer.ts';
 import { parseWithRecovery } from './dialect/recovery.ts';
@@ -40,7 +40,8 @@ import {
 import { convertAIGenerated, type AIGeneratedProject } from './ai/convert.ts';
 import { generateST, loadLLMConfig } from './ai/client.ts';
 import { buildSystemPrompt } from './ai/prompt.ts';
-import { loadStyleFile } from './style/index.ts';
+import { loadStyleFile, resolveStyleFiles } from './style/index.ts';
+import { extractStyleCandidates, renderCandidateMarkdown } from './style/diff-candidates.ts';
 
 const SEVERITY_ICON: Record<Diagnostic['severity'], string> = {
   error: '✖',
@@ -487,11 +488,17 @@ async function cmdGen(args: Args): Promise<number> {
     }
   }
 
-  // 编程习惯档案（可选）：--style profiles/industrial/robot_transfer_habits.json
+  // 编程习惯档案（可选，支持多级合并：--style user.json,company.json,project.json）
   const stylePath = typeof args.style === 'string' ? args.style : undefined;
   let style;
   if (stylePath) {
-    const loadedStyle = await loadStyleFile(resolve(stylePath));
+    const paths = stylePath
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((s) => resolve(s));
+    const loadedStyle =
+      paths.length > 1 ? await resolveStyleFiles(paths) : await loadStyleFile(paths[0]);
     if (!loadedStyle.ok || !loadedStyle.profile) {
       console.error(`✖ 编程习惯档案校验失败：${loadedStyle.diagnostics.map((d) => d.message).join('; ')}`);
       return 2;
@@ -597,6 +604,137 @@ async function cmdDeliver(args: Args): Promise<number> {
 async function cmdMcp(): Promise<number> {
   await runMcpServer();
   return 0;
+}
+
+/** `style` 子命令：档案列表/查看/校验/合并 + 从生成物 diff 提取候选规则。 */
+async function cmdStyle(args: Args): Promise<number> {
+  const action = args._[0];
+  const rest = args._.slice(1);
+  const dir = typeof args.dir === 'string' ? args.dir : 'profiles';
+
+  const walk = async (p: string): Promise<string[]> => {
+    const out: string[] = [];
+    let entries;
+    try {
+      entries = await readdir(resolve(p), { withFileTypes: true });
+    } catch {
+      return out;
+    }
+    for (const e of entries) {
+      const fp = join(p, e.name);
+      if (e.isDirectory()) out.push(...(await walk(fp)));
+      else if (e.name.endsWith('.json')) out.push(fp);
+    }
+    return out;
+  };
+
+  if (!action || action === 'help') {
+    console.log(`用法: ai-st-gxworks3 style <list|show|check|merge|candidates> [参数]`);
+    console.log(`  style list [--dir profiles]                    列出全部习惯档案`);
+    console.log(`  style show <profile.json>                      查看档案内容`);
+    console.log(`  style check [<profile.json>...] [--dir profiles] 校验档案`);
+    console.log(`  style merge <a.json> <b.json> [-o merged.json] 多级合并（后者覆盖前者）`);
+    console.log(`  style candidates --generated gen.st --actual user.st [-o outdir]`);
+    console.log(`                                                 对比生成物与用户修改，提取候选规则`);
+    return 0;
+  }
+
+  if (action === 'list') {
+    const files = await walk(dir);
+    if (files.length === 0) {
+      console.log(`（${dir} 下没有 json 档案）`);
+      return 0;
+    }
+    for (const f of files) {
+      const r = await loadStyleFile(f);
+      if (!r.ok || !r.profile) {
+        console.log(`✖ ${f}：${r.diagnostics.map((d) => d.message).join('; ')}`);
+        continue;
+      }
+      const p = r.profile;
+      console.log(
+        `- ${p.name}${p.title ? ` — ${p.title}` : ''}` +
+          `（scope=${p.scope ?? '-'}，语言=${p.labels?.language ?? '-'}，超时=${p.defaults?.cylinderTimeoutMs ?? '-'}ms）`,
+      );
+      console.log(`    ${f}`);
+    }
+    return 0;
+  }
+
+  if (action === 'show') {
+    const file = rest[0];
+    if (!file) {
+      console.error('用法: ai-st-gxworks3 style show <profile.json>');
+      return 2;
+    }
+    const r = await loadStyleFile(resolve(file));
+    if (!r.ok || !r.profile) {
+      console.error(`✖ 档案校验失败：${r.diagnostics.map((d) => d.message).join('; ')}`);
+      return 1;
+    }
+    console.log(JSON.stringify(r.profile, null, 2));
+    return 0;
+  }
+
+  if (action === 'check') {
+    const files = rest.length > 0 ? rest : await walk(dir);
+    let errors = 0;
+    for (const f of files) {
+      const r = await loadStyleFile(resolve(f));
+      if (r.ok) console.log(`✓ ${f}`);
+      else {
+        errors++;
+        console.error(`✖ ${f}：${r.diagnostics.map((d) => d.message).join('; ')}`);
+      }
+    }
+    return errors > 0 ? 1 : 0;
+  }
+
+  if (action === 'merge') {
+    if (rest.length === 0) {
+      console.error('用法: ai-st-gxworks3 style merge <a.json> <b.json> ... [-o merged.json]');
+      return 2;
+    }
+    const r = await resolveStyleFiles(rest.map((f) => resolve(f)));
+    if (!r.ok || !r.profile) {
+      console.error(`✖ 合并失败：${r.diagnostics.map((d) => d.message).join('; ')}`);
+      return 1;
+    }
+    const out = typeof args.out === 'string' ? args.out : undefined;
+    const text = JSON.stringify(r.profile, null, 2) + '\n';
+    if (out) {
+      await writeFile(resolve(out), text, 'utf8');
+      console.log(`✓ 已合并 ${rest.length} 个档案 → ${out}`);
+    } else {
+      console.log(text);
+    }
+    return 0;
+  }
+
+  if (action === 'candidates') {
+    const gen = typeof args.generated === 'string' ? args.generated : undefined;
+    const act = typeof args.actual === 'string' ? args.actual : undefined;
+    if (!gen || !act) {
+      console.error(
+        '用法: ai-st-gxworks3 style candidates --generated gen.st --actual user_modified.st [-o outdir]',
+      );
+      return 2;
+    }
+    const report = extractStyleCandidates(await readFile(resolve(gen), 'utf8'), await readFile(resolve(act), 'utf8'));
+    const md = renderCandidateMarkdown(report);
+    console.log(md);
+    const out = typeof args.out === 'string' ? args.out : undefined;
+    if (out) {
+      await mkdir(resolve(out), { recursive: true });
+      await writeFile(resolve(out, 'style_candidates.json'), JSON.stringify(report, null, 2) + '\n', 'utf8');
+      await writeFile(resolve(out, 'style_candidates.md'), md, 'utf8');
+      console.log(`✓ 候选报告已写入 ${out}/style_candidates.json 与 .md`);
+    }
+    return report.ok ? 0 : 1;
+  }
+
+  console.error(`未知 style 动作：${action}（可用 list/show/check/merge/candidates）`);
+  return 2;
 }
 
 async function cmdGenerate(args: Args): Promise<number> {
@@ -715,6 +853,8 @@ function usage(): void {
   ai-st-gxworks3 build-text <file.st>          生成 ST 文本 + 标签 CSV（备选通道）
   ai-st-gxworks3 generate "<需求>"             AI 生成 ST（LLM，旧流程）
   ai-st-gxworks3 prompt                       打印系统提示词
+  ai-st-gxworks3 style list|show|check|merge|candidates
+                                              编程习惯档案管理 / 修改 diff 候选规则提取
 
 通用选项:
   --target FX5U|iQ-R     目标 CPU 系列（默认 FX5U）
@@ -779,6 +919,9 @@ async function main(): Promise<void> {
       break;
     case 'prompt':
       cmdPrompt(cmdArgs);
+      break;
+    case 'style':
+      code = await cmdStyle(cmdArgs);
       break;
     default:
       console.error(`未知子命令: ${cmd}\n`);

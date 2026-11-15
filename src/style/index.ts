@@ -137,6 +137,79 @@ export async function loadStyleFile(path: string): Promise<StyleLoadResult> {
 }
 
 /**
+ * 深合并两个 style 档案（后者覆盖前者）。
+ *
+ * - 对象：递归合并；
+ * - 数组：拼接并去重（保留顺序）；
+ * - 标量：后者覆盖。
+ */
+function mergeProfileValue(base: unknown, over: unknown): unknown {
+  if (Array.isArray(base) && Array.isArray(over)) {
+    const out: unknown[] = [];
+    const seen = new Set<string>();
+    for (const v of [...base, ...over]) {
+      const key = JSON.stringify(v);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(v);
+    }
+    return out;
+  }
+  if (isPlainObject(base) && isPlainObject(over)) {
+    const out: Record<string, unknown> = { ...base };
+    for (const [k, v] of Object.entries(over)) {
+      out[k] = k in out ? mergeProfileValue(out[k], v) : v;
+    }
+    return out;
+  }
+  return over;
+}
+
+/**
+ * 合并多级档案：按数组顺序，后面的覆盖前面的。
+ *
+ * 典型顺序：个人(user) → 公司(company) → 项目(project)。
+ */
+export function mergeStyleProfiles(profiles: StyleProfile[]): StyleProfile {
+  if (profiles.length === 0) throw new Error('mergeStyleProfiles 至少需要 1 个档案');
+  let merged: StyleProfile = {
+    schemaVersion: 1,
+    name: profiles[0].name,
+  };
+  for (const p of profiles) {
+    merged = mergeProfileValue(merged, p) as StyleProfile;
+  }
+  if (profiles.length > 1 && !profiles[profiles.length - 1].name.includes('+')) {
+    merged.name = profiles.map((p) => p.name).join('+');
+  }
+  merged.schemaVersion = 1;
+  return merged;
+}
+
+/** 读取并合并多个 style 文件（后文件优先）。 */
+export async function resolveStyleFiles(paths: string[]): Promise<{
+  ok: boolean;
+  profile: StyleProfile | null;
+  sources: string[];
+  diagnostics: StyleDiagnostic[];
+}> {
+  const diagnostics: StyleDiagnostic[] = [];
+  const profiles: StyleProfile[] = [];
+  for (const path of paths) {
+    const r = await loadStyleFile(path);
+    if (!r.ok || !r.profile) {
+      diagnostics.push(...r.diagnostics);
+      continue;
+    }
+    profiles.push(r.profile);
+  }
+  if (diagnostics.length > 0 || profiles.length === 0) {
+    return { ok: false, profile: null, sources: paths, diagnostics };
+  }
+  return { ok: true, profile: mergeStyleProfiles(profiles), sources: paths, diagnostics };
+}
+
+/**
  * 把 style 档案合并进 spec（只填充未显式设置的字段）。
  *
  * 当前自动应用：

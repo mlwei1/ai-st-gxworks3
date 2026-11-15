@@ -19,7 +19,7 @@ profiles/
 **本次对话/CLI 显式要求 > spec 显式字段 > style 档案 > 内置默认**
 
 - 档案只填充 spec **未显式设置**的字段，不覆盖项目已做的明确选择；
-- 公司/项目档案应继承个人档案后再覆盖（后续支持多级合并）。
+- 公司/项目档案可继承个人档案后再覆盖（支持 `--style a,b,c` 多级合并）。
 
 ## 使用方式
 
@@ -28,6 +28,22 @@ profiles/
 node --experimental-strip-types --no-warnings src/cli.ts gen specs/robot_transfer_steps_v2.json \
   -o out --style profiles/industrial/robot_transfer_habits.json
 ```
+
+## 多级档案（个人 → 公司 → 项目）
+
+```bash
+# 后者覆盖前者（对象递归合并、数组合并去重）
+gen specs/xxx.json --style profiles/user.json,profiles/company.json,profiles/project.json
+style merge profiles/user.json profiles/company.json -o profiles/merged.json
+```
+
+## 从用户修改提取候选
+
+```bash
+style candidates --generated gen.st --actual user_modified.st -o out/style_candidates
+```
+
+生成候选报告（标签改名/局部变量改名/语言/前缀/正文修改），人工确认后写入档案。
 
 当前自动应用（v0）：
 
