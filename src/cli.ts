@@ -40,6 +40,7 @@ import {
 import { convertAIGenerated, type AIGeneratedProject } from './ai/convert.ts';
 import { generateST, loadLLMConfig } from './ai/client.ts';
 import { buildSystemPrompt } from './ai/prompt.ts';
+import { loadStyleFile } from './style/index.ts';
 
 const SEVERITY_ICON: Record<Diagnostic['severity'], string> = {
   error: '✖',
@@ -453,7 +454,9 @@ async function cmdGen(args: Args): Promise<number> {
 
   const specPath = args._[0];
   if (!specPath) {
-    console.error('用法: ai-st-gxworks3 gen <spec.json> [-o outdir] [--llm] [--compiler-errors errors.json] [--list-templates]');
+    console.error(
+      '用法: ai-st-gxworks3 gen <spec.json> [-o outdir] [--llm] [--compiler-errors errors.json] [--style profile.json] [--labels en|zh] [--list-templates]',
+    );
     return 2;
   }
 
@@ -484,12 +487,25 @@ async function cmdGen(args: Args): Promise<number> {
     }
   }
 
+  // 编程习惯档案（可选）：--style profiles/industrial/robot_transfer_habits.json
+  const stylePath = typeof args.style === 'string' ? args.style : undefined;
+  let style;
+  if (stylePath) {
+    const loadedStyle = await loadStyleFile(resolve(stylePath));
+    if (!loadedStyle.ok || !loadedStyle.profile) {
+      console.error(`✖ 编程习惯档案校验失败：${loadedStyle.diagnostics.map((d) => d.message).join('; ')}`);
+      return 2;
+    }
+    style = loadedStyle.profile;
+  }
+
   const result = await generateFromSpec(resolve(specPath), {
     outDir,
     useLlm,
     compilerErrors,
     labelLanguage:
       args.labels === 'en' || args.labels === 'zh' ? (args.labels as 'en' | 'zh') : undefined,
+    style,
   });
 
   if (result.specDiagnostics.length > 0) {

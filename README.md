@@ -46,6 +46,12 @@ node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_sta
 > ST 文件头的 `VAR_GLOBAL` 块给出标签↔软元件映射（便于单独 check/build-xml）；
 > IEC XML 的 `<GlobalVars>` 负责在 GX Works3 中建立全局标签表，导入后编译 Error:0。
 >
+>
+> **编程习惯沉淀（v0.5）**：用户/公司的编程偏好（标签语言、命名前缀、模式划分、报警/停止策略、
+> HMI 地址、默认超时等）沉淀为可版本化档案 `profiles/*.json`，`gen ... --style profiles/industrial/robot_transfer_habits.json`
+> 在 spec 未显式设置时应用；机制见 [docs/编程习惯沉淀.md](docs/编程习惯沉淀.md)，
+> 首个档案 [profiles/industrial/robot_transfer_habits.json](profiles/industrial/robot_transfer_habits.json)，
+> 新用户习惯提问清单 [profiles/questions.md](profiles/questions.md)。>
 > **标签语言可配置**：`spec.labels.language` 支持 `zh`（中文标签，如 `启动按钮`，机器人示例默认）与 `en`（英文，如 `bStart`，正式项目/旧项目默认）；也可用 `gen spec.json --labels en` 临时覆盖。中文标签已实测可被 GX Works3 导入并编译 Error:0。
 >
 > **中文模式也覆盖局部标签**：主程序局部变量、FB 形参/实例名同样中文化，并按数据类型加英文前缀（`b`=BOOL、`n`=INT、`t`=TIME/TON、`x`=输入信号），如 `n模式`、`b启动上升沿`、`fb竖直缸`、`b使能`、`t超时`、`b伸出输出`。

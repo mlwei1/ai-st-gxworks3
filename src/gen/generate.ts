@@ -33,6 +33,7 @@ import { generateStepSequence } from './step-sequence.ts';
 import { extractPouBodies } from '../pipeline/pou-text.ts';
 import { compilerErrorsToDiagnostics, type CompilerErrorEntry } from './compiler-feedback.ts';
 import type { DiagnosticLike } from './repair.ts';
+import { mergeStyleIntoSpec, type StyleProfile } from '../style/index.ts';
 
 export interface GenerateOptions {
   /** 输出目录；默认 `<spec 所在目录>/../out/<spec.name>` 或 `out/<spec.name>`。 */
@@ -47,6 +48,8 @@ export interface GenerateOptions {
   compilerErrors?: CompilerErrorEntry[];
   /** 标签语言覆盖：en=英文标签（默认），zh=中文标签。 */
   labelLanguage?: 'en' | 'zh';
+  /** 编程习惯档案（命名/标签语言/默认超时等）；只填充 spec 未显式设置的项。 */
+  style?: StyleProfile;
 }
 
 export interface GenerateResult {
@@ -122,6 +125,13 @@ export async function generateFromSpec(
   }
 
   const spec = loaded.spec;
+  // 编程习惯档案：只填充 spec 未显式设置项（优先级：CLI/对话 > spec > style）
+  if (options.style) {
+    const applied = mergeStyleIntoSpec(spec, options.style);
+    if (applied.applied.length > 0) {
+      result.warnings.push(`已应用编程习惯档案 ${options.style.name}：${applied.applied.join('、')}`);
+    }
+  }
   // CLI --labels 覆盖：全局标签与局部标签/ FB 形参语言保持一致
   if (options.labelLanguage) {
     spec.labels = { ...(spec.labels ?? {}), language: options.labelLanguage };
