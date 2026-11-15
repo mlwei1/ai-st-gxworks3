@@ -1,139 +1,151 @@
 # ai-st-gxworks3
 
-AI 驱动的三菱 PLC **GX Works3 ST 语言**代码生成与校验工具。
+AI 驱动的三菱 PLC **GX Works3 ST** 代码生成、校验与编程习惯沉淀工具。
 
-面向 **MELSEC iQ-F / FX5U**（当前已验证；iQ-R 尚未验证），把自然语言控制需求变成可直接导入 GX Works3 的
-ST 程序，并在导入前完成语法与三菱方言的静态检查。
+面向 **MELSEC iQ-F / FX5U**（GX Works3 1.128 实测；iQ-R 尚未验证）：把控制需求（Spec 或自然语言）
+变成可直接导入 GX Works3 的 **ST 源码 + IEC 61131-10 XML**，导入前先做语法与三菱方言静态检查，
+导入后由 GX Works3 `全部转换` 验证。
 
-> **v0.8 核心流程（M0–M5 已验证）**：`gen`（Spec → ST + IEC 61131-10 XML）→ GX Works3 导入编译 →
-> `deliver` 交付包（报告 + 需求追溯矩阵 + SHA256）→ `mcp` 供 AI Agent 调用。
-> 工业程序支持六模式/气缸 FB/报警冻结/停止序列/HMI，并可用**风格档案**沉淀用户编程习惯
-> （标签名/前缀/模式名/停止顺序/HMI 地址/报警码），从用户修改中提取候选规则并回注生成。
-> 纯 ST 模板工程 `templates/FX5U_ST_Template.gx3`；总体设计与证据见 [docs/整体方案.md](docs/整体方案.md)。
-> 风格能力见 [docs/风格档案速查表.md](docs/风格档案速查表.md)。
+- 当前版本：**v0.8.0**
+- 测试：**297/297 通过**
+- 零运行时依赖（Node 22 原生 TypeScript 类型剥离 + `node:test`）
+
+> 说明：仿真不作为主线。PLC 程序的价值在**连设备后监视**，本项目暂停了 GX Simulator3 自动化投入，
+> 验证以「单元测试 + GX Works3 导入/全部转换 Error:0」为主。
 
 ---
 
-## 30 秒上手（v0.8）
+## 这是什么
 
-```bash
-# 1. Spec → ST + IEC 61131-10 XML（12 个模板可选）
-node --experimental-strip-types --no-warnings src/cli.ts gen specs/motor_start_stop.json -o ./out
+### 解决什么问题
 
-# 2. 本地校验（语法 + 三菱方言）
-node --experimental-strip-types --no-warnings src/cli.ts check out/motor_start_stop.st
+GX Works3 的工程文件是**专有二进制格式**，外部工具无法直接读写；它也没有西门子 `.scl` 那种
+ST 文本导入（剪贴板也是专有二进制）。但 GX Works3 支持 **IEC 61131-10 XML 导入**，
+本工具就围绕这条通道构建：
 
-# 3. 复制纯 ST 模板工程（不要直接改模板）→ GX Works3 导入 out/motor_start_stop.xml → 全部转换 0 error
-copy templates\FX5U_ST_Template.gx3 %TEMP%\run.gx3
-
-# 4. 仿真断言（半自动）与交付包
-node --experimental-strip-types --no-warnings src/cli.ts sim sim/motor_start_stop.sim.json --observed sim/motor_start_stop.obs.json
-node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_start_stop.json -o ./out/deliver_motor
-
-# 5. 用编程习惯档案生成 / 检查（可选，v0.8）
-node --experimental-strip-types --no-warnings src/cli.ts gen specs/robot_transfer_steps_v2.json -o out \
-  --style profiles/industrial/robot_transfer_habits.json
-node --experimental-strip-types --no-warnings src/cli.ts style check-spec specs/robot_transfer_steps_v2.json \
-  --style profiles/industrial/robot_transfer_habits.json
+```
+需求 Spec（JSON） ──模板/AI──▶ ST 源码 ──▶ 方言检查 ──▶ IEC 61131-10 XML ──▶ GX Works3 导入
+                                                      └─▶ 标签 CSV / HMI 表 / 报警表（备选与辅助）
 ```
 
-> **Spec 驱动生成（M1）**：`gen specs/motor_start_stop.json -o out` 会按模板生成 ST + IEC XML 工程包
-> （`specs/` 下有多个示例；`gen --list-templates` 查看 12 个标准/行业模板）。
->
-> **ST 步进程序 / 定位模板（M3+）**：`gen specs/robot_transfer_steps.json`（SFC/STL 风格的 ST 步进）、
-> `gen specs/positioning_drva.json`（DRVA 定位模板）、`gen specs/temperature_two_position.json`（位式温控模板）；均已在 GX Works3 导入 + 全部转换验证 0 error。
-> 详见 [docs/ST步进程序.md](docs/ST步进程序.md)、[docs/定位模板.md](docs/定位模板.md)。
-> 仿真导入/运行步骤见 [docs/仿真操作手册.md](docs/仿真操作手册.md)。
->
-> **工业版步进程序（v0.4）**：`gen specs/robot_transfer_steps_v2.json -o out` 生成带
-> 待机/自动/手动/停止中/报警/急停暂停六模式、气缸 5s 卡缸报警（步号冻结）、
-> 手动翻转按钮、停止序列回原点、HMI M/D 地址表；气缸超时逻辑封装为 `FB_Cylinder`（双电控）/ `FB_CylinderSV`（单电控）两个 FB，主程序只做模式与命令协调，
-> 设计说明见 [docs/工业程序结构-robot_steps设计稿.md](docs/工业程序结构-robot_steps设计稿.md)。
->
-> **全局标签 / IO 注释**：`gen` 会从 spec.io 与工业 HMI 地址表生成带软元件地址和中文注释的全局标签，
-> 并且 **ST 程序正文直接使用标签名**（如 `IF bDownPos THEN bDown := TRUE;`，不再出现 X10/Y0），
-> ST 文件头的 `VAR_GLOBAL` 块给出标签↔软元件映射（便于单独 check/build-xml）；
-> IEC XML 的 `<GlobalVars>` 负责在 GX Works3 中建立全局标签表，导入后编译 Error:0。
->
->
-> **编程习惯沉淀（v0.7）**：用户/公司的编程偏好（标签语言、命名前缀、模式划分、报警/停止策略、
-> HMI 地址、默认超时等）沉淀为可版本化档案 `profiles/*.json`；支持单档案、多级合并
-> （`--style user.json,company.json,project.json`）和 `style list/show/check/merge/candidates/adopt` CLI；
-> `style candidates --generated gen.st --actual user.st` 从用户修改 diff 提取改名/语言/前缀候选，
-> `style adopt` 可一键写入档案（`--dry-run` 只预览）；档案的标签名（labels.names）、命名前缀（naming.prefixes）、
-> 精确改名（naming.renames）会实际作用于生成；`--style` 还支持目录（按 user/company/project scope 自动排序合并）；
-> `style check-spec <spec> --style p.json` 会检查 spec 与习惯的偏差（HMI/超时/报警码/手动按钮/停止序列安全规则），
-> `gen --style p.json --hmi-from-style` 可用档案 HMI 规划显式覆盖 spec 地址；
-> `style init --out p.json` 生成空白档案模板；`spec` 的 `stopSequence: []` 会按气缸清单自动生成
-> 安全停止序列（缩回→松夹→全关，回原点顺序可由 `codeStructure.stopSequence.order` 指定）；`style migrate` 可迁移无版本号的旧档案；`generate "需求" --style profile.json` 会把档案注入 LLM
-> 系统提示词；机制见 [docs/编程习惯沉淀.md](docs/编程习惯沉淀.md)，
-> 首个档案 [profiles/industrial/robot_transfer_habits.json](profiles/industrial/robot_transfer_habits.json)，
-> 新用户习惯提问清单 [profiles/questions.md](profiles/questions.md)。
->
-> 端到端演示（生成 → 用户修改 → candidates → adopt → 再生成）：[docs/演示-习惯沉淀闭环.md](docs/演示-习惯沉淀闭环.md)，
-> 多用户/多级档案演示：[docs/演示-多用户档案.md](docs/演示-多用户档案.md)，字段/CLI 速查：[docs/风格档案速查表.md](docs/风格档案速查表.md)，
-> 一键运行 `powershell -NoProfile -ExecutionPolicy Bypass -File tools\demo-style-loop.ps1`。
->
-> **HMI/报警表导出**：工业程序 `gen` 时自动输出 `hmi_map.csv`（触摸屏地址表）与 `alarm_map.csv`
-> （报警码表），标签名与 ST/XML 全局标签同源；报警码可由 spec 提供，缺省时按习惯档案
-> `alarmCodes.mapping` 按缸名兜底；`style check` 会校验档案中的标签名冲突/改名循环/非法前缀。>
-> **标签语言可配置**：`spec.labels.language` 支持 `zh`（中文标签，如 `启动按钮`，机器人示例默认）与 `en`（英文，如 `bStart`，正式项目/旧项目默认）；也可用 `gen spec.json --labels en` 临时覆盖。中文标签已实测可被 GX Works3 导入并编译 Error:0。
->
-> **中文模式也覆盖局部标签**：主程序局部变量、FB 形参/实例名同样中文化，并按数据类型加英文前缀（`b`=BOOL、`n`=INT、`t`=TIME/TON、`x`=输入信号），如 `n模式`、`b启动上升沿`、`fb竖直缸`、`b使能`、`t超时`、`b伸出输出`。
->
-> **仿真场景断言（M2）**：`sim sim/motor_start_stop.sim.json --observed sim/motor_start_stop.obs.json`
-> 校验「写输入 → 读输出」场景（半自动执行器，详见 [sim/README.md](sim/README.md)）。
->
-> **M3 交付与 MCP**：`deliver` 生成 report.md / trace.json（需求追溯矩阵）/ delivery.json（SHA256 清单）；
-> `node src/cli.ts mcp` 启动内置 MCP Server（5 个工具），供 Claude/DeepSeek 等 Agent 调用，
-> 详见 [docs/M3-交付与MCP.md](docs/M3-交付与MCP.md)。
->
-> **LLM 兜底 + 编译诊断回灌**：模板失败时加 `--llm` 走 LLM 生成；把 GX Works3 转换错误整理成
-> JSON/文本后 `--llm --compiler-errors errors.json` 可带着真实编译错误重新生成
-> （详见 [docs/编译诊断回灌.md](docs/编译诊断回灌.md)；LLM 需要 `ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN`）。
->
-> 备用通道（v0.1，标签 CSV + 粘贴 ST 正文）：`build-text`，见 [docs/快速上手.md](docs/快速上手.md)；
-> 该文档中「标签 XML 导入」的说法已过时（标签编辑器只支持 CSV 导入）。
+### 它是什么
+
+- **ST 生成器**：Spec → 12 个标准/行业模板 + 工业步进/气缸 FB 程序；
+- **ST 检查器**：自建词法/语法/分析器，拦截三菱方言坑（伪 IEC 写法、隐式类型转换、设备越界、FB 形参错误）；
+- **IEC XML 发射器**：Program、FUNCTION_BLOCK、GlobalVars（含软元件地址与注释）；
+- **编程习惯沉淀工具**：把“标签语言、命名前缀、模式划分、报警/停止策略、HMI 地址、报警码”等偏好
+  沉淀为可版本化档案，并从用户对生成物的修改中提取候选规则，回注到下一次生成；
+- **交付工具链**：`deliver` 交付包、`mcp` 供 AI Agent 调用。
+
+### 它不是什么
+
+- 不生成梯形图/FBD/SFC 图形（只交付纯 ST）；
+- 不读写 `.gx3` 工程文件、不下载 PLC 程序；
+- 不替代 GX Works3 的硬件配置、模块参数、在线监视；
+- 不保证“AI 一次写对”：静态检查 + GX 编译 + 人工评审仍是必要环节。
 
 ---
 
-## 为什么需要它
+## 30 秒上手
 
-三菱 GX Works3 的工程文件（`.gx3` / `.gxp`）是**专有二进制格式**，无法被外部工具直接读写。
-GX Works3 也没有西门子那种 `.scl` 式 ST 文本导入（外部文本还不能直接粘进梯形图，
-剪贴板是专有二进制）。
+要求：Node.js **22.6+**，GX Works3（导入时需要）。
 
-所以唯一可行的路径是**分三块落地**：
+```bash
+git clone <your-repo-url> ai-st-gxworks3
+cd ai-st-gxworks3
 
-| 产物 | 落地方式 |
-|---|---|
-| 全局标签 | CSV 导入（`全局标签 → 右键 → 导入文件`） |
-| 局部标签 | CSV 导入（`程序/FB → 右键 → 局部标签 → 导入文件`） |
-| ST 程序本体 | 复制粘贴进「程序本体」工作表 |
+# 1) 标准模板：Spec → ST + IEC XML + 标签 CSV
+node --experimental-strip-types --no-warnings src/cli.ts gen specs/motor_start_stop.json -o ./out
 
-本工具把这三块一次性生成好，你只需要点几下菜单。
+# 2) 本地静态校验
+node --experimental-strip-types --no-warnings src/cli.ts check out/motor_start_stop.st
+
+# 3) 工业步进示例（六模式/气缸 FB/报警冻结/停止序列/HMI）
+node --experimental-strip-types --no-warnings src/cli.ts gen specs/robot_transfer_steps_v2.json -o ./out
+
+# 4) 叠加“编程习惯档案”（标签名/前缀/模式名/停止顺序/HMI/报警码）
+node --experimental-strip-types --no-warnings src/cli.ts gen specs/robot_transfer_steps_v2.json -o ./out \
+  --style profiles/industrial/robot_transfer_habits.json
+
+# 5) 用档案检查 spec 是否偏离习惯
+node --experimental-strip-types --no-warnings src/cli.ts style check-spec \
+  specs/robot_transfer_steps_v2.json --style profiles/industrial/robot_transfer_habits.json
+```
+
+然后在 GX Works3：
+
+1. 新建工程（FX5U，程序语言选“不指定”，不要先生成空 SFC 骨架）；
+2. `工程 → 导入文件 → IEC61131-10 XML格式`，选 `out/*.xml`；
+3. `转换 → 全部转换`，检查 `Error:0`；
+4. 打开程序本体即可查看/修改 ST。
+
+也可 `npm link` 后使用 `ai-st-gxworks3` 命令，或直接用 `npm start -- <子命令>`。
 
 ---
 
-## ⚠️ 重要：GX Works3 的硬约束（决定了整个技术路线）
+## 原理
 
-GX Works3 强制「结构化工程」模式，**变量声明与 ST 本体是分离存储的**：
+### 1. 生成管线
 
-| 元素 | 位置 | 能否外部写入 |
+| 阶段 | 模块 | 做什么 |
 |---|---|---|
-| 全局标签 | 全局标签工作表 | ✅ **CSV 导入**（XML 只能导出） |
-| 局部标签 | **「标签设置」工作表** | ✅ **CSV 导入**（XML 只能导出） |
-| ST 程序本体 | **「程序本体」工作表** | ✅ 可粘贴（ST 编辑器是纯文本编辑器） |
-| 梯形图 | 梯形图编辑器 | ❌ 剪贴板是专有二进制 |
-| 工程文件 | `.gx3` / `.gxp` | ❌ 专有二进制格式 |
-| 整个工程 | `工程 → 导入 → IEC61131-10 XML格式` | ❌ 导入后程序内容为空 |
+| Spec 加载 | `src/spec/load.ts` | JSON Schema 校验 + 工业/HMI/步进段规范化 |
+| 模板实例化 | `src/templates/*` | 12 个标准/行业模板；`step_sequence` 生成 `nStep + CASE` 状态机 |
+| 工业生成 | `src/gen/industrial-step.ts` | 六模式、气缸 FB、报警冻结、手动翻转、停止序列、HMI 状态/数据 |
+| 可选 LLM 兜底 | `src/ai/*`、`src/gen/llm.ts` | 模板覆盖不了的非标逻辑；带本地诊断反馈重试 |
+| 方言检查 | `src/dialect/*` | 词法/语法（错误恢复）/语义/设备范围/指令白名单/FB 形参 |
+| 发射 | `src/emit/*` | ST 文本、IEC XML、标签 CSV（UTF-16LE+BOM，TAB 分隔）、HMI/报警表 |
+| 交付 | `src/deliver/*`、`src/mcp/*` | report/trace/SHA256；MCP Server |
 
-官方文档明确说明（三菱 ST 编程说明）：
+### 2. 为什么是 IEC 61131-10 XML
 
-> 你没有办法像 codesys 系那样在文本中直接定义标签。
+GX Works3 虽不能读工程文件，但支持导入 IEC 61131-10 XML：程序本体、局部标签、全局标签、结构体
+可一次落地（实测 `全部转换 Error:0`）。本工具的 XML 严格按 GX 可接受的结构生成：
 
-**因此本工具的主流程是「生成文本 + 导入标签 CSV」，不是生成工程文件。**
-详见 [docs/快速上手.md](docs/快速上手.md)。
+- `ResourceExecutionType = scan`（否则程序被放到 Initial 只执行一次）；
+- GlobalVars 带 `<Address address="X0"/>` 与 VariableComments；
+- FUNCTION_BLOCK 的 Parameters/InputVars/OutputVars/Vars/MainBody 与实例调用（`=>` 输出）已实测可导入；
+- 锁存变量分组为 RETAIN，避免编译错误码 `0x11021040`。
+
+标签 CSV + 粘贴 ST 的旧通道仍保留（`build-text`），作为备选。
+
+### 3. 三菱方言知识从哪来
+
+不是让 AI 自由发挥，而是把三菱规则固化成三类资产：
+
+- **静态规则**：设备范围、类型规则、指令白名单、FB 形参表（如 `TON` 只有 `IN/PT/Q/ET`）；
+- **手册 RAG**：7 本官方手册的核实锚点（定位/通信/温度/计数等），见 `docs/RAG/`；
+- **模板经验**：定位/温控/MODBUS/串口/工业步进的校验过的 ST 写法。
+
+生成后用同一套规则检查，检查不过就修复或拒绝产出。
+
+### 4. 编程习惯沉淀（v0.8 重点）
+
+核心思想：**把“这个人/这家公司怎么编程”从一次性对话变成可版本化档案**。
+
+```
+用户对话 / 修改生成物
+        │
+        ▼
+style candidates  ← 生成 ST 与用户改后 ST 的 diff
+   （全局标签改名、局部变量/FB 形参改名、语言推断、命名前缀推断）
+        │ 人工确认
+        ▼
+style adopt  →  profiles/*.json（标签名/前缀/改名/模式/停止顺序/HMI/报警码…）
+        │
+        ▼
+gen --style / generate --style  →  下次生成直接遵守
+        │
+        ▼
+style check-spec  →  复核偏差；有偏差提示但不阻断
+```
+
+- **多级合并**：个人 → 公司 → 项目（目录递归 + scope 排序，后者覆盖前者；对象深合并）；
+- **冲突防护**：标签重名、改名循环、非法前缀在 `style check` / `adopt` 阶段拦截；
+- **可回滚**：档案是普通 JSON，可 git diff/审阅；
+- **AI 也遵守**：`generate --style` 与 LLM 兜底会把档案转成提示段注入。
+
+详见 [docs/风格档案速查表.md](docs/风格档案速查表.md)、[docs/编程习惯沉淀.md](docs/编程习惯沉淀.md)。
 
 ---
 
@@ -141,398 +153,161 @@ GX Works3 强制「结构化工程」模式，**变量声明与 ST 本体是分�
 
 | 能力 | 说明 |
 |---|---|
-| **ST 解析器** | 自建词法/语法分析，覆盖 POU、VAR 段、STRUCT、CASE/FOR/WHILE/REPEAT、功能块调用 |
-| **三菱方言检查** | 拦截跨品牌写法、隐式类型转换、越界设备地址、非法变量名等 |
-| **Spec 驱动生成（M1）** | 需求规格 JSON → 12 个标准/行业模板 → ST + IEC 61131-10 XML + 标签 CSV |
-| **ST 步进程序（SFC/STL 的 ST 实现）** | `spec.sequence` 定义步/动作/转移/分支/延时 → 生成 `nStep + CASE` 步号状态机（纯 ST） |
-| **定位模板（工业场景）** | `positioning_drva`：DRVA ST 指令 + 完成/超时/出错处理，见 [docs/定位模板.md](docs/定位模板.md) |
-| **温控模板（工业场景）** | `temperature_two_position`：位式温控（加热/冷却 + 回差 + 超量程保护），见 [docs/温度模板.md](docs/温度模板.md) |
-| **MODBUS 模板（工业场景）** | `modbus_read`：ADPRW 主站读取保持/输入寄存器（完成/异常/超时），见 [docs/Modbus模板.md](docs/Modbus模板.md) |
-| **串口模板（工业场景）** | `serial_send_recv`：RS2 无协议收发（完成/超时/异常 + 特殊软元件判定），见 [docs/串口模板.md](docs/串口模板.md) |
-| **仿真场景断言（M2）** | 场景 DSL + 观测文件断言 + CLI `sim`（GX Simulator3 半自动执行） |
-| **交付工程包（M3）** | `deliver`：report.md + 需求追溯矩阵 trace.json + SHA256 交付清单 |
-| **MCP Server（M3）** | `mcp`：stdio JSON-RPC，5 个工具（check/generate/build-xml/sim/deliver），供 AI Agent 调用 |
-| **CLI** | `check` / `gen` / `sim` / `deliver` / `mcp` / `build-xml` / `build-text` / `generate`，零运行时依赖 |
+| ST 前端 | 词法/语法（一次报告全部错误）/分析器；中文标识符支持 |
+| 三菱方言检查 | 设备范围、类型、指令白名单、FB 形参、跨品牌写法拦截 |
+| Spec 生成 | 12 个模板：电机启停/延时/正反转互锁/多步定时/计数/状态机/模拟量/报警首出/定位/温控/MODBUS/串口 |
+| 步进程序 | `sequence` → `nStep + CASE`，分支/延时/动作；工业版含六模式与气缸 FB |
+| 全局标签 | XML GlobalVars（地址+注释）；ST 正文使用标签名，无裸软元件 |
+| 中文标签 | 全局/局部/FB 形参中文，类型前缀 b/n/t/x；可切英文 |
+| 编程习惯档案 | 多级合并、diff 候选提取、adopt、check-spec、LLM 注入 |
+| HMI/报警表 | 自动导出 `hmi_map.csv` / `alarm_map.csv`（UTF-8 BOM） |
+| 停止序列 | 安全规则校验；`stopSequence: []` 自动生成（缩回→松夹→全关） |
+| 交付/MCP | `deliver` 报告+追溯+SHA256；`mcp` 5 个工具 |
+| LLM 兜底 | `--llm`，支持 GX 编译错误回灌重生成 |
 
 ---
 
-## 快速开始
+## 怎么用
 
-### 环境要求
-
-- Node.js **22.6+**（使用原生 TypeScript 类型剥离，无需编译步骤）
-- GX Works3（导入时需要）
+### CLI 命令
 
 ```bash
-# 校验 ST 代码
-node --experimental-strip-types --no-warnings src/cli.ts check examples/motor_demo.st
-
-# 生成可粘贴的 ST 文本 + 标签 CSV（主流程）
-node --experimental-strip-types --no-warnings src/cli.ts build-text examples/motor_demo.st -o ./out
-
-# AI 生成
-node --experimental-strip-types --no-warnings src/cli.ts generate "电机启停控制，按下启动按钮运行10秒后自动停止"
+node --experimental-strip-types --no-warnings src/cli.ts <命令> [参数]
 ```
 
-安装为全局命令：
-
-```bash
-npm link
-ai-st-gxworks3 check program.st
-```
-
----
-
-## 命令说明
-
-### `check` —— 静态检查
-
-```bash
-ai-st-gxworks3 check program.st [更多文件...]
-```
-
-对 ST 源码做语法解析 + 三菱方言检查，输出分级诊断：
-
-```
-motor_demo.st —— 0 个错误, 0 个警告
-
-✖ program.st:25:5 [Main] E008: 未定义的标识符 'bFault'
-    ↳ 检查拼写、是否在 VAR 段声明，或是否使用了其他品牌的指令
-```
-
-诊断码分三类：
-
-- **E0xx** —— GX Works3 编译必然失败
-- **W0xx** —— 能编译但很可能埋坑（跨品牌写法、隐式转换、地址冲突）
-- **I0xx** —— 风格建议
-
-常见诊断：
-
-| 码 | 含义 |
+| 命令 | 用途 |
 |---|---|
-| `E004` | 未知数据类型 |
-| `E008` | 未定义的标识符 |
-| `E010` | 用了其他品牌的函数（西门子 `IREF` 等） |
-| `E014` | 把数值赋给 BOOL |
-| `E015` | 整数与浮点隐式赋值（三菱不允许） |
-| `E016` / `E017` | 功能块形参名错误（如 `RS` 用 `SET` 而非 `S`） |
-| `E009` | 设备地址越界 |
+| `gen <spec.json> [-o outdir]` | Spec → ST + XML + 标签 CSV + manifest；工业程序附加 HMI/报警表 |
+| `gen --list-templates` | 列出 12 个模板及参数 |
+| `check <file.st...>` | ST 语法 + 三菱方言检查 |
+| `build-xml <file.st> [-o outdir]` | 纯 ST → IEC XML |
+| `build-text <file.st> [-o outdir]` | ST → 可粘贴文本 + 标签 CSV（备选通道） |
+| `generate "<需求>" [--io io.txt] [--style p.json]` | AI 生成 ST（需 LLM 环境变量） |
+| `generate ... --llm --compiler-errors errors.json` | 带 GX 编译错误重新生成 |
+| `deliver <spec.json> [-o outdir]` | 交付包（报告/追溯/SHA256） |
+| `mcp` | 启动 MCP Server（stdio） |
+| `style <子命令>` | 编程习惯档案管理与候选提取 |
+| `prompt` | 打印系统提示词（调试） |
 
-### 错误恢复
-
-检查器**一次运行报告全部问题**，而不是遇到第一个错误就停：
-
-- 某个 POU 有语法错误 → 其他 POU 照常检查
-- POU 内某条语句写错 → 该 POU 的其余语句照常检查
-- 同一位置的重复错误自动去重
-
-```
-bad_example.st —— 1 个语法错误
-✖ bad_example.st:29:5 语法错误: 保留字 'IF' 不能作为变量名
-
-bad_example.st —— 5 个错误, 2 个警告
-✖ bad_example.st:38:5 [BadExample] E016: 功能块 'TON' 没有名为 'INPUT' 的输入参数
-    ↳ 可用输入参数：IN, PT
-```
-
-`examples/bad_example.st` 是一份故意写错的样例，演示检查器能拦住哪些问题。
-
-### `build-text` —— 生成可粘贴文本（主流程）
+### 风格档案 CLI
 
 ```bash
-ai-st-gxworks3 build-text program.st -o ./out
+style init --out profiles/users/alice.json --name alice --scope user
+style list [--dir profiles]
+style check [files...]
+style check-spec specs/xxx.json --style profiles/users/alice
+style merge a.json b.json -o merged.json
+style diff a.json b.json [--json]
+style migrate old.json -o old.migrated.json
+style candidates --generated out/gen.st --actual user_modified.st -o out/candidate
+style adopt --profile p.json --candidates out/candidate/style_candidates.json -o p.new.json --dry-run
 ```
 
-产出：
+生成时：
 
+```bash
+gen spec.json --style profiles/users/alice                 # 单档案
+gen spec.json --style a.json,b.json,c.json                 # 多级（后覆盖前）
+gen spec.json --style profiles/users/alice                 # 目录（递归 + scope 排序）
+gen spec.json --style p.json --hmi-from-style              # 档案 HMI 地址覆盖 spec
 ```
+
+### 输出物
+
+一次工业程序 `gen` 典型产出：
+
+```text
 out/
-├── Main.st               ← 粘贴进「程序本体」工作表
-├── Main_labels.txt       ← 「标签设置」工作表录入表
-├── FB_Motor.st
-├── FB_Motor_labels.txt
-├── global_labels.csv     ← 导入「全局标签」
-└── local_labels_table.txt
+├── <name>.st             ST 源码（可直接检查/粘贴）
+├── <name>.xml            IEC 61131-10（GX Works3 导入）
+├── *_labels*.csv         标签 CSV（备选通道）
+├── hmi_map.csv           触摸屏地址表
+├── alarm_map.csv         报警码表
+├── manifest.json         程序/结构体/全局变量/告警清单
+└── diagnostics.json      诊断与警告
 ```
 
-完整导入步骤见 **[docs/GXWorks3-导入指南.md](docs/GXWorks3-导入指南.md)**。
+### GX Works3 导入
 
-### `generate` —— AI 生成
+1. 新建 FX5U 工程（程序语言“不指定”，不要生成空 SFC 骨架程序）；
+2. `工程 → 导入文件 → IEC61131-10 XML格式`，选 `.xml`；
+3. 确认数据名重复处理（添加）；
+4. `转换 → 全部转换`，输出面板确认 `Error:0`。
 
-```bash
-ai-st-gxworks3 generate "水箱液位控制，低于10%启动水泵，高于90%停泵" --io io.txt --out tank.st
-```
-
-流程：调用 LLM → 解析 JSON → 还原成 ST → **静态检查** → 输出 `.st` + 标签 CSV + 录入表。
-
-内置两种重试：
-
-- **输出格式错误** → 把错误信息反馈给模型，让它自我修正后重新输出
-- **网络/超时/5xx** → 指数退避后重试（4xx 属请求本身问题，直接失败）
-
-LLM 凭据从环境变量读取（与 MCode 运行时一致）：
-
-```bash
-export ANTHROPIC_BASE_URL="https://api.deepseek.com/anthropic"
-export ANTHROPIC_AUTH_TOKEN="sk-..."
-export ANTHROPIC_MODEL="deepseek-v4-pro[1m]"
-```
+完整操作见 [docs/GXWorks3-导入指南.md](docs/GXWorks3-导入指南.md)。
 
 ---
 
-### `step_sequence` —— ST 步进程序（SFC/STL 的 ST 实现）
-
-在 spec 中加 `sequence` 段并令 `template.name = "step_sequence"`，按工位分步生成 ST：
-
-```bash
-ai-st-gxworks3 gen specs/robot_transfer_steps.json -o out/robot_steps
-```
-
-生成「步号状态机」：`nStep` + 步转移 `CASE` + 按步输出，等价梯形图 STL 的步进写法（**纯 ST，不含 SFC 对象**）。
-支持选择分支（多条 `next`）、延时转移（`delayMs`）、表达式动作；并行分支暂不支持。
-详见 [docs/ST步进程序.md](docs/ST步进程序.md)。
-
-### `positioning_drva` —— 定位模板（工业场景）
-
-```bash
-ai-st-gxworks3 gen specs/positioning_drva.json -o out/positioning_drva
-```
-
-生成 `ENO := DRVA(EN,s1,s2,d1,d2);` 的 ST 调用 + 完成（SM5500 下降沿）/超时/出错处理；
-参数：轴号、目标地址、速度、脉冲/方向 Y。需在 GX 模块参数中配置定位参数后才会实际输出脉冲。
-详见 [docs/定位模板.md](docs/定位模板.md)。
-
-### `deliver` —— 交付工程包（M3）
-
-```bash
-ai-st-gxworks3 deliver specs/motor_start_stop.json -o out/deliver_motor `
-  --sim docs/evidence/M2/02-sim-scenario/report.json
-```
-
-产出 `report.md`（人读交付报告 + 需求追溯矩阵）、`trace.json`（机读追溯）、
-`delivery.json`（每个文件的 SHA256）、`artifacts/`（ST/XML/CSV/manifest）与 `evidence/`。
-失败也会产出报告并标 FAIL。详见 [docs/M3-交付与MCP.md](docs/M3-交付与MCP.md)。
-
-### `mcp` —— 内置 MCP Server（M3）
-
-```bash
-ai-st-gxworks3 mcp
-```
-
-stdio JSON-RPC 服务，暴露 `st_check` / `spec_generate` / `st_build_xml` / `sim_validate` / `deliver`
-五个工具，可直接挂到 Claude/DeepSeek 等支持 MCP 的 Agent 上。零依赖实现。
-
-## 三菱方言规则
-
-这是本工具区别于「通用 IEC 61131-3 代码生成」的核心。以下规则已内置到提示词和静态检查器中。
-
-### 指令白名单
-
-| 类别 | 允许 |
-|---|---|
-| 标准功能块 | `TON` `TOF` `TP` `CTU` `CTD` `CTUD` `R_TRIG` `F_TRIG` `RS` `SR` |
-| 三菱功能块 | `OUT_M` `OUT_H` `OUT_L` `TIMER_T` `COUNTER_FB` `RAMPF` `RAMP` `MC_HOM` `MC_MOVE_ABSOLUTE` `MC_MOVE_RELATIVE` `MC_MOVE_VELOCITY` `MC_STOP` `MC_SET_POSITION` `MC_GET_POSITION` `MC_DUTY` `HIOEN` `HIOTRK` `DHIOEN` `DHIO_TRK` |
-| 标准函数 | `ABS` `SQRT` `SIN` `COS` `MAX` `MIN` `LIMIT` `SEL` `MUX` `MOV` `SMOV` `BLKMOV` `INT_TO_REAL` `REAL_TO_INT` `LEN` `CONCAT` `MID` `LEFT` `RIGHT` `FIND` `REPLACE` `INSERT` `DELETE` 等 |
-| 三菱函数 | `SET` `RST` `PLS` `PLF` `ZR` |
-
-**明确拦截**（AI 最容易误用的部分）：
-
-- 西门子：`IREF` `POKE` `PEEK` `SCALE` `NORM_X`
-- CODESYS：`__CALL` `CU_ADD` `RSR` `ROL`
-- 伪 IEC：`RAMP_REAL`（三菱用 `RAMPF` / `RAMP`）、`CTU_DINT`、`TONR`
-
-### 类型规则
-
-- 可用类型：`BOOL` `BYTE` `WORD` `DWORD` `INT` `UINT` `DINT` `UDINT` `LINT` `ULINT` `REAL` `LREAL` `TIME` `STRING` `WSTRING`
-- **整数与浮点之间不做隐式转换**，必须显式：`nInt := REAL_TO_INT(fValue);`
-- `BOOL` 只能用 `TRUE` / `FALSE`，不用 `ON` / `OFF` / `1` / `0`
-- 寄存器宽度：`REAL` 占 2 个 D，`LREAL` 占 4 个 D
-
-### 地址规则
-
-| 前缀 | 含义 | FX5U 范围（应用篇 p87/p142） |
-|---|---|---|
-| `X` / `Y` | 输入 / 输出 | `X0~X1777` / `Y0~Y1777`（**八进制**） |
-| `M` / `L` | 内部/锁存继电器 | 0–32767 |
-| `B` / `SB` | 链接继电器 | `B0~B7FFF`（十六进制） |
-| `S` | 步进继电器 | 0–4095 |
-| `T` / `ST` / `C` / `LC` | 定时器 / 累计定时器 / 计数器 / 长计数器 | 0–1023 |
-| `D` | 数据寄存器 | 0–7999 |
-| `W` / `SW` | 链接寄存器 | `W0~W7FFF`（十六进制） |
-| `R` / `ER` | 文件寄存器 / 扩展文件寄存器 | 0–32767 |
-| `Z` / `LZ` | 变址寄存器 | 0–19 / 0–1（可配，合计 24 字） |
-
-`M8000` 以上、`D512` 以上留给编译期自动分配，显式地址落在低区可能冲突。
-
-### 三菱特有陷阱
-
-- `LIMIT` 参数顺序与部分 IEC 实现不同
-- `SET(TRUE, Y0)` / `RST(TRUE, Y0)` 是函数，不是 IEC 的 `SR` 触发器
-- `OUT_M(M0, Y0)` 是上升沿触发输出
-- 简单工程（非 IEC 模式）下 ST 变量声明在**独立工作表**，不在源码里；本工具生成的是
-  **结构化工程（IEC 模式）** 格式，声明与本体同处一个 POU
-
----
-
-## 关于标签 CSV 格式（重要）
-
-GX Works3 的标签**只能导入 CSV**（XML 仅支持导出）。格式很挑，
-本工具的 `src/emit/label-csv.ts` 严格按 GX Works3 实际导出文件复刻：
-
-```csv
-"(工程未设置)"                                              ← 第 1 行：工程名
-"类"	"标签名"	"数据类型"	"常数"	"初始值"	"分配(软元件/标签)"	"地址"	"注释"	…  ← 第 2 行：表头
-"VAR_GLOBAL"	"label_global"	"BOOL"	""	""	"M1000"	""	""	…	"0"   ← 数据行
-```
-
-关键约束（都是实测踩出来的）：
-
-| 项 | 要求 |
-|---|---|
-| 分隔符 | **TAB**，不是逗号 |
-| 引号 | 每个字段都带双引号，内部引号写两个 |
-| 表头 | 第 1 行是**工程名**，第 2 行才是表头 |
-| 局部标签 | **27** 列（到「属性」结束） |
-| 全局标签 | **28** 列（多「外部设备的访问」列，值为 `0`） |
-| 「类」值 | 全局 `VAR_GLOBAL`；局部 `VAR`；FB 形参 `VAR_INPUT`/`VAR_OUTPUT`/`VAR_IN_OUT` |
-| 软元件号 | 写在第 6 列「分配(软元件/标签)」，第 7 列「地址」留空 |
-| 编码 | **UTF-16LE + BOM** |
-| 换行 | LF |
-
-`test/label-csv.test.ts` 会把生成结果与真实导出文件**逐行逐列**比对。
-
-> ⚠️ 自定义类型名（如 `ST_Motor`）**必须保持原样大小写** ——
-> GX Works3 区分大小写，写成 `ST_MOTOR` 会指向一个不存在的类型。
-
----
-
-## 文本输出格式（主流程）
-
-`build-text` 产出三类文件，分别对应 GX Works3 的三个落点：
-
-### 1. 程序本体（`Main.st`）—— 粘贴进「程序本体」工作表
+## 目录结构
 
 ```text
-(* ---------- 本 POU 需在「标签设置」工作表建立的局部标签 ----------
-   输入   bEnable : BOOL
-   输出   bRunning : BOOL
-   局部   tRampTimer : TON
-   局部   nRampStep : INT := 0
-(* ----------------------------------------------------------- *)
-
-IF bEnable THEN
-    tRampTimer(IN := TRUE, PT := T#100ms);
-    IF tRampTimer.Q THEN
-        nRampStep := nRampStep + 10;
-    END_IF;
-    bRunning := TRUE;
-END_IF;
-```
-
-顶部的注释块是给人工核对用的，不影响编译，可用 `--no-declare` 去掉。
-
-### 2. 标签 CSV（`*_local_labels.csv` / `Global.csv`）—— 直接导入
-
-格式与 GX Works3 导出的标签文件**逐行逐列一致**（TAB 分隔、UTF-16 + BOM）。
-导入路径：
-
-- 局部标签：程序/FB 右键 → **局部标签** → **导入文件** → 选 `Main_local_labels.csv`
-- 全局标签：**全局标签** → 右键 → **导入文件** → 选 `Global.csv`
-
-### 3. 标签录入表（`Main_labels.txt`）—— 备选
-
-```text
-(* FB_Motor —— 在「标签设置」工作表按此表逐行录入
-   方向    标签名              数据类型   初始值   软元件     注释
-   输入    bEnable             BOOL                         启动命令
-   输出    bRunning            BOOL                         运行状态
-   局部    tRampTimer          TON                          斜坡定时器
-   局部    nRampStep           INT          0              斜坡步进
-*)
-```
-
----
-
-## 关于「工程 → 导入 → IEC61131-10 XML格式」
-
-**已实测可用，是本工具的主路径（M0/M1 验证）**。GX Works3 1.128 上导入本工具生成的
-IEC 61131-10 XML 后，程序本体、局部标签、全局标签、结构体一次落地，`全部转换` **Error 0 / Warning 0**。
-（早期 v0.1 生成的 PLCopen TC6_0201 格式导入为空，该结论已作废；证据见 `docs/evidence/M0/`。）
-
-注意事项：
-- 资源执行类型必须是 `scan`（本工具已固化），否则程序会被放到 Initial 只执行一次；
-- 锁存区变量（如 D200+）需声明为 `VAR_GLOBAL_RETAIN`，否则编译报 `0x11021040`（发射器已按此分组）；
-- 标签 CSV + 粘贴 ST 仍作为**备选通道**保留（`build-text`）。
-
----
-
-
-## 项目结构
-
-```
 src/
-  dialect/
-    lexer.ts       词法分析（注释、进制前缀、时间字面量、=> 输出参数）
-    parser.ts      递归下降语法分析 + 语句级错误恢复
-    recovery.ts    多错误收集（一次报告全部问题）
-    ast.ts         AST 定义
-    analyzer.ts    语义分析与方言检查
-    types.ts       FX5U 类型系统与兼容规则
-    instructions.ts 指令白名单、陷阱、地址范围、功能块形参表
-  emit/
-    text.ts        ★ ST 文本输出（程序本体 / 标签录入表）
-    label-csv.ts   ★ 标签 CSV（TAB 分隔、UTF-16，与 GX Works3 导出格式一致）
-    unparser.ts    AST → ST 源码
-  ai/
-    prompt.ts      三菱方言系统提示词
-    client.ts      LLM 调用与 JSON 重试
-    convert.ts     AI JSON → ST/AST
-  cli.ts           命令行入口
-test/
-  dialect.test.ts         解析器与检查器
-  text.test.ts            ST 文本输出格式
-  label-csv.test.ts       标签 CSV（与 GX Works3 实际导出逐行逐列比对）
-  ai.test.ts              AI 输出转换层
-  prompt.test.ts          提示词内容与格式
-  recovery.test.ts        语法错误恢复
-examples/
-  motor_demo.st   三相电机启停控制示例（正确代码）
-  bad_example.st  故意写错的反例（演示检查器）
-  io_table.txt    IO 分配表示例
-  out_motor/      build-text 的产物示例
-docs/
-  GXWorks3-导入指南.md   完整导入操作手册
+├── dialect/        ST 词法/语法/错误恢复/AST/分析器/三菱方言规则
+├── emit/           ST 文本、IEC XML、标签 CSV、HMI/报警表
+├── spec/           Spec JSON Schema/加载/规范化
+├── templates/      12 个标准/行业模板
+├── gen/            生成管线：步进/工业/LLM 兜底/修复/交付编排
+├── style/          编程习惯档案：合并/校验/候选提取/adopt/停止序列/提示词
+├── deliver/        交付包（报告/追溯/SHA256）
+├── mcp/            内置 MCP Server
+└── cli.ts          命令行入口
+
+specs/              需求 Spec 示例（标准/工业/定位/温控/通信）
+profiles/           编程习惯档案（个人/公司/项目 + 提问清单 + 速查表）
+templates/          FX5U_ST_Template.gx3（纯 ST 模板工程）
+docs/               设计文档、导入指南、RAG、证据
+test/               node:test（297 用例）
+tools/              demo 与维护脚本
 ```
+
+---
+
+## 验证与边界
+
+### 已验证
+
+| 项 | 结果 |
+|---|---|
+| 单元/集成测试 | **297/297 通过**（`npm test`） |
+| GX Works3 XML 导入 + 全部转换 | 标准模板、工业 v2、FB、中文标签、自动停止序列均 `Error:0`（证据见 `docs/evidence/M4/`） |
+| 工业程序 | robot_transfer_steps_v2：六模式/气缸 FB/报警冻结/停止序列/HMI 地址 |
+| 习惯档案闭环 | 单用户闭环、多用户多级（demo 脚本实际运行通过） |
+| 中文标签 | 全局/局部/FB 形参导入编译 `Error:0` |
+
+### 已知边界
+
+- **仅 FX5U 系统验证**；FX5UJ/iQ-R 差异未系统验证；
+- **仅 ST**，不生成图形程序；不写 `.gx3`、不下载 PLC；
+- **编译级验证**：GX 侧只验证到导入+全部转换，未做真机运行/时序验证；
+- 仿真自动化已暂停（用户明确：连设备监视才有价值）；
+- 工业程序的报警/停止/HMI 语义需按具体设备评审，工具只保证结构与静态规则；
+- 非标逻辑依赖 LLM 时，仍需人工评审与 GX 编译确认。
+
+---
+
+## 文档索引
+
+- 总体方案：[docs/整体方案.md](docs/整体方案.md)
+- 进度与路线：[docs/进度与路线.md](docs/进度与路线.md)
+- 导入指南：[docs/GXWorks3-导入指南.md](docs/GXWorks3-导入指南.md)
+- 工业程序结构：[docs/工业程序结构-robot_steps设计稿.md](docs/工业程序结构-robot_steps设计稿.md)
+- 风格档案：[docs/风格档案速查表.md](docs/风格档案速查表.md)、[docs/编程习惯沉淀.md](docs/编程习惯沉淀.md)
+- 演示：[docs/演示-习惯沉淀闭环.md](docs/演示-习惯沉淀闭环.md)、[docs/演示-多用户档案.md](docs/演示-多用户档案.md)
+- 步进/定位/温控/MODBUS/串口：[docs/ST步进程序.md](docs/ST步进程序.md)、[docs/定位模板.md](docs/定位模板.md)、[docs/温度模板.md](docs/温度模板.md)、[docs/Modbus模板.md](docs/Modbus模板.md)、[docs/串口模板.md](docs/串口模板.md)
+- 交付/MCP：[docs/M3-交付与MCP.md](docs/M3-交付与MCP.md)
+- 变更记录：[CHANGELOG.md](CHANGELOG.md)
 
 ---
 
 ## 开发
 
 ```bash
-npm test          # 203 个测试（含 deliver / MCP 集成测试）
-npm run check -- examples/motor_demo.st
+npm test                 # 297 个测试
+npm start -- gen specs/motor_start_stop.json -o ./out
 ```
 
-零运行时依赖，仅用 Node 内置模块与 `node:test`。
-
----
-
-## 已知限制
-
-- **局部标签需手工录入**。GX Works3 的标签在「标签设置」工作表单独维护，
-  贴 ST 文本不会自动建标签。工具提供 `*_labels.txt` 录入表来降低这项工作量，
-  但这一步目前无法自动化。
-- **仅覆盖 ST**。梯形图 / FBD 无法从外部粘贴（三菱剪贴板是专有二进制），
-  也不生成图形化程序体。
-- **不覆盖硬件配置**。模块型号、I/O 分配、网络参数需在 GX Works3 中配置；
-  全局标签的设备地址由 `--io` 指定或写在 ST 的 `VAR_GLOBAL` 段里。
-- **不下载 PLC**。MC/SLMP 协议可读写软元件，但不能写程序；
-  程序下载仍需 GX Works3 在线操作。
-- **HMI 标签需物理地址**。三菱 HMI/上位机不支持按符号名寻址，
-  供 HMI 读写的全局变量必须显式分配地址。
-
----
+零运行时依赖，仅 Node 内置模块与 `node:test`；TypeScript 通过 Node 22 类型剥离直接运行。
 
 ## 许可证
 
-MIT
+MIT（见仓库 LICENSE；如未附带请补充）。
