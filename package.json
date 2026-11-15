@@ -1,6 +1,6 @@
 {
   "name": "ai-st-gxworks3",
-  "version": "0.1.0",
+  "version": "0.8.0",
   "private": true,
   "description": "AI 驱动的三菱 GX Works3 ST 语言代码生成与校验工具（FX5U / iQ-F）",
   "type": "module",

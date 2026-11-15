@@ -5,13 +5,16 @@ AI 驱动的三菱 PLC **GX Works3 ST 语言**代码生成与校验工具。
 面向 **MELSEC iQ-F / FX5U**（当前已验证；iQ-R 尚未验证），把自然语言控制需求变成可直接导入 GX Works3 的
 ST 程序，并在导入前完成语法与三菱方言的静态检查。
 
-> **v0.3 核心流程（M0–M3 已验证）**：`gen`（Spec → ST + IEC 61131-10 XML）→ GX Works3 导入编译 →
-> `sim` 仿真场景断言 → `deliver` 交付包（报告 + 需求追溯矩阵 + SHA256）→ `mcp` 供 AI Agent 调用。
+> **v0.8 核心流程（M0–M5 已验证）**：`gen`（Spec → ST + IEC 61131-10 XML）→ GX Works3 导入编译 →
+> `deliver` 交付包（报告 + 需求追溯矩阵 + SHA256）→ `mcp` 供 AI Agent 调用。
+> 工业程序支持六模式/气缸 FB/报警冻结/停止序列/HMI，并可用**风格档案**沉淀用户编程习惯
+> （标签名/前缀/模式名/停止顺序/HMI 地址/报警码），从用户修改中提取候选规则并回注生成。
 > 纯 ST 模板工程 `templates/FX5U_ST_Template.gx3`；总体设计与证据见 [docs/整体方案.md](docs/整体方案.md)。
+> 风格能力见 [docs/风格档案速查表.md](docs/风格档案速查表.md)。
 
 ---
 
-## 30 秒上手（v0.2）
+## 30 秒上手（v0.8）
 
 ```bash
 # 1. Spec → ST + IEC 61131-10 XML（12 个模板可选）
@@ -26,6 +29,12 @@ copy templates\FX5U_ST_Template.gx3 %TEMP%\run.gx3
 # 4. 仿真断言（半自动）与交付包
 node --experimental-strip-types --no-warnings src/cli.ts sim sim/motor_start_stop.sim.json --observed sim/motor_start_stop.obs.json
 node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_start_stop.json -o ./out/deliver_motor
+
+# 5. 用编程习惯档案生成 / 检查（可选，v0.8）
+node --experimental-strip-types --no-warnings src/cli.ts gen specs/robot_transfer_steps_v2.json -o out \
+  --style profiles/industrial/robot_transfer_habits.json
+node --experimental-strip-types --no-warnings src/cli.ts style check-spec specs/robot_transfer_steps_v2.json \
+  --style profiles/industrial/robot_transfer_habits.json
 ```
 
 > **Spec 驱动生成（M1）**：`gen specs/motor_start_stop.json -o out` 会按模板生成 ST + IEC XML 工程包
