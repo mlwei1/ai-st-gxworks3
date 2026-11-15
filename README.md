@@ -47,11 +47,12 @@ node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_sta
 > IEC XML 的 `<GlobalVars>` 负责在 GX Works3 中建立全局标签表，导入后编译 Error:0。
 >
 >
-> **编程习惯沉淀（v0.6）**：用户/公司的编程偏好（标签语言、命名前缀、模式划分、报警/停止策略、
+> **编程习惯沉淀（v0.7）**：用户/公司的编程偏好（标签语言、命名前缀、模式划分、报警/停止策略、
 > HMI 地址、默认超时等）沉淀为可版本化档案 `profiles/*.json`；支持单档案、多级合并
-> （`--style user.json,company.json,project.json`）和 `style list/show/check/merge/candidates` CLI；
-> `style candidates --generated gen.st --actual user.st` 可从用户修改 diff 提取改名/语言/前缀候选规则；
-> 机制见 [docs/编程习惯沉淀.md](docs/编程习惯沉淀.md)，
+> （`--style user.json,company.json,project.json`）和 `style list/show/check/merge/candidates/adopt` CLI；
+> `style candidates --generated gen.st --actual user.st` 从用户修改 diff 提取改名/语言/前缀候选，
+> `style adopt` 可一键写入档案；档案的标签名（labels.names）、命名前缀（naming.prefixes）、
+> 精确改名（naming.renames）会实际作用于生成；机制见 [docs/编程习惯沉淀.md](docs/编程习惯沉淀.md)，
 > 首个档案 [profiles/industrial/robot_transfer_habits.json](profiles/industrial/robot_transfer_habits.json)，
 > 新用户习惯提问清单 [profiles/questions.md](profiles/questions.md)。>
 > **标签语言可配置**：`spec.labels.language` 支持 `zh`（中文标签，如 `启动按钮`，机器人示例默认）与 `en`（英文，如 `bStart`，正式项目/旧项目默认）；也可用 `gen spec.json --labels en` 临时覆盖。中文标签已实测可被 GX Works3 导入并编译 Error:0。

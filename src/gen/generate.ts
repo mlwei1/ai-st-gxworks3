@@ -26,7 +26,12 @@ import { parseWithRecovery } from '../dialect/recovery.ts';
 import { analyzeST, type Diagnostic } from '../dialect/analyzer.ts';
 import { astToIecProject } from '../emit/iec-project.ts';
 import { emitIecXml, type IecVar } from '../emit/iecxml.ts';
-import { buildGlobalLabelPlan, prependGlobalVarBlock, renameDevicesToLabels } from '../emit/label-map.ts';
+import {
+  buildGlobalLabelPlan,
+  prependGlobalVarBlock,
+  renameDevicesToLabels,
+  renameIdentifiers,
+} from '../emit/label-map.ts';
 import { generateLabelCsvFiles } from '../emit/label-csv.ts';
 import { generateWithLlmFallback, type LlmSourceGenerator } from './llm.ts';
 import { generateStepSequence } from './step-sequence.ts';
@@ -192,7 +197,7 @@ export async function generateFromSpec(
   // 场景 B0：步进程序（spec.sequence）→ 由生成器输出 SFC/STL 风格 ST
   if (!stSource && spec.sequence) {
     try {
-      const stepGen = generateStepSequence(spec);
+      const stepGen = generateStepSequence(spec, { style: options.style });
       stSource = stepGen.source;
       generator = 'template';
       result.attempts = Math.max(result.attempts, 1);
@@ -241,9 +246,25 @@ export async function generateFromSpec(
     return result;
   }
 
+  // 习惯档案里的精确标识符改名（来自 style candidates 采纳）
+  const styleRenames = options.style?.naming?.renames;
+  if (styleRenames && Object.keys(styleRenames).length > 0) {
+    const map = new Map<string, string>();
+    for (const [from, to] of Object.entries(styleRenames)) {
+      // 防止误改软元件地址
+      if (!from.trim() || !to.trim()) continue;
+      if (/^(X|Y|M|D|T|C|SM|SD|B|W)\d/i.test(from)) continue;
+      map.set(from, to);
+    }
+    if (map.size > 0) {
+      stSource = renameIdentifiers(stSource, map);
+      result.warnings.push(`已按习惯档案改名 ${map.size} 个标识符`);
+    }
+  }
+
   // 全局标签：把程序正文里的软元件地址替换成标签名（可读性），
   // 并在 ST 文件头插入 VAR_GLOBAL 块（便于单独 check/build-xml）。
-  const labelPlan = buildGlobalLabelPlan(spec, options.labelLanguage);
+  const labelPlan = buildGlobalLabelPlan(spec, options.labelLanguage, options.style);
   if (labelPlan.labels.length > 0 && !/\bVAR_GLOBAL\b/.test(stSource)) {
     stSource = renameDevicesToLabels(stSource, labelPlan.deviceToLabel);
     stSource = prependGlobalVarBlock(stSource, labelPlan.labels);

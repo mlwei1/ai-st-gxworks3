@@ -13,6 +13,7 @@
 
 import type { IecVar } from './iecxml.ts';
 import type { LabelLanguage, RequirementSpec } from '../spec/schema.ts';
+import type { StyleProfile } from '../style/index.ts';
 
 export interface GlobalLabelPlan {
   /** 要写入 XML/ST 的全局标签（带 address/comment）。 */
@@ -55,17 +56,31 @@ function uniqueName(base: string, used: Set<string>): string {
  *
  * 同一名称或同一软元件只保留首个（避免 GX 导入时重复分配）。
  */
-export function buildGlobalLabelPlan(spec: RequirementSpec, language?: LabelLanguage): GlobalLabelPlan {
+export function buildGlobalLabelPlan(
+  spec: RequirementSpec,
+  language?: LabelLanguage,
+  style?: StyleProfile,
+): GlobalLabelPlan {
   const lang: LabelLanguage = language ?? spec.labels?.language ?? 'en';
   const zh = lang === 'zh';
   const labels: IecVar[] = [];
   const deviceToLabel = new Map<string, string>();
   const used = new Set<string>();
+  // 用户习惯档案里的标签名覆盖（device → 用户习惯叫法）
+  const overrideRaw = style?.labels?.names ?? {};
+  const overrides = new Map<string, string>();
+  for (const [dev, name] of Object.entries(overrideRaw)) {
+    if (!dev.trim() || !name.trim()) continue;
+    overrides.set(dev.trim(), name.trim());
+    overrides.set(dev.trim().toUpperCase(), name.trim());
+  }
+  const preferredName = (address: string, fallback: string): string =>
+    overrides.get(address) ?? overrides.get(address.toUpperCase()) ?? fallback;
 
   const push = (v: { name: string; type: string; address?: string; comment?: string }) => {
     const address = (v.address ?? '').trim();
     if (!address || deviceToLabel.has(address)) return;
-    const name = uniqueName(v.name.trim(), used);
+    const name = uniqueName(preferredName(address, v.name.trim()), used);
     deviceToLabel.set(address, name);
     labels.push({ name, type: v.type, address, ...(v.comment ? { comment: v.comment } : {}) });
   };

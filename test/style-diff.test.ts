@@ -95,8 +95,12 @@ END_PROGRAM
   const rename = r.candidates.find((c) => c.kind === 'label-rename');
   assert.equal(rename?.before, 'bStart');
   assert.equal(rename?.after, '启动按钮');
+  assert.equal(rename?.device, 'X0');
   const lang = r.candidates.find((c) => c.kind === 'language');
   assert.equal(lang?.after, 'zh');
+  const prefix = r.candidates.find((c) => c.kind === 'naming-prefix');
+  assert.equal(prefix?.prefixes?.INT, 'n');
+  assert.equal(prefix?.prefixes?.FB_INSTANCE, 'fb');
 
   const md = renderCandidateMarkdown(r);
   assert.match(md, /label-rename/);

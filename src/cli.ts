@@ -41,7 +41,8 @@ import { convertAIGenerated, type AIGeneratedProject } from './ai/convert.ts';
 import { generateST, loadLLMConfig } from './ai/client.ts';
 import { buildSystemPrompt } from './ai/prompt.ts';
 import { loadStyleFile, resolveStyleFiles } from './style/index.ts';
-import { extractStyleCandidates, renderCandidateMarkdown } from './style/diff-candidates.ts';
+import { extractStyleCandidates, renderCandidateMarkdown, type StyleCandidate } from './style/diff-candidates.ts';
+import { adoptCandidates } from './style/adopt.ts';
 
 const SEVERITY_ICON: Record<Diagnostic['severity'], string> = {
   error: '✖',
@@ -636,6 +637,8 @@ async function cmdStyle(args: Args): Promise<number> {
     console.log(`  style merge <a.json> <b.json> [-o merged.json] 多级合并（后者覆盖前者）`);
     console.log(`  style candidates --generated gen.st --actual user.st [-o outdir]`);
     console.log(`                                                 对比生成物与用户修改，提取候选规则`);
+    console.log(`  style adopt --profile p.json --candidates candidates.json [-o out.json] [--min high|medium]`);
+    console.log(`                                                 把候选规则采纳进档案`);
     return 0;
   }
 
@@ -705,6 +708,56 @@ async function cmdStyle(args: Args): Promise<number> {
     if (out) {
       await writeFile(resolve(out), text, 'utf8');
       console.log(`✓ 已合并 ${rest.length} 个档案 → ${out}`);
+    } else {
+      console.log(text);
+    }
+    return 0;
+  }
+
+  if (action === 'adopt') {
+    const profilePath = typeof args.profile === 'string' ? args.profile : rest[0];
+    const candidatesPath = typeof args.candidates === 'string' ? args.candidates : rest[1];
+    if (!profilePath || !candidatesPath) {
+      console.error(
+        '用法: ai-st-gxworks3 style adopt --profile p.json --candidates candidates.json [-o out.json] [--min high|medium|low]',
+      );
+      return 2;
+    }
+    const loadedProfile = await loadStyleFile(resolve(profilePath));
+    if (!loadedProfile.ok || !loadedProfile.profile) {
+      console.error(`✖ 档案校验失败：${loadedProfile.diagnostics.map((d) => d.message).join('; ')}`);
+      return 1;
+    }
+    let raw: unknown;
+    try {
+      raw = JSON.parse(await readFile(resolve(candidatesPath), 'utf8'));
+    } catch (e) {
+      console.error(`✖ 读取候选文件失败：${e instanceof Error ? e.message : String(e)}`);
+      return 1;
+    }
+    const list = Array.isArray(raw)
+      ? (raw as StyleCandidate[])
+      : ((raw as { candidates?: StyleCandidate[] }).candidates ?? null);
+    if (!Array.isArray(list)) {
+      console.error('✖ 候选文件应为数组，或 style_candidates.json（含 candidates 字段）');
+      return 1;
+    }
+    const minConfidence =
+      args.min === 'high' || args.min === 'medium' || args.min === 'low'
+        ? (args.min as 'high' | 'medium' | 'low')
+        : 'medium';
+    const adopted = adoptCandidates(loadedProfile.profile, list, { minConfidence });
+    console.log(`采纳 ${adopted.adopted.length} 条候选规则（最低置信度 ${minConfidence}）：`);
+    for (const a of adopted.adopted) console.log(`  ✓ ${a}`);
+    if (adopted.skipped.length > 0) {
+      console.log(`跳过 ${adopted.skipped.length} 条：`);
+      for (const s of adopted.skipped) console.log(`  - ${s}`);
+    }
+    const out = typeof args.out === 'string' ? args.out : undefined;
+    const text = JSON.stringify(adopted.profile, null, 2) + '\n';
+    if (out) {
+      await writeFile(resolve(out), text, 'utf8');
+      console.log(`✓ 已写入 ${out}`);
     } else {
       console.log(text);
     }

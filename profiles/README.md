@@ -50,10 +50,24 @@ style candidates --generated gen.st --actual user_modified.st -o out/style_candi
 | 字段 | 作用 |
 |---|---|
 | `labels.language` | 全局/局部标签语言（en/zh），spec 未设置时生效 |
+| `labels.names` | 按软元件覆盖标签名（如 `{"X0":"开始按钮"}`） |
+| `naming.prefixes` | 局部/FB 命名类型前缀（BOOLEAN/INT/TIME/INPUT_BOOL/FB_INSTANCE） |
+| `naming.renames` | 生成后精确标识符改名（before → after） |
 | `defaults.cylinderTimeoutMs` | 气缸动作超时默认值（spec 未设置时填入） |
 
-其余字段（命名前缀、模式划分、报警策略、HMI 地址规划、停止/急停语义、自检清单）
+其余字段（模式划分、报警策略、HMI 地址规划、停止/急停语义、自检清单）
 目前作为**结构化档案**保存：供 AI 阅读并按要求生成，后续逐步映射为生成器规则。
+
+## 从候选采纳（style adopt）
+
+```bash
+style candidates --generated gen.st --actual user_modified.st -o out/style_candidates
+style adopt --profile profiles/industrial/robot_transfer_habits.json \
+  --candidates out/style_candidates/style_candidates.json \
+  -o profiles/industrial/robot_transfer_habits.adopted.json
+```
+
+`style adopt` 默认采纳 high/medium 候选，写入标签名/语言/前缀/精确改名；低置信正文修改只提示。
 
 ## 如何新增/更新档案
 

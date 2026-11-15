@@ -34,11 +34,13 @@ export interface StyleProfile {
   /** 作用域：user=个人习惯，company=公司规范，project=项目覆盖。 */
   scope?: 'user' | 'company' | 'project';
   description?: string;
-  /** 标签语言。 */
-  labels?: { language?: LabelLanguage };
+  /** 标签语言与按软元件覆盖的标签名（device → 用户习惯叫法，如 X0 → 开始按钮）。 */
+  labels?: { language?: LabelLanguage; names?: Record<string, string> };
   /** 命名习惯。 */
   naming?: {
     prefixes?: StylePrefixes;
+    /** 精确标识符改名（before → after），由 diff 候选采纳生成。 */
+    renames?: Record<string, string>;
     examples?: string[];
     notes?: string[];
   };
@@ -94,8 +96,29 @@ export function parseStyle(raw: unknown): StyleLoadResult {
   if (raw.labels !== undefined) {
     if (!isPlainObject(raw.labels)) {
       err('STYLE_E_LABELS', 'labels 必须是对象');
-    } else if (raw.labels.language !== undefined && !LABEL_LANGUAGES.has(String(raw.labels.language))) {
-      err('STYLE_E_LABELS_LANGUAGE', "labels.language 只能是 'en' 或 'zh'");
+    } else {
+      if (raw.labels.language !== undefined && !LABEL_LANGUAGES.has(String(raw.labels.language))) {
+        err('STYLE_E_LABELS_LANGUAGE', "labels.language 只能是 'en' 或 'zh'");
+      }
+      if (raw.labels.names !== undefined) {
+        if (!isPlainObject(raw.labels.names)) err('STYLE_E_LABELS_NAMES', 'labels.names 必须是 { 软元件: 标签名 } 对象');
+        else {
+          for (const [k, v] of Object.entries(raw.labels.names)) {
+            if (typeof v !== 'string' || !v.trim()) err('STYLE_E_LABELS_NAMES_VALUE', `labels.names.${k} 必须是非空字符串`);
+          }
+        }
+      }
+    }
+  }
+  if (raw.naming !== undefined) {
+    if (!isPlainObject(raw.naming)) err('STYLE_E_NAMING', 'naming 必须是对象');
+    else if (raw.naming.renames !== undefined) {
+      if (!isPlainObject(raw.naming.renames)) err('STYLE_E_RENAMES', 'naming.renames 必须是 { 旧名: 新名 } 对象');
+      else {
+        for (const [k, v] of Object.entries(raw.naming.renames)) {
+          if (typeof v !== 'string' || !v.trim()) err('STYLE_E_RENAMES_VALUE', `naming.renames.${k} 必须是非空字符串`);
+        }
+      }
     }
   }
   if (raw.defaults !== undefined && !isPlainObject(raw.defaults)) {

@@ -44,6 +44,21 @@ interface Ctx {
   outMap: Map<string, { cyl: number; dir: 'ext' | 'ret' }>;
   /** 是否使用中文局部标签（含 FB 形参/实例名）。 */
   zh: boolean;
+  /** 中文命名类型前缀（可由 style 档案覆盖）。 */
+  prefixes: Prefixes;
+}
+
+export interface Prefixes {
+  BOOL: string;
+  INT: string;
+  TIME: string;
+  INPUT_BOOL: string;
+  FB_INSTANCE: string;
+}
+
+export interface IndustrialStepOptions {
+  /** 编程习惯档案：目前用于命名前缀等。 */
+  style?: import('../style/index.ts').StyleProfile;
 }
 
 const MODE = {
@@ -523,86 +538,104 @@ function outputDriveLines(ctx: Ctx): string[] {
   return lines;
 }
 
-/** 中文局部标签重命名表（类型前缀 b/n/t/x + 中文语义，便于阅读）。 */
+/** 中文局部标签重命名表（类型前缀 + 中文语义，便于阅读；前缀可由 style 覆盖）。 */
 function buildZhRenameMap(ctx: Ctx): Map<string, string> {
   const m = new Map<string, string>();
+  const p = ctx.prefixes;
   const add = (en: string, zh: string) => m.set(en, zh);
 
   // 模式/流程
-  add('nMode', 'n模式');
-  add('nStep', 'n步号');
-  add('nStopStep', 'n停止步号');
-  add('bStopReq', 'b停止请求');
-  add('bStopActive', 'b停止序列启动');
-  add('bAlarmAny', 'b存在报警');
-  add('bAlarm', 'b报警');
-  add('nAlarmCode', 'n报警码');
-  add('nAlarmStep', 'n报警步号');
-  add('bEStopPause', 'b急停暂停');
-  add('bCylOK', 'b气缸位置正常');
+  add('nMode', `${p.INT}模式`);
+  add('nStep', `${p.INT}步号`);
+  add('nStopStep', `${p.INT}停止步号`);
+  add('bStopReq', `${p.BOOL}停止请求`);
+  add('bStopActive', `${p.BOOL}停止序列启动`);
+  add('bAlarmAny', `${p.BOOL}存在报警`);
+  add('bAlarm', `${p.BOOL}报警`);
+  add('nAlarmCode', `${p.INT}报警码`);
+  add('nAlarmStep', `${p.INT}报警步号`);
+  add('bEStopPause', `${p.BOOL}急停暂停`);
+  add('bCylOK', `${p.BOOL}气缸位置正常`);
 
   // HMI 边沿
-  add('bStartLast', 'b启动上次');
-  add('bStopLast', 'b停止上次');
-  add('bResetLast', 'b复位上次');
-  add('bManualLast', 'b手动上次');
-  add('bExitLast', 'b退出手动上次');
-  add('bContinueLast', 'b继续上次');
-  add('bRestartLast', 'b从头上次');
-  add('bStartEdge', 'b启动上升沿');
-  add('bStopEdge', 'b停止上升沿');
-  add('bResetEdge', 'b复位上升沿');
-  add('bManualEdge', 'b手动上升沿');
-  add('bExitEdge', 'b退出手动上升沿');
-  add('bContinueEdge', 'b继续上升沿');
-  add('bRestartEdge', 'b从头上升沿');
+  add('bStartLast', `${p.BOOL}启动上次`);
+  add('bStopLast', `${p.BOOL}停止上次`);
+  add('bResetLast', `${p.BOOL}复位上次`);
+  add('bManualLast', `${p.BOOL}手动上次`);
+  add('bExitLast', `${p.BOOL}退出手动上次`);
+  add('bContinueLast', `${p.BOOL}继续上次`);
+  add('bRestartLast', `${p.BOOL}从头上次`);
+  add('bStartEdge', `${p.BOOL}启动上升沿`);
+  add('bStopEdge', `${p.BOOL}停止上升沿`);
+  add('bResetEdge', `${p.BOOL}复位上升沿`);
+  add('bManualEdge', `${p.BOOL}手动上升沿`);
+  add('bExitEdge', `${p.BOOL}退出手动上升沿`);
+  add('bContinueEdge', `${p.BOOL}继续上升沿`);
+  add('bRestartEdge', `${p.BOOL}从头上升沿`);
 
   // FB 形参/内部变量
-  add('bEnable', 'b使能');
-  add('bCmdExtend', 'b伸出命令');
-  add('bCmdRetract', 'b缩回命令');
-  add('xExtended', 'x伸出到位');
-  add('xRetracted', 'x原位到位');
-  add('tTimeout', 't超时');
-  add('nAlarmExt', 'n伸出报警码');
-  add('nAlarmRet', 'n缩回报警码');
-  add('bOutExtend', 'b伸出输出');
-  add('bOutRetract', 'b缩回输出');
-  add('tExt', 't伸出超时');
-  add('tRet', 't缩回超时');
-  add('bCmdClamp', 'b夹紧命令');
-  add('xClamped', 'x夹紧到位');
-  add('xReleased', 'x松开到位');
-  add('nAlarmClamp', 'n夹紧报警码');
-  add('nAlarmRelease', 'n松开报警码');
-  add('bOutClamp', 'b夹紧输出');
-  add('tClamp', 't夹紧超时');
-  add('tRelease', 't松开超时');
+  add('bEnable', `${p.BOOL}使能`);
+  add('bCmdExtend', `${p.BOOL}伸出命令`);
+  add('bCmdRetract', `${p.BOOL}缩回命令`);
+  add('xExtended', `${p.INPUT_BOOL}伸出到位`);
+  add('xRetracted', `${p.INPUT_BOOL}原位到位`);
+  add('tTimeout', `${p.TIME}超时`);
+  add('nAlarmExt', `${p.INT}伸出报警码`);
+  add('nAlarmRet', `${p.INT}缩回报警码`);
+  add('bOutExtend', `${p.BOOL}伸出输出`);
+  add('bOutRetract', `${p.BOOL}缩回输出`);
+  add('tExt', `${p.TIME}伸出超时`);
+  add('tRet', `${p.TIME}缩回超时`);
+  add('bCmdClamp', `${p.BOOL}夹紧命令`);
+  add('xClamped', `${p.INPUT_BOOL}夹紧到位`);
+  add('xReleased', `${p.INPUT_BOOL}松开到位`);
+  add('nAlarmClamp', `${p.INT}夹紧报警码`);
+  add('nAlarmRelease', `${p.INT}松开报警码`);
+  add('bOutClamp', `${p.BOOL}夹紧输出`);
+  add('tClamp', `${p.TIME}夹紧超时`);
+  add('tRelease', `${p.TIME}松开超时`);
 
   // 每个气缸
   ctx.cyls.forEach((c, i) => {
     const n = i + 1;
-    add(`bC${n}Ext`, `b${c.name}伸出命令`);
-    add(`bC${n}Ret`, `b${c.name}缩回命令`);
-    add(`bC${n}Clamp`, `b${c.name}夹紧命令`);
-    add(`bC${n}OutExt`, `b${c.name}伸出输出`);
-    add(`bC${n}OutRet`, `b${c.name}缩回输出`);
-    add(`bC${n}OutClamp`, `b${c.name}夹紧输出`);
-    add(`bC${n}Alarm`, `b${c.name}报警`);
-    add(`nC${n}AlarmCode`, `n${c.name}报警码`);
-    add(`fbCyl${n}`, `fb${c.name}`);
-    add(`bBtn${n}Edge`, `b手动${c.name}上升沿`);
-    add(`bBtn${n}Last`, `b手动${c.name}上次`);
+    add(`bC${n}Ext`, `${p.BOOL}${c.name}伸出命令`);
+    add(`bC${n}Ret`, `${p.BOOL}${c.name}缩回命令`);
+    add(`bC${n}Clamp`, `${p.BOOL}${c.name}夹紧命令`);
+    add(`bC${n}OutExt`, `${p.BOOL}${c.name}伸出输出`);
+    add(`bC${n}OutRet`, `${p.BOOL}${c.name}缩回输出`);
+    add(`bC${n}OutClamp`, `${p.BOOL}${c.name}夹紧输出`);
+    add(`bC${n}Alarm`, `${p.BOOL}${c.name}报警`);
+    add(`nC${n}AlarmCode`, `${p.INT}${c.name}报警码`);
+    add(`fbCyl${n}`, `${p.FB_INSTANCE}${c.name}`);
+    add(`bBtn${n}Edge`, `${p.BOOL}手动${c.name}上升沿`);
+    add(`bBtn${n}Last`, `${p.BOOL}手动${c.name}上次`);
   });
   return m;
 }
 
+function sanitizePrefix(value: unknown, fallback: string): string {
+  if (typeof value !== 'string') return fallback;
+  const v = value.trim();
+  return /^[A-Za-z_][A-Za-z0-9_]*$/.test(v) ? v : fallback;
+}
+
 /** 生成工业版 ST 步进程序（FB 版）。 */
-export function generateIndustrialStepSequence(spec: RequirementSpec): IndustrialStepResult {
+export function generateIndustrialStepSequence(
+  spec: RequirementSpec,
+  options: IndustrialStepOptions = {},
+): IndustrialStepResult {
   const seq = spec.sequence;
   if (!seq) throw new Error('spec.sequence 为空');
   const ind = seq.industrial;
   if (!ind) throw new Error('spec.sequence.industrial 为空');
+  const sp = options.style?.naming?.prefixes;
+  const prefixes: Prefixes = {
+    BOOL: sanitizePrefix(sp?.BOOL, 'b'),
+    INT: sanitizePrefix(sp?.INT, 'n'),
+    TIME: sanitizePrefix(sp?.TIME, 't'),
+    INPUT_BOOL: sanitizePrefix(sp?.INPUT_BOOL, 'x'),
+    FB_INSTANCE: sanitizePrefix(sp?.FB_INSTANCE, 'fb'),
+  };
   const ctx: Ctx = {
     spec,
     seq,
@@ -615,6 +648,7 @@ export function generateIndustrialStepSequence(spec: RequirementSpec): Industria
     manualButton: new Map(),
     outMap: new Map(),
     zh: (spec.labels?.language ?? 'en') === 'zh',
+    prefixes,
   };
   validateAndIndex(ctx);
   ind.manualButtons.forEach((b) => {

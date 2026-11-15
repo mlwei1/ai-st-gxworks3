@@ -112,11 +112,14 @@ function transitionLines(seq: SequenceSpec, step: SequenceStep, useTimer: boolea
 }
 
 /** 生成步进 ST 源码。 */
-export function generateStepSequence(spec: RequirementSpec): StepSequenceResult {
+export function generateStepSequence(
+  spec: RequirementSpec,
+  options: { style?: import('../style/index.ts').StyleProfile } = {},
+): StepSequenceResult {
   const seq = spec.sequence;
   if (!seq) throw new Error('spec.sequence 为空，无法生成步进程序');
   // 工业版：带模式/气缸监视/手动/停止序列/HMI 时走工业骨架生成器
-  if (seq.industrial) return generateIndustrialStepSequence(spec);
+  if (seq.industrial) return generateIndustrialStepSequence(spec, options);
   validateSequence(seq);
 
   const warnings: string[] = [];

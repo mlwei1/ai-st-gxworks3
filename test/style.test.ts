@@ -9,6 +9,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 import { loadStyleFile, mergeStyleIntoSpec, parseStyle } from '../src/style/index.ts';
+import type { StyleProfile } from '../src/style/index.ts';
+import { buildGlobalLabelPlan } from '../src/emit/label-map.ts';
 import { loadSpecFile } from '../src/spec/load.ts';
 import { generateFromSpec } from '../src/gen/generate.ts';
 import type { RequirementSpec } from '../src/spec/schema.ts';
@@ -77,6 +79,41 @@ test('style：gen 使用档案后生成中文全局标签', async () => {
     const st = await readFile(r.stPath!, 'utf8');
     assert.match(st, /VAR_GLOBAL/);
     assert.match(st, /启动按钮 : BOOL AT X0;/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('style：labels.names 覆盖软元件派生标签名', async () => {
+  const loaded = await loadSpecFile(resolve('specs/robot_transfer_steps_v2.json'));
+  assert.equal(loaded.ok, true);
+  const style: StyleProfile = {
+    schemaVersion: 1,
+    name: 'rename_demo',
+    labels: { language: 'zh', names: { X0: '开始按钮', M0: '触摸屏开始' } },
+  };
+  const plan = buildGlobalLabelPlan(loaded.spec!, 'zh', style);
+  const x0 = plan.labels.find((l) => l.address === 'X0');
+  assert.equal(x0?.name, '开始按钮');
+  const m0 = plan.labels.find((l) => l.address === 'M0');
+  assert.equal(m0?.name, '触摸屏开始');
+});
+
+test('style：命名前缀与精确改名驱动生成', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'dsh-style-prefix-'));
+  try {
+    const style: StyleProfile = {
+      schemaVersion: 1,
+      name: 'prefix_demo',
+      naming: { prefixes: { BOOL: 'q' }, renames: { n模式: 'n工作模式' } },
+    };
+    const r = await generateFromSpec(resolve('specs/robot_transfer_steps_v2.json'), { outDir: dir, style });
+    assert.equal(r.ok, true, r.diagnostics.map((d) => d.message).join('; '));
+    const st = await readFile(r.stPath!, 'utf8');
+    assert.match(st, /q启动上升沿/);
+    assert.ok(!st.includes('b启动上升沿'), 'BOOL 前缀应改为 q');
+    assert.match(st, /n工作模式/);
+    assert.ok(r.warnings.some((w) => w.includes('已按习惯档案改名')), r.warnings.join('; '));
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

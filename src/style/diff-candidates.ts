@@ -26,6 +26,8 @@ export type CandidateKind =
 
 export type CandidateConfidence = 'high' | 'medium' | 'low';
 
+export type PrefixGroup = 'BOOL' | 'INT' | 'TIME' | 'INPUT_BOOL' | 'FB_INSTANCE';
+
 export interface StyleCandidate {
   kind: CandidateKind;
   confidence: CandidateConfidence;
@@ -34,6 +36,10 @@ export interface StyleCandidate {
   after?: string;
   /** 作用域：global / POU 名 / 段名。 */
   scope?: string;
+  /** label-rename 对应的软元件地址（如 X0）。 */
+  device?: string;
+  /** naming-prefix 推断出的类型前缀映射。 */
+  prefixes?: Partial<Record<PrefixGroup, string>>;
 }
 
 export interface CandidateReport {
@@ -120,6 +126,7 @@ export function extractStyleCandidates(generatedSource: string, actualSource: st
         scope: 'global',
         before: gv.name,
         after: av.name,
+        device: addr,
         message: `全局标签 ${addr}：${gv.name} → ${av.name}`,
       });
     }
@@ -185,13 +192,53 @@ export function extractStyleCandidates(generatedSource: string, actualSource: st
   };
   const gPrefix = prefixCount(gNames);
   const aPrefix = prefixCount(aNames);
+  // 用户版声明：名称 → 类型段，用于把前缀映射到数据类型
+  const aDecls = [
+    ...aAst.pous.flatMap((p) =>
+      p.vars.map((v) => ({ name: v.name, typeName: v.typeName, section: v.section })),
+    ),
+    ...aAst.globalVars.map((v) => ({ name: v.name, typeName: v.typeName, section: 'VAR_GLOBAL' as const })),
+  ];
+  const typeGroup = (typeName: string, section: string): PrefixGroup | undefined => {
+    const t = typeName.toUpperCase();
+    if (t === 'TIME' || t === 'LTIME') return 'TIME';
+    if (['INT', 'DINT', 'SINT', 'UINT', 'UDINT', 'WORD', 'DWORD'].includes(t)) return 'INT';
+    if (t === 'BOOL') return section === 'VAR_INPUT' || section === 'VAR_IN_OUT' ? 'INPUT_BOOL' : 'BOOL';
+    if (t.startsWith('FB_')) return 'FB_INSTANCE';
+    return undefined;
+  };
+  const groupPrefix = new Map<PrefixGroup, string>();
+  const groupPrefixCounts = new Map<PrefixGroup, Map<string, number>>();
+  for (const d of aDecls) {
+    const hit = PREFIX_RE.exec(d.name);
+    if (!hit) continue;
+    const group = typeGroup(d.typeName, d.section);
+    if (!group) continue;
+    let m = groupPrefixCounts.get(group);
+    if (!m) {
+      m = new Map();
+      groupPrefixCounts.set(group, m);
+    }
+    m.set(hit[1], (m.get(hit[1]) ?? 0) + 1);
+  }
+  for (const [group, m] of groupPrefixCounts) {
+    const best = [...m.entries()].sort((x, y) => y[1] - x[1])[0];
+    if (best) groupPrefix.set(group, best[0]);
+  }
   if (aPrefix.length > 0 && aPrefix.join(',') !== gPrefix.join(',')) {
+    const prefixes = Object.fromEntries(groupPrefix) as Partial<Record<PrefixGroup, string>>;
+    const mapping = Object.entries(prefixes)
+      .map(([g, p]) => `${g}=${p}`)
+      .join('，');
     candidates.push({
       kind: 'naming-prefix',
       confidence: 'medium',
       before: gPrefix.join(',') || '(无)',
       after: aPrefix.join(','),
-      message: `用户命名前缀习惯：${aPrefix.join(' / ')}（生成物：${gPrefix.join(',') || '无'}）`,
+      prefixes: Object.keys(prefixes).length > 0 ? prefixes : undefined,
+      message:
+        `用户命名前缀习惯：${aPrefix.join(' / ')}（生成物：${gPrefix.join(',') || '无'}）` +
+        (mapping ? `；类型映射：${mapping}` : ''),
     });
   }
 
