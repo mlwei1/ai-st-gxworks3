@@ -13,6 +13,23 @@ AI 驱动的三菱 PLC **GX Works3 ST** 代码生成、校验与编程习惯沉�
 > 说明：仿真不作为主线。PLC 程序的价值在**连设备后监视**，本项目暂停了 GX Simulator3 自动化投入，
 > 验证以「单元测试 + GX Works3 导入/全部转换 Error:0」为主。
 
+**仓库**：[GitHub（主）](https://github.com/mlwei1/ai-st-gxworks3) · [Gitee 镜像](https://gitee.com/mlwei1/ai-st-gxworks3)
+
+![version](https://img.shields.io/badge/version-0.8.0-2563eb)
+![tests](https://img.shields.io/badge/tests-297%2F297-059669)
+![license](https://img.shields.io/badge/license-MIT-7c3aed)
+![platform](https://img.shields.io/badge/platform-FX5U%20%2F%20GX%20Works3-0891b2)
+
+---
+
+## 整体架构
+
+![从需求到 GX Works3 的 ST 生成链路](docs/images/pipeline.png)
+
+一次完整流程：**Spec / 自然语言 → 模板或 AI 生成 ST → 方言检查 → IEC 61131-10 XML + 标签/HMI/报警表 → GX Works3 导入编译**。
+
+**目录**：[这是什么](#这是什么) · [30 秒上手](#30-秒上手) · [原理](#原理) · [核心能力](#核心能力) · [怎么用](#怎么用) · [编程习惯沉淀](#编程习惯沉淀v08-重点) · [验证与边界](#验证与边界) · [文档索引](#文档索引)
+
 ---
 
 ## 这是什么
@@ -87,6 +104,8 @@ node --experimental-strip-types --no-warnings src/cli.ts style check-spec \
 
 ## 原理
 
+![代码结构与数据流](docs/images/module-map.png)
+
 ### 1. 生成管线
 
 | 阶段 | 模块 | 做什么 |
@@ -125,22 +144,10 @@ GX Works3 虽不能读工程文件，但支持导入 IEC 61131-10 XML：程序�
 
 核心思想：**把“这个人/这家公司怎么编程”从一次性对话变成可版本化档案**。
 
-```
-用户对话 / 修改生成物
-        │
-        ▼
-style candidates  ← 生成 ST 与用户改后 ST 的 diff
-   （全局标签改名、局部变量/FB 形参改名、语言推断、命名前缀推断）
-        │ 人工确认
-        ▼
-style adopt  →  profiles/*.json（标签名/前缀/改名/模式/停止顺序/HMI/报警码…）
-        │
-        ▼
-gen --style / generate --style  →  下次生成直接遵守
-        │
-        ▼
-style check-spec  →  复核偏差；有偏差提示但不阻断
-```
+![编程习惯沉淀闭环](docs/images/habit-loop.png)
+
+循环说明：用户对话/修改生成物 → `style candidates` 从 diff 提取候选（标签/局部变量/语言/前缀）→
+人工确认 → `style adopt` 写入档案 → 下次 `gen --style` 直接遵守 → `style check-spec` 复核偏差。
 
 - **多级合并**：个人 → 公司 → 项目（目录递归 + scope 排序，后者覆盖前者；对象深合并）；
 - **冲突防护**：标签重名、改名循环、非法前缀在 `style check` / `adopt` 阶段拦截；
@@ -275,6 +282,13 @@ tools/              demo 与维护脚本
 | 工业程序 | robot_transfer_steps_v2：六模式/气缸 FB/报警冻结/停止序列/HMI 地址 |
 | 习惯档案闭环 | 单用户闭环、多用户多级（demo 脚本实际运行通过） |
 | 中文标签 | 全局/局部/FB 形参导入编译 `Error:0` |
+
+<p align="center">
+  <img src="docs/evidence/M4/21-robot-autostop-profile-gx-compile.png" width="760"
+       alt="GX Works3 导入档案驱动生成的自动停止序列程序后 全部转换 Error:0">
+</p>
+
+> GX Works3 实测：档案驱动 + 自动停止序列生成物导入后，`全部转换(重新分配)` **Error:0 / Warning:0**。
 
 ### 已知边界
 
