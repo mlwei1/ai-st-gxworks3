@@ -9,7 +9,7 @@
  *   prompt    打印将要使用的系统提示词（调试用）
  */
 
-import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir, stat } from 'node:fs/promises';
 import { basename, dirname, join, resolve } from 'node:path';
 
 import { analyzeST, type Diagnostic } from './dialect/analyzer.ts';
@@ -40,7 +40,8 @@ import {
 import { convertAIGenerated, type AIGeneratedProject } from './ai/convert.ts';
 import { generateST, loadLLMConfig } from './ai/client.ts';
 import { buildSystemPrompt } from './ai/prompt.ts';
-import { loadStyleFile, resolveStyleFiles } from './style/index.ts';
+import { loadStyleFile, resolveStyleDirectory, resolveStyleFiles } from './style/index.ts';
+import type { StyleProfile } from './style/index.ts';
 import { extractStyleCandidates, renderCandidateMarkdown, type StyleCandidate } from './style/diff-candidates.ts';
 import { adoptCandidates } from './style/adopt.ts';
 import { styleErrors, validateStyleProfile } from './style/validate.ts';
@@ -491,17 +492,11 @@ async function cmdGen(args: Args): Promise<number> {
     }
   }
 
-  // 编程习惯档案（可选，支持多级合并：--style user.json,company.json,project.json）
+  // 编程习惯档案（可选，支持逗号多级 / 目录自动合并：--style user.json,company.json,project.json 或 --style profiles/users/alice）
   const stylePath = typeof args.style === 'string' ? args.style : undefined;
   let style;
   if (stylePath) {
-    const paths = stylePath
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .map((s) => resolve(s));
-    const loadedStyle =
-      paths.length > 1 ? await resolveStyleFiles(paths) : await loadStyleFile(paths[0]);
+    const loadedStyle = await loadStyleArg(stylePath);
     if (!loadedStyle.ok || !loadedStyle.profile) {
       console.error(`✖ 编程习惯档案校验失败：${loadedStyle.diagnostics.map((d) => d.message).join('; ')}`);
       return 2;
@@ -609,6 +604,39 @@ async function cmdDeliver(args: Args): Promise<number> {
 async function cmdMcp(): Promise<number> {
   await runMcpServer();
   return 0;
+}
+
+/**
+ * 解析 --style 参数：支持单文件、逗号多级、目录（目录内按 scope 排序合并）。
+ */
+async function loadStyleArg(value: string): Promise<{
+  ok: boolean;
+  profile?: StyleProfile;
+  diagnostics: Array<{ message: string }>;
+}> {
+  const paths = value
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (paths.length === 0) {
+    return { ok: false, diagnostics: [{ message: '--style 不能为空' }] };
+  }
+  if (paths.length === 1) {
+    const abs = resolve(paths[0]);
+    try {
+      const st = await stat(abs);
+      if (st.isDirectory()) {
+        const r = await resolveStyleDirectory(abs);
+        return { ok: r.ok, profile: r.profile ?? undefined, diagnostics: r.diagnostics };
+      }
+    } catch {
+      // 不存在时交给 loadStyleFile 报错
+    }
+    const r = await loadStyleFile(abs);
+    return { ok: r.ok, profile: r.profile ?? undefined, diagnostics: r.diagnostics };
+  }
+  const r = await resolveStyleFiles(paths.map((p) => resolve(p)));
+  return { ok: r.ok, profile: r.profile ?? undefined, diagnostics: r.diagnostics };
 }
 
 /** `style` 子命令：档案列表/查看/校验/合并 + 从生成物 diff 提取候选规则。 */
@@ -860,10 +888,10 @@ async function cmdGenerate(args: Args): Promise<number> {
     ioTable = await readFile(resolve(args.io), 'utf8');
   }
 
-  // 编程习惯档案（可选）：注入 system prompt / 需求文本
+  // 编程习惯档案（可选）：注入 system prompt / 需求文本；支持文件/目录/多级
   let aiStyle;
   if (typeof args.style === 'string') {
-    const styleResult = await loadStyleFile(resolve(args.style));
+    const styleResult = await loadStyleArg(args.style);
     if (!styleResult.ok || !styleResult.profile) {
       console.error(`✖ 编程习惯档案校验失败：${styleResult.diagnostics.map((d) => d.message).join('; ')}`);
       return 2;

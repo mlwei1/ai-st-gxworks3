@@ -35,6 +35,9 @@ node --experimental-strip-types --no-warnings src/cli.ts gen specs/robot_transfe
 # 后者覆盖前者（对象递归合并、数组合并去重）
 gen specs/xxx.json --style profiles/user.json,profiles/company.json,profiles/project.json
 style merge profiles/user.json profiles/company.json -o profiles/merged.json
+
+# 目录自动发现：按 scope（user < company < project）+ 文件名排序合并
+gen specs/xxx.json --style profiles/users/alice
 ```
 
 ## 从用户修改提取候选

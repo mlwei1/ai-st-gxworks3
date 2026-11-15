@@ -46,6 +46,8 @@ interface Ctx {
   zh: boolean;
   /** 中文命名类型前缀（可由 style 档案覆盖）。 */
   prefixes: Prefixes;
+  /** 模式名称（0~5，可由 style.codeStructure.modes 覆盖）。 */
+  modeNames: string[];
 }
 
 export interface Prefixes {
@@ -57,7 +59,7 @@ export interface Prefixes {
 }
 
 export interface IndustrialStepOptions {
-  /** 编程习惯档案：目前用于命名前缀等。 */
+  /** 编程习惯档案：命名前缀、模式名称等。 */
   style?: import('../style/index.ts').StyleProfile;
 }
 
@@ -613,6 +615,8 @@ function buildZhRenameMap(ctx: Ctx): Map<string, string> {
   return m;
 }
 
+const DEFAULT_MODE_NAMES = ['待机', '自动', '手动', '停止中', '报警', '急停暂停'];
+
 function sanitizePrefix(value: unknown, fallback: string): string {
   if (typeof value !== 'string') return fallback;
   const v = value.trim();
@@ -636,6 +640,14 @@ export function generateIndustrialStepSequence(
     INPUT_BOOL: sanitizePrefix(sp?.INPUT_BOOL, 'x'),
     FB_INSTANCE: sanitizePrefix(sp?.FB_INSTANCE, 'fb'),
   };
+  const styleModesRaw = options.style?.codeStructure?.modes;
+  const styleModes =
+    Array.isArray(styleModesRaw) &&
+    styleModesRaw.length === DEFAULT_MODE_NAMES.length &&
+    styleModesRaw.every((m) => typeof m === 'string' && m.trim())
+      ? styleModesRaw.map((m) => (m as string).trim())
+      : undefined;
+  const invalidStyleModes = styleModesRaw !== undefined && styleModes === undefined;
   const ctx: Ctx = {
     spec,
     seq,
@@ -649,6 +661,7 @@ export function generateIndustrialStepSequence(
     outMap: new Map(),
     zh: (spec.labels?.language ?? 'en') === 'zh',
     prefixes,
+    modeNames: styleModes ?? DEFAULT_MODE_NAMES,
   };
   validateAndIndex(ctx);
   ind.manualButtons.forEach((b) => {
@@ -657,6 +670,9 @@ export function generateIndustrialStepSequence(
   });
 
   const warnings: string[] = [];
+  if (invalidStyleModes) {
+    warnings.push('编程习惯档案 codeStructure.modes 与六模式定义不符，已使用默认模式名');
+  }
   const lines: string[] = [];
   const h = ind.hmi;
   const initialIndex = ctx.stepIndex.get(seq.initialStep ?? ctx.steps[0].id) ?? 1;
@@ -667,13 +683,13 @@ export function generateIndustrialStepSequence(
   lines.push('// ============================================================');
   lines.push('// 工业步进主程序（FB 版：模式/自动/手动/报警/停止序列/HMI）');
   lines.push(`// 规格：${spec.name}`);
-  lines.push(`// 急停：${ind.estop}；模式：0待机 1自动 2手动 3停止中 4报警 5急停暂停`);
+  lines.push(`// 急停：${ind.estop}；模式：${ctx.modeNames.map((n, i) => `${i}${n}`).join(' ')}`);
   lines.push('// ============================================================');
   lines.push('');
   lines.push('PROGRAM Main');
   lines.push('VAR');
   lines.push('    // ---- 模式/流程 ----');
-  lines.push(`    nMode : INT := ${MODE.idle};                   // 0待机 1自动 2手动 3停止中 4报警 5急停暂停`);
+  lines.push(`    nMode : INT := ${MODE.idle};                   // ${ctx.modeNames.map((n, i) => `${i}${n}`).join(' ')}`);
   lines.push('    nStep : INT := 0;                       // 自动步号（0=待机）');
   lines.push('    nStopStep : INT := 0;                   // 停止序列步号');
   lines.push('    bStopReq : BOOL := FALSE;               // 停止请求（当前步完成后进入停止序列）');

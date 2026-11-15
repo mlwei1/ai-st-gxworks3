@@ -8,7 +8,8 @@
  * 因此 merge 只填充 spec 中“未显式设置”的字段，不覆盖项目已明确的选择。
  */
 
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import type { LabelLanguage, RequirementSpec } from '../spec/schema.ts';
 
@@ -232,6 +233,56 @@ export async function resolveStyleFiles(paths: string[]): Promise<{
   return { ok: true, profile: mergeStyleProfiles(profiles), sources: paths, diagnostics };
 }
 
+/** 读取目录下全部 *.json 档案，按 scope（user < company < project）排序后合并。 */
+export async function resolveStyleDirectory(dir: string): Promise<{
+  ok: boolean;
+  profile: StyleProfile | null;
+  sources: string[];
+  diagnostics: StyleDiagnostic[];
+}> {
+  const diagnostics: StyleDiagnostic[] = [];
+  let files: string[];
+  try {
+    const entries = await readdir(dir, { withFileTypes: true });
+    files = entries
+      .filter((e) => e.isFile() && e.name.toLowerCase().endsWith('.json'))
+      .map((e) => join(dir, e.name));
+  } catch (e) {
+    return {
+      ok: false,
+      profile: null,
+      sources: [],
+      diagnostics: [
+        { code: 'STYLE_E_DIR', message: `读取档案目录失败：${e instanceof Error ? e.message : String(e)}` },
+      ],
+    };
+  }
+  const rank = (scope: StyleProfile['scope']): number =>
+    scope === 'user' ? 1 : scope === 'company' ? 2 : scope === 'project' ? 3 : 2;
+  const loaded: Array<{ profile: StyleProfile; file: string }> = [];
+  for (const file of files.sort()) {
+    const r = await loadStyleFile(file);
+    if (!r.ok || !r.profile) {
+      diagnostics.push(...r.diagnostics);
+      continue;
+    }
+    loaded.push({ profile: r.profile, file });
+  }
+  if (diagnostics.length > 0 || loaded.length === 0) {
+    if (loaded.length === 0 && diagnostics.length === 0) {
+      diagnostics.push({ code: 'STYLE_E_DIR_EMPTY', message: `目录中没有可用的 *.json 档案：${dir}` });
+    }
+    return { ok: false, profile: null, sources: files, diagnostics };
+  }
+  loaded.sort((a, b) => rank(a.profile.scope) - rank(b.profile.scope) || a.file.localeCompare(b.file));
+  return {
+    ok: true,
+    profile: mergeStyleProfiles(loaded.map((x) => x.profile)),
+    sources: loaded.map((x) => x.file),
+    diagnostics,
+  };
+}
+
 /**
  * 把 style 档案合并进 spec（只填充未显式设置的字段）。
  *
@@ -262,6 +313,31 @@ export function mergeStyleIntoSpec(
       }
     }
     if (n > 0) applied.push(`${n} 个气缸超时默认=${Math.trunc(timeout)}ms`);
+  }
+
+  // 报警码：spec 未设置时按档案 alarmCodes.mapping（缸名 → 方向码）补齐
+  const mapping = profile.alarmCodes?.mapping;
+  if (mapping && typeof mapping === 'object' && cylinders) {
+    const num = (v: unknown): number | undefined =>
+      typeof v === 'number' && Number.isFinite(v) ? v : undefined;
+    let n = 0;
+    for (const c of cylinders) {
+      const m = (mapping as Record<string, unknown>)[c.name];
+      if (!m || typeof m !== 'object') continue;
+      const row = m as Record<string, unknown>;
+      const single = c.valve === 'single';
+      const ext = num(row.extend) ?? num(row.clamp);
+      const ret = num(row.retract) ?? num(row.release);
+      if (!c.alarmExtend && ext !== undefined) {
+        c.alarmExtend = { code: ext, message: `${c.name}${single ? '夹紧' : '伸出'}超时` };
+        n++;
+      }
+      if (!c.alarmRetract && ret !== undefined) {
+        c.alarmRetract = { code: ret, message: `${c.name}${single ? '松开' : '缩回'}超时` };
+        n++;
+      }
+    }
+    if (n > 0) applied.push(`${n} 条报警码按档案补齐`);
   }
 
   return { applied };
