@@ -463,7 +463,7 @@ async function cmdGen(args: Args): Promise<number> {
   const specPath = args._[0];
   if (!specPath) {
     console.error(
-      '用法: ai-st-gxworks3 gen <spec.json> [-o outdir] [--llm] [--compiler-errors errors.json] [--style profile.json] [--labels en|zh] [--list-templates]',
+      '用法: ai-st-gxworks3 gen <spec.json> [-o outdir] [--llm] [--compiler-errors errors.json] [--style profile.json] [--hmi-from-style] [--labels en|zh] [--list-templates]',
     );
     return 2;
   }
@@ -514,6 +514,7 @@ async function cmdGen(args: Args): Promise<number> {
     labelLanguage:
       args.labels === 'en' || args.labels === 'zh' ? (args.labels as 'en' | 'zh') : undefined,
     style,
+    applyHmiFromStyle: args['hmi-from-style'] === true,
   });
 
   if (result.specDiagnostics.length > 0) {

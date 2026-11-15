@@ -53,7 +53,8 @@ node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_sta
 > `style candidates --generated gen.st --actual user.st` 从用户修改 diff 提取改名/语言/前缀候选，
 > `style adopt` 可一键写入档案（`--dry-run` 只预览）；档案的标签名（labels.names）、命名前缀（naming.prefixes）、
 > 精确改名（naming.renames）会实际作用于生成；`--style` 还支持目录（按 user/company/project scope 自动排序合并）；
-> `style check-spec <spec> --style p.json` 会检查 spec 与习惯的偏差（HMI/超时/报警码/手动按钮），
+> `style check-spec <spec> --style p.json` 会检查 spec 与习惯的偏差（HMI/超时/报警码/手动按钮/停止序列安全规则），
+> `gen --style p.json --hmi-from-style` 可用档案 HMI 规划显式覆盖 spec 地址；
 > `style init --out p.json` 生成空白档案模板；`generate "需求" --style profile.json` 会把档案注入 LLM
 > 系统提示词；机制见 [docs/编程习惯沉淀.md](docs/编程习惯沉淀.md)，
 > 首个档案 [profiles/industrial/robot_transfer_habits.json](profiles/industrial/robot_transfer_habits.json)，

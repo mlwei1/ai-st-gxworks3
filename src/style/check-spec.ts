@@ -10,7 +10,7 @@ import type { RequirementSpec } from '../spec/schema.ts';
 import type { StyleProfile } from './index.ts';
 import type { StyleRuleDiagnostic } from './validate.ts';
 
-type RoleKey =
+export type RoleKey =
   | 'start'
   | 'stop'
   | 'reset'
@@ -183,6 +183,51 @@ export function checkSpecAgainstStyle(
   const modes = style.codeStructure?.modes;
   if (Array.isArray(modes) && modes.length !== 6) {
     warn('STYLE_SPEC_MODES', `档案 modes 数量 ${modes.length} ≠ 6，生成时会回退默认模式名`);
+  }
+
+  // ---- 6) 停止序列安全规则（档案 codeStructure.stopSequence.rules） ----
+  const stopRules = asRecord(style.codeStructure?.stopSequence).rules;
+  if (Array.isArray(stopRules)) {
+    const rules = stopRules.map(String);
+    if (rules.includes('hold-clamp-until-release')) {
+      const clampOutputs = ind.cylinders
+        .filter((c) => c.valve === 'single')
+        .map((c) => c.extendY.trim());
+      for (const out of clampOutputs) {
+        const releaseIdx = ind.stopSequence.findIndex((s) =>
+          s.actions.some((a) => a.target.trim() === out && a.value === 'OFF'),
+        );
+        if (releaseIdx === -1) {
+          warn(
+            'STYLE_SPEC_STOP_CLAMP',
+            `停止序列未释放夹紧输出 ${out}（档案规则：hold-clamp-until-release 要求回原点后松开）`,
+          );
+          continue;
+        }
+        for (let i = 0; i < releaseIdx; i++) {
+          const held = ind.stopSequence[i].actions.some(
+            (a) => a.target.trim() === out && a.value === 'ON',
+          );
+          if (!held) {
+            warn(
+              'STYLE_SPEC_STOP_CLAMP',
+              `停止序列第 ${i + 1} 步未显式保持夹紧 ${out}（档案规则：松开前必须保持夹紧）`,
+            );
+          }
+        }
+      }
+    }
+    if (rules.includes('return-home-before-idle')) {
+      const last = ind.stopSequence[ind.stopSequence.length - 1];
+      if (!last) {
+        warn('STYLE_SPEC_STOP', '停止序列为空（档案规则：return-home-before-idle）');
+      } else if (last.until.trim().toUpperCase() !== 'TRUE') {
+        warn(
+          'STYLE_SPEC_STOP',
+          `停止序列最后一步完成条件为「${last.until}」，档案规则要求最后回到 TRUE/待机`,
+        );
+      }
+    }
   }
 
   return diags;

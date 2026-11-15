@@ -17,6 +17,7 @@ import {
 } from '../src/style/index.ts';
 import type { StyleProfile } from '../src/style/index.ts';
 import { checkSpecAgainstStyle, profileHmiAddresses } from '../src/style/check-spec.ts';
+import { applyStyleHmiAddresses } from '../src/style/apply-hmi.ts';
 import { generateFromSpec } from '../src/gen/generate.ts';
 
 const specPath = resolve('specs/robot_transfer_steps_v2.json');
@@ -162,4 +163,45 @@ test('style init 模板：字段齐全且可加载/校验', async () => {
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test('停止序列规则：未保持夹紧 / 最后一步未回 TRUE 会告警', async () => {
+  const loaded = await loadSpecFile(specPath);
+  const style = (await loadStyleFile(profilePath)).profile!;
+  const spec = loaded.spec!;
+  const ind = spec.sequence!.industrial!;
+  // 去掉 T1 的夹紧保持（松开步仍在 T3）
+  ind.stopSequence[0].actions = ind.stopSequence[0].actions.filter((a) => a.target !== 'Y2');
+  let diags = checkSpecAgainstStyle(spec, style);
+  assert.ok(diags.some((d) => d.code === 'STYLE_SPEC_STOP_CLAMP'), diags.map((d) => d.code).join(','));
+
+  // 恢复后修改最后一步完成条件
+  ind.stopSequence[0].actions.push({ target: 'Y2', value: 'ON' });
+  ind.stopSequence[ind.stopSequence.length - 1].until = 'X15';
+  diags = checkSpecAgainstStyle(spec, style);
+  assert.ok(diags.some((d) => d.code === 'STYLE_SPEC_STOP'), diags.map((d) => d.code).join(','));
+});
+
+test('HMI 地址覆盖：applyStyleHmiAddresses 按档案规划改 spec', async () => {
+  const loaded = await loadSpecFile(specPath);
+  const style = (await loadStyleFile(profilePath)).profile!;
+  // 默认档案与 spec 一致：无覆盖
+  const clean = applyStyleHmiAddresses(loaded.spec!, style);
+  assert.equal(clean.applied.length, 0);
+
+  // 修改档案规划后应覆盖 M0→M50、M11→M19
+  const custom = structuredClone(style);
+  (custom.hmi as Record<string, unknown>).commands = { ...(custom.hmi!.commands as object), M50: '启动' };
+  delete (custom.hmi!.commands as Record<string, unknown>).M0;
+  (custom.hmi as Record<string, unknown>).manualButtons = {
+    ...(custom.hmi!.manualButtons as object),
+    M19: '手动翻转 水平缸',
+  };
+  delete (custom.hmi!.manualButtons as Record<string, unknown>).M11;
+  const spec2 = (await loadSpecFile(specPath)).spec!;
+  const r = applyStyleHmiAddresses(spec2, custom);
+  assert.equal(spec2.sequence!.industrial!.hmi.start, 'M50');
+  const hBtn = spec2.sequence!.industrial!.manualButtons.find((b) => b.cylinder === '水平缸');
+  assert.equal(hBtn?.button, 'M19');
+  assert.ok(r.applied.length >= 2, r.applied.join('；'));
 });

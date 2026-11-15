@@ -41,6 +41,7 @@ import { compilerErrorsToDiagnostics, type CompilerErrorEntry } from './compiler
 import type { DiagnosticLike } from './repair.ts';
 import { mergeStyleIntoSpec, type StyleProfile } from '../style/index.ts';
 import { checkSpecAgainstStyle } from '../style/check-spec.ts';
+import { applyStyleHmiAddresses } from '../style/apply-hmi.ts';
 
 export interface GenerateOptions {
   /** 输出目录；默认 `<spec 所在目录>/../out/<spec.name>` 或 `out/<spec.name>`。 */
@@ -57,6 +58,8 @@ export interface GenerateOptions {
   labelLanguage?: 'en' | 'zh';
   /** 编程习惯档案（命名/标签语言/默认超时等）；只填充 spec 未显式设置的项。 */
   style?: StyleProfile;
+  /** 用档案 HMI 地址规划覆盖 spec（显式 opt-in，默认关闭）。 */
+  applyHmiFromStyle?: boolean;
 }
 
 export interface GenerateResult {
@@ -141,6 +144,13 @@ export async function generateFromSpec(
     const applied = mergeStyleIntoSpec(spec, options.style);
     if (applied.applied.length > 0) {
       result.warnings.push(`已应用编程习惯档案 ${options.style.name}：${applied.applied.join('、')}`);
+    }
+    // HMI 地址显式覆盖（opt-in）
+    if (options.applyHmiFromStyle) {
+      const hmiApplied = applyStyleHmiAddresses(spec, options.style);
+      if (hmiApplied.applied.length > 0) {
+        result.warnings.push(`HMI 地址已按习惯档案覆盖：${hmiApplied.applied.join('；')}`);
+      }
     }
     // 习惯一致性校验：只提示 spec 与档案的偏差，不阻断生成
     for (const d of checkSpecAgainstStyle(spec, options.style)) {

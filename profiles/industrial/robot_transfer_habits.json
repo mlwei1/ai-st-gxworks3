@@ -67,7 +67,8 @@
         "夹爪松开",
         "全部输出关闭 → 待机"
       ],
-      "safety": "夹紧保持到“松开”步，避免搬运途中掉件"
+      "safety": "夹紧保持到“松开”步，避免搬运途中掉件",
+      "rules": ["hold-clamp-until-release", "return-home-before-idle"]
     },
     "manual": {
       "buttons": "每个执行元件一个翻转按钮：按一下到位、再按一下原位",
