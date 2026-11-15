@@ -43,6 +43,7 @@ import { buildSystemPrompt } from './ai/prompt.ts';
 import { loadStyleFile, resolveStyleFiles } from './style/index.ts';
 import { extractStyleCandidates, renderCandidateMarkdown, type StyleCandidate } from './style/diff-candidates.ts';
 import { adoptCandidates } from './style/adopt.ts';
+import { styleErrors, validateStyleProfile } from './style/validate.ts';
 
 const SEVERITY_ICON: Record<Diagnostic['severity'], string> = {
   error: '✖',
@@ -553,6 +554,8 @@ async function cmdGen(args: Args): Promise<number> {
   if (result.stPath) console.log(`  ST       : ${result.stPath}`);
   if (result.xmlPath) console.log(`  IEC XML  : ${result.xmlPath}`);
   if (result.labelFiles?.length) console.log(`  标签 CSV : ${result.labelFiles.length} 个`);
+  if (result.hmiCsvPath) console.log(`  HMI 表   : ${result.hmiCsvPath}`);
+  if (result.alarmCsvPath) console.log(`  报警表   : ${result.alarmCsvPath}`);
   if (result.manifestPath) console.log(`  manifest : ${result.manifestPath}`);
   console.log('');
   console.log('导入步骤：');
@@ -637,8 +640,8 @@ async function cmdStyle(args: Args): Promise<number> {
     console.log(`  style merge <a.json> <b.json> [-o merged.json] 多级合并（后者覆盖前者）`);
     console.log(`  style candidates --generated gen.st --actual user.st [-o outdir]`);
     console.log(`                                                 对比生成物与用户修改，提取候选规则`);
-    console.log(`  style adopt --profile p.json --candidates candidates.json [-o out.json] [--min high|medium]`);
-    console.log(`                                                 把候选规则采纳进档案`);
+    console.log(`  style adopt --profile p.json --candidates candidates.json [-o out.json] [--min high|medium] [--force]`);
+    console.log(`                                                 把候选规则采纳进档案（有冲突时默认拒绝写盘）`);
     return 0;
   }
 
@@ -684,10 +687,21 @@ async function cmdStyle(args: Args): Promise<number> {
     let errors = 0;
     for (const f of files) {
       const r = await loadStyleFile(resolve(f));
-      if (r.ok) console.log(`✓ ${f}`);
-      else {
+      if (!r.ok) {
         errors++;
         console.error(`✖ ${f}：${r.diagnostics.map((d) => d.message).join('; ')}`);
+        continue;
+      }
+      const ruleDiags = validateStyleProfile(r.profile!);
+      const errs = styleErrors(ruleDiags);
+      errors += errs.length;
+      if (ruleDiags.length === 0) {
+        console.log(`✓ ${f}`);
+      } else {
+        console.log(`▲ ${f}`);
+        for (const d of ruleDiags) {
+          console.log(`  ${d.severity === 'error' ? '✖' : '▲'} ${d.code}: ${d.message}`);
+        }
       }
     }
     return errors > 0 ? 1 : 0;
@@ -752,6 +766,19 @@ async function cmdStyle(args: Args): Promise<number> {
     if (adopted.skipped.length > 0) {
       console.log(`跳过 ${adopted.skipped.length} 条：`);
       for (const s of adopted.skipped) console.log(`  - ${s}`);
+    }
+    if (adopted.diagnostics.length > 0) {
+      console.log(`规则校验：${adopted.diagnostics.length} 条提示`);
+      for (const d of adopted.diagnostics) {
+        console.log(`  ${d.severity === 'error' ? '✖' : '▲'} ${d.code}: ${d.message}`);
+      }
+    }
+    const ruleErrors = styleErrors(adopted.diagnostics);
+    if (ruleErrors.length > 0 && args.force !== true) {
+      console.error(
+        `✖ 采纳后档案存在 ${ruleErrors.length} 个规则冲突，未写盘（确认无误可加 --force）`,
+      );
+      return 1;
     }
     const out = typeof args.out === 'string' ? args.out : undefined;
     const text = JSON.stringify(adopted.profile, null, 2) + '\n';

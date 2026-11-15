@@ -7,6 +7,7 @@
 
 import type { StyleCandidate } from './diff-candidates.ts';
 import type { StyleProfile } from './index.ts';
+import { validateStyleProfile, type StyleRuleDiagnostic } from './validate.ts';
 
 export type Confidence = 'high' | 'medium' | 'low';
 
@@ -19,6 +20,7 @@ export interface AdoptResult {
   profile: StyleProfile;
   adopted: string[];
   skipped: string[];
+  diagnostics: StyleRuleDiagnostic[];
 }
 
 const RANK: Record<Confidence, number> = { high: 3, medium: 2, low: 1 };
@@ -96,5 +98,5 @@ export function adoptCandidates(
     }
   }
 
-  return { profile: next, adopted, skipped };
+  return { profile: next, adopted, skipped, diagnostics: validateStyleProfile(next) };
 }

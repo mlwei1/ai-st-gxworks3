@@ -33,6 +33,7 @@ import {
   renameIdentifiers,
 } from '../emit/label-map.ts';
 import { generateLabelCsvFiles } from '../emit/label-csv.ts';
+import { exportHmiCsvFiles } from '../emit/hmi-csv.ts';
 import { generateWithLlmFallback, type LlmSourceGenerator } from './llm.ts';
 import { generateStepSequence } from './step-sequence.ts';
 import { extractPouBodies } from '../pipeline/pou-text.ts';
@@ -76,6 +77,10 @@ export interface GenerateResult {
   stPath?: string;
   xmlPath?: string;
   labelFiles?: string[];
+  /** 工业程序的触摸屏地址表（CSV）。 */
+  hmiCsvPath?: string;
+  /** 工业程序的报警表（CSV）。 */
+  alarmCsvPath?: string;
   manifestPath?: string;
   diagnosticsPath?: string;
   stSource: string;
@@ -242,7 +247,7 @@ export async function generateFromSpec(
   }
 
   if (!stSource) {
-    await writeArtifacts(result, null);
+    await writeArtifacts(result, null, undefined, options.style);
     return result;
   }
 
@@ -317,7 +322,7 @@ export async function generateFromSpec(
   }
 
   // ---- 4) 写工程包 ----
-  await writeArtifacts(result, xml, ast);
+  await writeArtifacts(result, xml, ast, options.style);
 
   return result;
 }
@@ -327,6 +332,7 @@ async function writeArtifacts(
   result: GenerateResult,
   xml: string | null,
   ast?: ReturnType<typeof parseWithRecovery>['ast'],
+  style?: StyleProfile,
 ): Promise<void> {
   const spec = result.spec;
   const baseName = spec ? spec.name : basename(result.specPath).replace(/\.json$/i, '');
@@ -358,6 +364,19 @@ async function writeArtifacts(
           `标签 CSV 生成失败（不影响 XML）：${e instanceof Error ? e.message : String(e)}`,
         );
       }
+    }
+  }
+
+  // 工业程序：HMI 地址表 + 报警表（与 ST/XML 标签同源）
+  if (spec?.sequence?.industrial) {
+    try {
+      const exported = await exportHmiCsvFiles(spec, style, result.outDir);
+      if (exported) {
+        result.hmiCsvPath = exported.hmiPath;
+        result.alarmCsvPath = exported.alarmPath;
+      }
+    } catch (e) {
+      result.warnings.push(`HMI/报警表生成失败：${e instanceof Error ? e.message : String(e)}`);
     }
   }
 

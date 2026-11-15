@@ -54,7 +54,11 @@ node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_sta
 > `style adopt` 可一键写入档案；档案的标签名（labels.names）、命名前缀（naming.prefixes）、
 > 精确改名（naming.renames）会实际作用于生成；机制见 [docs/编程习惯沉淀.md](docs/编程习惯沉淀.md)，
 > 首个档案 [profiles/industrial/robot_transfer_habits.json](profiles/industrial/robot_transfer_habits.json)，
-> 新用户习惯提问清单 [profiles/questions.md](profiles/questions.md)。>
+> 新用户习惯提问清单 [profiles/questions.md](profiles/questions.md)。
+>
+> **HMI/报警表导出**：工业程序 `gen` 时自动输出 `hmi_map.csv`（触摸屏地址表）与 `alarm_map.csv`
+> （报警码表），标签名与 ST/XML 全局标签同源；报警码可由 spec 提供，缺省时按习惯档案
+> `alarmCodes.mapping` 按缸名兜底；`style check` 会校验档案中的标签名冲突/改名循环/非法前缀。>
 > **标签语言可配置**：`spec.labels.language` 支持 `zh`（中文标签，如 `启动按钮`，机器人示例默认）与 `en`（英文，如 `bStart`，正式项目/旧项目默认）；也可用 `gen spec.json --labels en` 临时覆盖。中文标签已实测可被 GX Works3 导入并编译 Error:0。
 >
 > **中文模式也覆盖局部标签**：主程序局部变量、FB 形参/实例名同样中文化，并按数据类型加英文前缀（`b`=BOOL、`n`=INT、`t`=TIME/TON、`x`=输入信号），如 `n模式`、`b启动上升沿`、`fb竖直缸`、`b使能`、`t超时`、`b伸出输出`。
