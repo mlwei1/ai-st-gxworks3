@@ -143,7 +143,7 @@ export async function generateFromSpec(
   // 停止序列为空：按气缸清单自动生成默认安全停止序列（缩回→松夹→全关）
   const indAuto = spec.sequence?.industrial;
   if (indAuto && indAuto.stopSequence.length === 0) {
-    indAuto.stopSequence = buildDefaultStopSequence(indAuto.cylinders);
+    indAuto.stopSequence = buildDefaultStopSequence(indAuto.cylinders, options.style);
     if (indAuto.stopSequence.length > 0) {
       result.warnings.push(
         `stopSequence 为空，已按气缸清单自动生成 ${indAuto.stopSequence.length} 步停止序列`,

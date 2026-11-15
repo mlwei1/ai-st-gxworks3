@@ -9,22 +9,45 @@
  */
 
 import type { CylinderSpec, StepAction, StopStepSpec } from '../spec/schema.ts';
+import type { StyleProfile } from './index.ts';
 
 function uniq<T>(arr: T[]): T[] {
   return [...new Set(arr)];
 }
 
+/** 从档案 codeStructure.stopSequence.order 取气缸回原点顺序。 */
+function stopOrder(style?: StyleProfile): string[] {
+  const stop = style?.codeStructure?.stopSequence;
+  if (!stop || typeof stop !== 'object') return [];
+  const order = (stop as Record<string, unknown>).order;
+  return Array.isArray(order) ? order.map(String).map((s) => s.trim()).filter(Boolean) : [];
+}
+
 /** 生成默认停止序列；无法生成时返回空数组。 */
-export function buildDefaultStopSequence(cylinders: CylinderSpec[]): StopStepSpec[] {
+export function buildDefaultStopSequence(
+  cylinders: CylinderSpec[],
+  style?: StyleProfile,
+): StopStepSpec[] {
   const doubles = cylinders.filter((c) => c.valve !== 'single' && c.retractY);
   const singles = cylinders.filter((c) => c.valve === 'single');
   if (doubles.length === 0 && singles.length === 0) return [];
+
+  // 按档案顺序排列双电控气缸；未列出的保持原顺序排在后面
+  const order = stopOrder(style);
+  const rank = (name: string): number => {
+    const i = order.indexOf(name);
+    return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+  };
+  const orderedDoubles = doubles
+    .map((c, i) => ({ c, i }))
+    .sort((a, b) => rank(a.c.name) - rank(b.c.name) || a.i - b.i)
+    .map((x) => x.c);
 
   const clampHold: StepAction[] = singles.map((c) => ({ target: c.extendY.trim(), value: 'ON' as const }));
   const steps: StopStepSpec[] = [];
   let n = 1;
 
-  for (const c of doubles) {
+  for (const c of orderedDoubles) {
     const actions: StepAction[] = [
       { target: c.extendY.trim(), value: 'OFF' },
       { target: c.retractY!.trim(), value: 'ON' },

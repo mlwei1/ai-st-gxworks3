@@ -213,11 +213,20 @@ test('自动停止序列：缩回→松夹→全关，满足夹紧保持规则',
   const cyls = loaded.spec!.sequence!.industrial!.cylinders;
   const steps = buildDefaultStopSequence(cyls);
   assert.equal(steps.length, 4); // 2 个双电控 + 1 个松开步 + 1 个全关步
+  assert.equal(steps[0].name, '竖直缸回原位');
   assert.ok(steps[0].actions.some((a) => a.target === 'Y2' && a.value === 'ON'));
   assert.ok(steps[1].actions.some((a) => a.target === 'Y2' && a.value === 'ON'));
   const release = steps.find((s) => (s.name ?? '').includes('松开'));
   assert.ok(release?.actions.some((a) => a.target === 'Y2' && a.value === 'OFF'));
   assert.equal(steps[steps.length - 1].until, 'TRUE');
+
+  // 档案 order 控制双电控回原点顺序
+  const style = (await loadStyleFile(profilePath)).profile!;
+  const reversed = structuredClone(style);
+  (reversed.codeStructure!.stopSequence as Record<string, unknown>).order = ['水平缸', '竖直缸'];
+  const ordered = buildDefaultStopSequence(cyls, reversed);
+  assert.equal(ordered[0].name, '水平缸回原位');
+  assert.equal(ordered[1].name, '竖直缸回原位');
 
   // spec 空 stopSequence：loader 接受，生成时自动补齐并通过停止规则校验
   const dir = await mkdtemp(join(tmpdir(), 'dsh-auto-stop-'));
