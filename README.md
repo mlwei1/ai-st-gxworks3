@@ -57,6 +57,9 @@ node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_sta
 > 首个档案 [profiles/industrial/robot_transfer_habits.json](profiles/industrial/robot_transfer_habits.json)，
 > 新用户习惯提问清单 [profiles/questions.md](profiles/questions.md)。
 >
+> 端到端演示（生成 → 用户修改 → candidates → adopt → 再生成）：[docs/演示-习惯沉淀闭环.md](docs/演示-习惯沉淀闭环.md)，
+> 一键运行 `powershell -NoProfile -ExecutionPolicy Bypass -File tools\demo-style-loop.ps1`。
+>
 > **HMI/报警表导出**：工业程序 `gen` 时自动输出 `hmi_map.csv`（触摸屏地址表）与 `alarm_map.csv`
 > （报警码表），标签名与 ST/XML 全局标签同源；报警码可由 spec 提供，缺省时按习惯档案
 > `alarmCodes.mapping` 按缸名兜底；`style check` 会校验档案中的标签名冲突/改名循环/非法前缀。>

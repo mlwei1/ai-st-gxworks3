@@ -10,6 +10,7 @@ import { join } from 'node:path';
 
 import { mergeStyleProfiles, resolveStyleFiles, type StyleProfile } from '../src/style/index.ts';
 import { extractStyleCandidates, renderCandidateMarkdown } from '../src/style/diff-candidates.ts';
+import { diffStyleProfiles, renderStyleDiff } from '../src/style/diff.ts';
 
 function prof(over: Partial<StyleProfile>): StyleProfile {
   return { schemaVersion: 1, name: 'x', ...over } as StyleProfile;
@@ -58,6 +59,47 @@ test('style 多文件解析：缺失文件报错', async () => {
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test('style 多级合并：labels.names 深合并，项目覆盖同名软元件', () => {
+  const user = prof({
+    name: 'user',
+    labels: { language: 'zh', names: { X0: '启动', X1: '停止' } },
+    naming: { prefixes: { BOOL: 'b' } },
+  });
+  const project = prof({
+    name: 'project',
+    scope: 'project',
+    labels: { names: { X0: '开始按钮', X2: '急停' } },
+    naming: { prefixes: { BOOL: 'q' } },
+  });
+  const merged = mergeStyleProfiles([user, project]);
+  assert.deepEqual(merged.labels?.names, { X0: '开始按钮', X1: '停止', X2: '急停' });
+  assert.equal(merged.naming?.prefixes?.BOOL, 'q');
+  assert.equal(merged.labels?.language, 'zh');
+});
+
+test('style diff：比较两个档案的字段差异', () => {
+  const a = prof({
+    name: 'a',
+    labels: { language: 'en', names: { X0: '启动' } },
+    defaults: { cylinderTimeoutMs: 5000 },
+  });
+  const b = prof({
+    name: 'b',
+    labels: { language: 'zh', names: { X0: '启动', X1: '停止' } },
+    defaults: { cylinderTimeoutMs: 8000 },
+  });
+  const entries = diffStyleProfiles(a, b);
+  const paths = entries.map((e) => e.path);
+  assert.ok(paths.includes('labels.language'));
+  assert.ok(paths.includes('labels.names.X1'));
+  assert.ok(paths.includes('defaults.cylinderTimeoutMs'));
+  assert.equal(entries.find((e) => e.path === 'labels.language')?.kind, 'changed');
+  assert.equal(entries.find((e) => e.path === 'labels.names.X1')?.kind, 'added');
+  const md = renderStyleDiff(entries, 'a', 'b');
+  assert.match(md, /labels.names.X1/);
+  assert.equal(diffStyleProfiles(a, a).length, 0);
 });
 
 test('diff 候选：全局标签改名 / 局部改名 / 语言与前缀推断', () => {

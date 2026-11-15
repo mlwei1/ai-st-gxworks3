@@ -44,6 +44,7 @@ import { loadStyleFile, resolveStyleFiles } from './style/index.ts';
 import { extractStyleCandidates, renderCandidateMarkdown, type StyleCandidate } from './style/diff-candidates.ts';
 import { adoptCandidates } from './style/adopt.ts';
 import { styleErrors, validateStyleProfile } from './style/validate.ts';
+import { diffStyleProfiles, renderStyleDiff } from './style/diff.ts';
 
 const SEVERITY_ICON: Record<Diagnostic['severity'], string> = {
   error: '✖',
@@ -638,6 +639,7 @@ async function cmdStyle(args: Args): Promise<number> {
     console.log(`  style show <profile.json>                      查看档案内容`);
     console.log(`  style check [<profile.json>...] [--dir profiles] 校验档案`);
     console.log(`  style merge <a.json> <b.json> [-o merged.json] 多级合并（后者覆盖前者）`);
+    console.log(`  style diff <a.json> <b.json> [--json]         比较两个档案的字段差异`);
     console.log(`  style candidates --generated gen.st --actual user.st [-o outdir]`);
     console.log(`                                                 对比生成物与用户修改，提取候选规则`);
     console.log(`  style adopt --profile p.json --candidates candidates.json [-o out.json] [--min high|medium] [--force] [--dry-run]`);
@@ -705,6 +707,29 @@ async function cmdStyle(args: Args): Promise<number> {
       }
     }
     return errors > 0 ? 1 : 0;
+  }
+
+  if (action === 'diff') {
+    const [aPath, bPath] = rest;
+    if (!aPath || !bPath) {
+      console.error('用法: ai-st-gxworks3 style diff <a.json> <b.json> [--json]');
+      return 2;
+    }
+    const ra = await loadStyleFile(resolve(aPath));
+    const rb = await loadStyleFile(resolve(bPath));
+    if (!ra.ok || !ra.profile || !rb.ok || !rb.profile) {
+      console.error(
+        `✖ 档案校验失败：${[...ra.diagnostics, ...rb.diagnostics].map((d) => d.message).join('; ')}`,
+      );
+      return 1;
+    }
+    const entries = diffStyleProfiles(ra.profile, rb.profile);
+    if (args.json === true) {
+      console.log(JSON.stringify(entries, null, 2));
+    } else {
+      console.log(renderStyleDiff(entries, ra.profile.name, rb.profile.name));
+    }
+    return 0;
   }
 
   if (action === 'merge') {
