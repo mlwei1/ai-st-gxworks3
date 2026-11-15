@@ -62,6 +62,7 @@ node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_sta
 > 新用户习惯提问清单 [profiles/questions.md](profiles/questions.md)。
 >
 > 端到端演示（生成 → 用户修改 → candidates → adopt → 再生成）：[docs/演示-习惯沉淀闭环.md](docs/演示-习惯沉淀闭环.md)，
+> 多用户/多级档案演示：[docs/演示-多用户档案.md](docs/演示-多用户档案.md)，字段/CLI 速查：[docs/风格档案速查表.md](docs/风格档案速查表.md)，
 > 一键运行 `powershell -NoProfile -ExecutionPolicy Bypass -File tools\demo-style-loop.ps1`。
 >
 > **HMI/报警表导出**：工业程序 `gen` 时自动输出 `hmi_map.csv`（触摸屏地址表）与 `alarm_map.csv`

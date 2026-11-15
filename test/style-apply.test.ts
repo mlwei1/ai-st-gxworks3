@@ -75,14 +75,14 @@ test('应用：--style 目录按 scope 排序合并（user < company < project�
   const dir = await mkdtemp(join(tmpdir(), 'dsh-style-dir-'));
   try {
     const profileDir = join(dir, 'profiles');
-    await mkdir(profileDir);
+    for (const sub of ['user', 'company', 'project']) await mkdir(join(profileDir, sub), { recursive: true });
     await writeFile(
-      join(profileDir, 'c_project.json'),
+      join(profileDir, 'project', 'c_project.json'),
       JSON.stringify({ schemaVersion: 1, name: 'proj', scope: 'project', labels: { language: 'en' } }),
       'utf8',
     );
     await writeFile(
-      join(profileDir, 'a_user.json'),
+      join(profileDir, 'user', 'a_user.json'),
       JSON.stringify({
         schemaVersion: 1,
         name: 'user',
@@ -93,7 +93,7 @@ test('应用：--style 目录按 scope 排序合并（user < company < project�
       'utf8',
     );
     await writeFile(
-      join(profileDir, 'b_company.json'),
+      join(profileDir, 'company', 'b_company.json'),
       JSON.stringify({
         schemaVersion: 1,
         name: 'company',

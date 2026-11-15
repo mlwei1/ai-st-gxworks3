@@ -243,10 +243,17 @@ export async function resolveStyleDirectory(dir: string): Promise<{
   const diagnostics: StyleDiagnostic[] = [];
   let files: string[];
   try {
-    const entries = await readdir(dir, { withFileTypes: true });
-    files = entries
-      .filter((e) => e.isFile() && e.name.toLowerCase().endsWith('.json'))
-      .map((e) => join(dir, e.name));
+    const collect = async (p: string): Promise<string[]> => {
+      const out: string[] = [];
+      const entries = await readdir(p, { withFileTypes: true });
+      for (const e of entries) {
+        const fp = join(p, e.name);
+        if (e.isDirectory()) out.push(...(await collect(fp)));
+        else if (e.isFile() && e.name.toLowerCase().endsWith('.json')) out.push(fp);
+      }
+      return out;
+    };
+    files = await collect(dir);
   } catch (e) {
     return {
       ok: false,
