@@ -51,7 +51,7 @@ ST 文本导入（剪贴板也是专有二进制）。但 GX Works3 支持 **IEC
 要求：Node.js **22.6+**，GX Works3（导入时需要）。
 
 ```bash
-git clone <your-repo-url> ai-st-gxworks3
+git clone https://github.com/mlwei1/ai-st-gxworks3.git
 cd ai-st-gxworks3
 
 # 1) 标准模板：Spec → ST + IEC XML + 标签 CSV
