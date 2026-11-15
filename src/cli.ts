@@ -640,7 +640,7 @@ async function cmdStyle(args: Args): Promise<number> {
     console.log(`  style merge <a.json> <b.json> [-o merged.json] 多级合并（后者覆盖前者）`);
     console.log(`  style candidates --generated gen.st --actual user.st [-o outdir]`);
     console.log(`                                                 对比生成物与用户修改，提取候选规则`);
-    console.log(`  style adopt --profile p.json --candidates candidates.json [-o out.json] [--min high|medium] [--force]`);
+    console.log(`  style adopt --profile p.json --candidates candidates.json [-o out.json] [--min high|medium] [--force] [--dry-run]`);
     console.log(`                                                 把候选规则采纳进档案（有冲突时默认拒绝写盘）`);
     return 0;
   }
@@ -780,6 +780,11 @@ async function cmdStyle(args: Args): Promise<number> {
       );
       return 1;
     }
+    if (args['dry-run'] === true) {
+      console.log('（dry-run：只预览，不写盘）');
+      console.log(JSON.stringify(adopted.profile, null, 2));
+      return 0;
+    }
     const out = typeof args.out === 'string' ? args.out : undefined;
     const text = JSON.stringify(adopted.profile, null, 2) + '\n';
     if (out) {
@@ -820,7 +825,7 @@ async function cmdStyle(args: Args): Promise<number> {
 async function cmdGenerate(args: Args): Promise<number> {
   const requirement = args._.join(' ') || (args.req as string);
   if (!requirement) {
-    console.error('用法: ai-st-gxworks3 generate "控制需求描述" [--io io.txt] [--out out.st]');
+    console.error('用法: ai-st-gxworks3 generate "控制需求描述" [--io io.txt] [--out out.st] [--style profile.json]');
     console.error('  或: ai-st-gxworks3 generate --req "控制需求描述"');
     return 2;
   }
@@ -828,6 +833,17 @@ async function cmdGenerate(args: Args): Promise<number> {
   let ioTable: string | undefined;
   if (args.io && typeof args.io === 'string') {
     ioTable = await readFile(resolve(args.io), 'utf8');
+  }
+
+  // 编程习惯档案（可选）：注入 system prompt / 需求文本
+  let aiStyle;
+  if (typeof args.style === 'string') {
+    const styleResult = await loadStyleFile(resolve(args.style));
+    if (!styleResult.ok || !styleResult.profile) {
+      console.error(`✖ 编程习惯档案校验失败：${styleResult.diagnostics.map((d) => d.message).join('; ')}`);
+      return 2;
+    }
+    aiStyle = styleResult.profile;
   }
 
   console.log('正在调用 AI 生成 GX Works3 ST 代码…');
@@ -839,6 +855,7 @@ async function cmdGenerate(args: Args): Promise<number> {
         ioTable,
         existingVariables: typeof args.vars === 'string' ? await readFile(resolve(args.vars), 'utf8') : undefined,
         target: (args.target as 'FX5U' | 'iQ-R') ?? 'FX5U',
+        style: aiStyle,
       },
       loadLLMConfig(),
     );

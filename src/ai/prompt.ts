@@ -205,7 +205,7 @@ ${targetNote}
 ${OUTPUT_FORMAT}
 
 其中 body 字段是纯 ST 代码正文（多行用 \\n 表示换行），不含 PROGRAM / VAR / END_PROGRAM 外壳。
-如果不需要结构体，types 输出空数组；不需要全局变量，globalVars 输出空数组。`;
+如果不需要结构体，types 输出空数组；不需要全局变量，globalVars 输出空数组。${extra ? `\n\n${extra}` : ''}`;
 }
 
 /**

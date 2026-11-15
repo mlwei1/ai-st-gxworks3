@@ -51,8 +51,9 @@ node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_sta
 > HMI 地址、默认超时等）沉淀为可版本化档案 `profiles/*.json`；支持单档案、多级合并
 > （`--style user.json,company.json,project.json`）和 `style list/show/check/merge/candidates/adopt` CLI；
 > `style candidates --generated gen.st --actual user.st` 从用户修改 diff 提取改名/语言/前缀候选，
-> `style adopt` 可一键写入档案；档案的标签名（labels.names）、命名前缀（naming.prefixes）、
-> 精确改名（naming.renames）会实际作用于生成；机制见 [docs/编程习惯沉淀.md](docs/编程习惯沉淀.md)，
+> `style adopt` 可一键写入档案（`--dry-run` 只预览）；档案的标签名（labels.names）、命名前缀（naming.prefixes）、
+> 精确改名（naming.renames）会实际作用于生成；`generate "需求" --style profile.json` 会把档案注入 LLM
+> 系统提示词；机制见 [docs/编程习惯沉淀.md](docs/编程习惯沉淀.md)，
 > 首个档案 [profiles/industrial/robot_transfer_habits.json](profiles/industrial/robot_transfer_habits.json)，
 > 新用户习惯提问清单 [profiles/questions.md](profiles/questions.md)。
 >

@@ -10,6 +10,8 @@
 
 import { generateST } from '../ai/client.ts';
 import { aiProjectToST, type AIGeneratedProject } from '../ai/convert.ts';
+import { styleToPromptSection } from '../style/prompt.ts';
+import type { StyleProfile } from '../style/index.ts';
 import { analyzeST } from '../dialect/analyzer.ts';
 import { parseWithRecovery } from '../dialect/recovery.ts';
 import type { RequirementSpec } from '../spec/index.ts';
@@ -46,6 +48,8 @@ export interface LlmFallbackOptions {
    * 错误列表需要先从 GX Works3 Output 人工整理/导出为 JSON 或文本。
    */
   compilerErrors?: CompilerErrorEntry[];
+  /** 编程习惯档案（默认生成器会注入需求文本与 system prompt）。 */
+  style?: StyleProfile;
 }
 
 export interface LlmFallbackResult {
@@ -62,8 +66,8 @@ export interface LlmFallbackResult {
   note?: string;
 }
 
-/** 把 spec 转成给 LLM 的需求文本（含验收条款与 IO 表）。 */
-export function specToRequirement(spec: RequirementSpec): string {
+/** 把 spec 转成给 LLM 的需求文本（含验收条款与 IO 表；可追加习惯档案）。 */
+export function specToRequirement(spec: RequirementSpec, style?: StyleProfile): string {
   const lines: string[] = [];
   lines.push(`目标 PLC：${spec.cpu.series}${spec.cpu.model ? `（${spec.cpu.model}）` : ''}`);
   if (spec.title) lines.push(`任务：${spec.title}`);
@@ -79,19 +83,26 @@ export function specToRequirement(spec: RequirementSpec): string {
     lines.push('', '安全/互锁约束：');
     for (const it of spec.safety.interlocks) lines.push(`- ${it}`);
   }
+  if (style) {
+    const section = styleToPromptSection(style);
+    if (section) lines.push('', section);
+  }
   return lines.join('\n');
 }
 
 /** 默认生成器：调用项目内置 LLM 客户端，输出 AST JSON → ST 源码。 */
-export function createDefaultLlmGenerator(options: { target?: 'FX5U' | 'iQ-R' } = {}): LlmSourceGenerator {
+export function createDefaultLlmGenerator(
+  options: { target?: 'FX5U' | 'iQ-R'; style?: StyleProfile } = {},
+): LlmSourceGenerator {
   return async ({ spec, feedback }) => {
-    const base = specToRequirement(spec);
+    const base = specToRequirement(spec, options.style);
     const requirement = feedback
       ? `${base}\n\n上一次生成的 ST 未通过本地检查，请根据以下诊断修正后重新生成：\n${feedback}`
       : base;
     const { json } = await generateST({
       requirement,
       target: options.target ?? 'FX5U',
+      style: options.style,
       maxAttempts: 1,
     });
     const project = json as AIGeneratedProject;
@@ -136,7 +147,7 @@ export async function generateWithLlmFallback(
   spec: RequirementSpec,
   options: LlmFallbackOptions = {},
 ): Promise<LlmFallbackResult> {
-  const generate = options.generate ?? createDefaultLlmGenerator();
+  const generate = options.generate ?? createDefaultLlmGenerator({ style: options.style });
   let lastSource = '';
   let lastAst: AST | undefined;
 

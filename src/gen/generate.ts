@@ -184,6 +184,7 @@ export async function generateFromSpec(
       const fb = await generateWithLlmFallback(spec, {
         generate: options.llmGenerate,
         compilerErrors: options.compilerErrors,
+        style: options.style,
       });
       result.attempts = Math.max(1, fb.attempts.length);
       if (fb.ok) {
@@ -232,7 +233,10 @@ export async function generateFromSpec(
       result.attempts = Math.max(result.attempts, 1);
     } else if (llmEnabled) {
       result.warnings.push(`模板实例化失败（${t.error}），改用 LLM 兜底生成。`);
-      const fb = await generateWithLlmFallback(spec, { generate: options.llmGenerate });
+      const fb = await generateWithLlmFallback(spec, {
+        generate: options.llmGenerate,
+        style: options.style,
+      });
       result.attempts = Math.max(1, fb.attempts.length);
       if (fb.ok) {
         stSource = fb.stSource;

@@ -69,7 +69,7 @@ style adopt --profile profiles/industrial/robot_transfer_habits.json \
 
 `style adopt` 默认采纳 high/medium 候选，写入标签名/语言/前缀/精确改名；低置信正文修改只提示。
 采纳后自动做规则校验（`style check` 同款）：标签名重复、非法标识符/软元件、改名循环、非法前缀
-会报 error，有 error 时默认拒绝写盘（确认无误可加 `--force`）。
+会报 error，有 error 时默认拒绝写盘（确认无误可加 `--force`）。正式写盘前建议先 `--dry-run` 预览。
 
 ## 如何新增/更新档案
 

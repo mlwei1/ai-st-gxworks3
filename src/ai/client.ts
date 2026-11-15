@@ -6,6 +6,8 @@
  */
 
 import { buildSystemPrompt, buildUserPrompt } from './prompt.ts';
+import { styleToPromptSection } from '../style/prompt.ts';
+import type { StyleProfile } from '../style/index.ts';
 
 export interface LLMConfig {
   baseUrl: string;
@@ -25,6 +27,8 @@ export interface GenerateOptions {
   existingVariables?: string;
   /** 目标 CPU 系列。 */
   target?: 'FX5U' | 'iQ-R';
+  /** 编程习惯档案（注入 system prompt，让 AI 遵守用户/公司习惯）。 */
+  style?: StyleProfile;
   /** 最大尝试次数（含首次）。 */
   maxAttempts?: number;
 }
@@ -127,7 +131,8 @@ export async function generateST(
   config: LLMConfig = loadLLMConfig(),
 ): Promise<{ json: unknown; raw: string; attempts: number }> {
   const maxAttempts = options.maxAttempts ?? 3;
-  const system = buildSystemPrompt(options.target ?? 'FX5U');
+  const styleSection = options.style ? styleToPromptSection(options.style) : '';
+  const system = buildSystemPrompt(options.target ?? 'FX5U', styleSection || undefined);
   let user = buildUserPrompt(options.requirement, {
     ioTable: options.ioTable,
     existingVariables: options.existingVariables,
