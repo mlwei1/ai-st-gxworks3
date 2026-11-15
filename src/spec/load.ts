@@ -774,10 +774,10 @@ function parseIndustrial(
     });
   }
 
-  // 停止序列
-  if (!Array.isArray(raw.stopSequence) || raw.stopSequence.length === 0) {
-    err(diagnostics, 'SPEC_E_INDUSTRIAL_STOP', `${root}.stopSequence`, 'stopSequence 必须是至少 1 个元素的数组');
-  } else {
+  // 停止序列（允许空数组：生成时按气缸清单自动生成默认停止序列）
+  if (!Array.isArray(raw.stopSequence)) {
+    err(diagnostics, 'SPEC_E_INDUSTRIAL_STOP', `${root}.stopSequence`, 'stopSequence 必须是数组（可为空，生成时自动生成）');
+  } else if (raw.stopSequence.length > 0) {
     raw.stopSequence.forEach((sRaw, i) => {
       const p = `${root}.stopSequence[${i}]`;
       if (!isPlainObject(sRaw) || !isNonEmptyString(sRaw.id) || !isNonEmptyString(sRaw.until)) {

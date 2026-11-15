@@ -18,6 +18,8 @@ import {
 import type { StyleProfile } from '../src/style/index.ts';
 import { checkSpecAgainstStyle, profileHmiAddresses } from '../src/style/check-spec.ts';
 import { applyStyleHmiAddresses } from '../src/style/apply-hmi.ts';
+import { buildDefaultStopSequence } from '../src/style/auto-stop.ts';
+import { migrateStyleRaw } from '../src/style/migrate.ts';
 import { generateFromSpec } from '../src/gen/generate.ts';
 
 const specPath = resolve('specs/robot_transfer_steps_v2.json');
@@ -204,4 +206,50 @@ test('HMI 地址覆盖：applyStyleHmiAddresses 按档案规划改 spec', async 
   const hBtn = spec2.sequence!.industrial!.manualButtons.find((b) => b.cylinder === '水平缸');
   assert.equal(hBtn?.button, 'M19');
   assert.ok(r.applied.length >= 2, r.applied.join('；'));
+});
+
+test('自动停止序列：缩回→松夹→全关，满足夹紧保持规则', async () => {
+  const loaded = await loadSpecFile(specPath);
+  const cyls = loaded.spec!.sequence!.industrial!.cylinders;
+  const steps = buildDefaultStopSequence(cyls);
+  assert.equal(steps.length, 4); // 2 个双电控 + 1 个松开步 + 1 个全关步
+  assert.ok(steps[0].actions.some((a) => a.target === 'Y2' && a.value === 'ON'));
+  assert.ok(steps[1].actions.some((a) => a.target === 'Y2' && a.value === 'ON'));
+  const release = steps.find((s) => (s.name ?? '').includes('松开'));
+  assert.ok(release?.actions.some((a) => a.target === 'Y2' && a.value === 'OFF'));
+  assert.equal(steps[steps.length - 1].until, 'TRUE');
+
+  // spec 空 stopSequence：loader 接受，生成时自动补齐并通过停止规则校验
+  const dir = await mkdtemp(join(tmpdir(), 'dsh-auto-stop-'));
+  try {
+    const raw = JSON.parse(await readFile(specPath, 'utf8'));
+    raw.sequence.industrial.stopSequence = [];
+    const emptyStopSpec = join(dir, 'empty_stop.json');
+    await writeFile(emptyStopSpec, JSON.stringify(raw), 'utf8');
+    const style = (await loadStyleFile(profilePath)).profile!;
+    const r = await generateFromSpec(emptyStopSpec, { outDir: join(dir, 'out'), style });
+    assert.equal(r.ok, true, r.diagnostics.map((d) => d.message).join('; '));
+    assert.ok(r.warnings.some((w) => w.includes('自动生成')), r.warnings.join('; '));
+    assert.ok(!r.warnings.some((w) => w.startsWith('习惯校验：停止序列')), r.warnings.join('; '));
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('schemaVersion 迁移：缺少版本号补 1，未知版本报错', () => {
+  const legacy = { name: 'old', labels: { language: 'zh' } };
+  const m = migrateStyleRaw(legacy);
+  assert.equal(m.ok, true);
+  assert.equal(m.changed, true);
+  assert.equal(m.profile?.schemaVersion, 1);
+  assert.ok(m.diagnostics.some((d) => d.code === 'STYLE_M_VERSION'));
+
+  const current = { schemaVersion: 1, name: 'new' };
+  const m2 = migrateStyleRaw(current);
+  assert.equal(m2.ok, true);
+  assert.equal(m2.changed, false);
+
+  const future = migrateStyleRaw({ schemaVersion: 2, name: 'future' });
+  assert.equal(future.ok, false);
+  assert.ok(future.diagnostics.some((d) => d.code === 'STYLE_E_SCHEMA_UNSUPPORTED'));
 });

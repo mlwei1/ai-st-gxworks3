@@ -49,6 +49,7 @@ import { extractStyleCandidates, renderCandidateMarkdown, type StyleCandidate } 
 import { adoptCandidates } from './style/adopt.ts';
 import { styleErrors, validateStyleProfile } from './style/validate.ts';
 import { diffStyleProfiles, renderStyleDiff } from './style/diff.ts';
+import { migrateStyleRaw } from './style/migrate.ts';
 
 const SEVERITY_ICON: Record<Diagnostic['severity'], string> = {
   error: '✖',
@@ -677,6 +678,8 @@ async function cmdStyle(args: Args): Promise<number> {
     console.log(`  style check-spec <spec.json> --style p.json   用档案检查 spec 偏差（HMI/超时/报警码/手动按钮）`);
     console.log(`  style init --out p.json [--name 名称] [--scope user|company|project]`);
     console.log(`                                                 生成空白习惯档案模板`);
+    console.log(`  style migrate <profile.json> [-o out.json] [--force]`);
+    console.log(`                                                 迁移旧版档案到 schemaVersion=1`);
     console.log(`  style adopt --profile p.json --candidates candidates.json [-o out.json] [--min high|medium] [--force] [--dry-run]`);
     console.log(`                                                 把候选规则采纳进档案（有冲突时默认拒绝写盘）`);
     return 0;
@@ -913,6 +916,42 @@ async function cmdStyle(args: Args): Promise<number> {
     await writeFile(target, JSON.stringify(profile, null, 2) + '\n', 'utf8');
     console.log(`✓ 已生成档案模板 ${out}（name=${name}, scope=${scope}）`);
     console.log('  下一步：按 profiles/questions.md 补充 HMI/报警码/停止序列习惯，再用 style check 校验');
+    return 0;
+  }
+
+  if (action === 'migrate') {
+    const file = typeof args.file === 'string' ? args.file : rest[0];
+    if (!file) {
+      console.error('用法: ai-st-gxworks3 style migrate <profile.json> [-o out.json] [--force]');
+      return 2;
+    }
+    let raw: unknown;
+    try {
+      raw = JSON.parse(await readFile(resolve(file), 'utf8'));
+    } catch (e) {
+      console.error(`✖ 读取档案失败：${e instanceof Error ? e.message : String(e)}`);
+      return 1;
+    }
+    const r = migrateStyleRaw(raw);
+    for (const d of r.diagnostics) console.log(`  ▲ ${d.code}: ${d.message}`);
+    if (!r.ok || !r.profile) {
+      console.error('✖ 档案迁移失败');
+      return 1;
+    }
+    if (!r.changed) {
+      console.log(`✓ 档案版本已是最新（schemaVersion=1）：${file}`);
+      return 0;
+    }
+    const out =
+      typeof args.out === 'string' ? args.out : args.force === true ? file : undefined;
+    const text = JSON.stringify(r.profile, null, 2) + '\n';
+    if (!out) {
+      console.log(text);
+      console.error('（预览）确认后加 -o out.json 或 --force 写盘');
+      return 0;
+    }
+    await writeFile(resolve(out), text, 'utf8');
+    console.log(`✓ 已迁移并写入 ${out}`);
     return 0;
   }
 

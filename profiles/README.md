@@ -51,6 +51,9 @@ style check-spec specs/xxx.json --style profiles/users/alice
 
 # 用档案 HMI 规划显式覆盖 spec 地址（生成时记录 warning）
 gen specs/xxx.json -o out --style profiles/users/alice --hmi-from-style
+
+# 迁移无 schemaVersion 的旧档案
+style migrate profiles/old.json -o profiles/old.migrated.json
 ```
 
 ## 从用户修改提取候选

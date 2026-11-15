@@ -55,7 +55,8 @@ node --experimental-strip-types --no-warnings src/cli.ts deliver specs/motor_sta
 > 精确改名（naming.renames）会实际作用于生成；`--style` 还支持目录（按 user/company/project scope 自动排序合并）；
 > `style check-spec <spec> --style p.json` 会检查 spec 与习惯的偏差（HMI/超时/报警码/手动按钮/停止序列安全规则），
 > `gen --style p.json --hmi-from-style` 可用档案 HMI 规划显式覆盖 spec 地址；
-> `style init --out p.json` 生成空白档案模板；`generate "需求" --style profile.json` 会把档案注入 LLM
+> `style init --out p.json` 生成空白档案模板；`spec` 的 `stopSequence: []` 会按气缸清单自动生成
+> 安全停止序列（缩回→松夹→全关）；`style migrate` 可迁移无版本号的旧档案；`generate "需求" --style profile.json` 会把档案注入 LLM
 > 系统提示词；机制见 [docs/编程习惯沉淀.md](docs/编程习惯沉淀.md)，
 > 首个档案 [profiles/industrial/robot_transfer_habits.json](profiles/industrial/robot_transfer_habits.json)，
 > 新用户习惯提问清单 [profiles/questions.md](profiles/questions.md)。

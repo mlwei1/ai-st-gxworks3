@@ -42,6 +42,7 @@ import type { DiagnosticLike } from './repair.ts';
 import { mergeStyleIntoSpec, type StyleProfile } from '../style/index.ts';
 import { checkSpecAgainstStyle } from '../style/check-spec.ts';
 import { applyStyleHmiAddresses } from '../style/apply-hmi.ts';
+import { buildDefaultStopSequence } from '../style/auto-stop.ts';
 
 export interface GenerateOptions {
   /** 输出目录；默认 `<spec 所在目录>/../out/<spec.name>` 或 `out/<spec.name>`。 */
@@ -139,6 +140,16 @@ export async function generateFromSpec(
   }
 
   const spec = loaded.spec;
+  // 停止序列为空：按气缸清单自动生成默认安全停止序列（缩回→松夹→全关）
+  const indAuto = spec.sequence?.industrial;
+  if (indAuto && indAuto.stopSequence.length === 0) {
+    indAuto.stopSequence = buildDefaultStopSequence(indAuto.cylinders);
+    if (indAuto.stopSequence.length > 0) {
+      result.warnings.push(
+        `stopSequence 为空，已按气缸清单自动生成 ${indAuto.stopSequence.length} 步停止序列`,
+      );
+    }
+  }
   // 编程习惯档案：只填充 spec 未显式设置项（优先级：CLI/对话 > spec > style）
   if (options.style) {
     const applied = mergeStyleIntoSpec(spec, options.style);
