@@ -304,6 +304,18 @@ export async function generateFromSpec(
     stSource = renameDevicesToLabels(stSource, labelPlan.deviceToLabel);
     stSource = prependGlobalVarBlock(stSource, labelPlan.labels);
   }
+
+  // 全局标签审计：只在标签表/声明里出现、从未在程序正文使用的标签，提示接线缺失
+  if (labelPlan.labels.length > 0) {
+    const bodyOnly = stSource.replace(/VAR_GLOBAL[\s\S]*?END_VAR/, '');
+    const unused = labelPlan.labels.filter((l) => !bodyOnly.includes(l.name));
+    if (unused.length > 0) {
+      result.warnings.push(
+        `未被程序引用的全局标签：${unused.map((l) => `${l.name}(${l.address})`).join('、')}` +
+          `；检查 spec.io 是否只定义了标签而未接线`,
+      );
+    }
+  }
   result.stSource = stSource;
   result.generator = generator;
 

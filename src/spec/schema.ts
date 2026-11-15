@@ -179,6 +179,10 @@ export interface StopStepSpec {
 export interface IndustrialSpec {
   /** 急停信号（任何模式立即冻结；如 X2）。 */
   estop: string;
+  /** 物理启动按钮（可选，如 X0）；与 HMI 启动 M0 并联取上升沿。 */
+  startButton?: string;
+  /** 物理停止按钮（可选，如 X1）；与 HMI 停止 M1 并联取上升沿。 */
+  stopButton?: string;
   hmi: IndustrialHmiSpec;
   /** 气缸列表（含磁性开关与超时报警）。 */
   cylinders: CylinderSpec[];

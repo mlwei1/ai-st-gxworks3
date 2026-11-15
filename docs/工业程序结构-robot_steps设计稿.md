@@ -253,3 +253,7 @@ Main（扫描任务）
   「类型前缀 + 中文语义」（b/n/t/x），如 `n模式`、`b启动上升沿`、`fb竖直缸`、`b使能`、`t超时`、`b伸出输出`；
   GX Works3 导入 + 全部转换 **Error:0 Warning:0**
   （证据 `docs/evidence/M4/20-robot-v2-zh-all-labels-gx-compile.png`）。
+- 物理启动/停止按钮（2026-11-15）：`spec.industrial.startButton/stopButton` 支持 X0/X1 与 HMI M0/M1 并联取上升沿；
+  修复此前 X0/X1 只出现在全局标签表、程序未引用（调试 X0 无效）的问题；
+  生成时同时审计「未被程序引用的全局标签」并给出 warning。
+  修复后 GX 导入 + 全部转换 **Error:0 Warning:0**（证据 `docs/evidence/M4/22-robot-v2-start-stop-gx-compile.png`）。

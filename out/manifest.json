@@ -447,13 +447,15 @@
             "until": "TRUE"
           }
         ],
+        "startButton": "X0",
+        "stopButton": "X1",
         "alarmOutput": "M104"
       }
     }
   },
   "templateName": "step_sequence",
   "generator": "template",
-  "generatedAt": "2026-11-15T08:58:01.066Z",
+  "generatedAt": "2026-11-15T10:27:39.476Z",
   "ok": true,
   "attempts": 1,
   "diagnostics": [],

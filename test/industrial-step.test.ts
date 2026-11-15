@@ -4,7 +4,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -27,6 +27,8 @@ test('工业 spec：industrial 段能加载并规范化', async () => {
   assert.equal(seq.industrial!.cylinders[2].valve, 'single');
   assert.equal(seq.industrial!.stopSequence.length, 4);
   assert.equal(seq.industrial!.hmi.start, 'M0');
+  assert.equal(seq.industrial!.startButton, 'X0');
+  assert.equal(seq.industrial!.stopButton, 'X1');
   assert.equal(loaded.spec!.labels?.language, 'zh', 'robot_steps_v2 应配置中文标签');
 });
 
@@ -43,6 +45,10 @@ test('工业生成：包含模式/急停/报警/手动/停止序列骨架', asyn
   assert.match(source, /fb竖直缸\(b使能 :=/);
   assert.match(source, /b报警 => b竖直缸报警, n报警码 => n竖直缸报警码/);
   assert.match(source, /b手动竖直缸上升沿 := M10 AND NOT b手动竖直缸上次/);
+  // 启动/停止：物理按钮与 HMI 命令并联
+  assert.match(source, /b启动上升沿 := \(X0 OR M0\) AND NOT b启动上次/);
+  assert.match(source, /b启动上次 := \(X0 OR M0\)/);
+  assert.match(source, /b停止上升沿 := \(X1 OR M1\) AND NOT b停止上次/);
   assert.match(source, /b气缸位置正常 :=/);
   assert.match(source, /n停止步号 := 1/);
   assert.match(source, /M100 := \(n模式 = 0\)/);
@@ -90,6 +96,15 @@ test('工业生成：XML 全局标签带软元件地址与注释（导入 GX 后
     assert.ok(xml.includes('<Address address="M0"/>'), '触摸屏启动 应分配到 M0');
     assert.ok(xml.includes('<Variable name="当前步号">'), '应包含中文步号数据标签');
     assert.ok(xml.includes('<Address address="D0"/>'), '当前步号 应分配到 D0');
+    // 启动/停止物理按钮必须出现在程序正文，而不只是全局标签表
+    assert.ok(
+      xml.includes('(启动按钮 OR 触摸屏启动)'),
+      '程序正文应引用启动按钮 X0（与触摸屏启动并联）',
+    );
+    assert.ok(
+      xml.includes('(停止按钮 OR 触摸屏停止)'),
+      '程序正文应引用停止按钮 X1（与触摸屏停止并联）',
+    );
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -131,4 +146,22 @@ test('工业 spec：缺少 estop 时报错', () => {
   assert.equal(bad.ok, false);
   const codes = bad.diagnostics.map((d) => d.code);
   assert.ok(codes.includes('SPEC_E_INDUSTRIAL_ESTOP'), codes.join(','));
+});
+
+test('全局标签审计：程序未引用的 IO 会给出警告', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'dsh-unused-label-'));
+  try {
+    const raw = JSON.parse(await readFile(specPath, 'utf8'));
+    raw.io.push({ device: 'X3', name: 'bSpare', type: 'BOOL', comment: '备用按钮' });
+    const tempSpec = join(dir, 'with_spare.json');
+    await writeFile(tempSpec, JSON.stringify(raw), 'utf8');
+    const r = await generateFromSpec(tempSpec, { outDir: join(dir, 'out') });
+    assert.equal(r.ok, true, r.diagnostics.map((d) => d.message).join('; '));
+    assert.ok(
+      r.warnings.some((w) => w.includes('未被程序引用') && w.includes('备用按钮')),
+      r.warnings.join('; '),
+    );
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });

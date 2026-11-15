@@ -680,6 +680,9 @@ function parseIndustrial(
   if (!isNonEmptyString(raw.estop)) err(diagnostics, 'SPEC_E_INDUSTRIAL_ESTOP', `${root}.estop`, 'estop 必须是非空字符串（如 X2）');
   else ind.estop = String(raw.estop).trim();
 
+  if (isNonEmptyString(raw.startButton)) ind.startButton = String(raw.startButton).trim();
+  if (isNonEmptyString(raw.stopButton)) ind.stopButton = String(raw.stopButton).trim();
+
   if (isNonEmptyString(raw.alarmOutput)) ind.alarmOutput = String(raw.alarmOutput).trim();
 
   // HMI

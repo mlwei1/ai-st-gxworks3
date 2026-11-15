@@ -104,6 +104,8 @@
     ],
     "industrial": {
       "estop": "X2",
+    "startButton": "X0",
+    "stopButton": "X1",
       "alarmOutput": "M104",
       "hmi": {
         "start": "M0",

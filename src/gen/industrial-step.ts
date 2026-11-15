@@ -48,6 +48,9 @@ interface Ctx {
   prefixes: Prefixes;
   /** 模式名称（0~5，可由 style.codeStructure.modes 覆盖）。 */
   modeNames: string[];
+  /** 启动/停止的合并信号（物理按钮 OR HMI 命令）。 */
+  startSignal: string;
+  stopSignal: string;
 }
 
 export interface Prefixes {
@@ -648,6 +651,10 @@ export function generateIndustrialStepSequence(
       ? styleModesRaw.map((m) => (m as string).trim())
       : undefined;
   const invalidStyleModes = styleModesRaw !== undefined && styleModes === undefined;
+  const hmiStart = ind.hmi.start.trim();
+  const hmiStop = ind.hmi.stop.trim();
+  const startSignal = ind.startButton ? `(${ind.startButton.trim()} OR ${hmiStart})` : hmiStart;
+  const stopSignal = ind.stopButton ? `(${ind.stopButton.trim()} OR ${hmiStop})` : hmiStop;
   const ctx: Ctx = {
     spec,
     seq,
@@ -662,6 +669,8 @@ export function generateIndustrialStepSequence(
     zh: (spec.labels?.language ?? 'en') === 'zh',
     prefixes,
     modeNames: styleModes ?? DEFAULT_MODE_NAMES,
+    startSignal,
+    stopSignal,
   };
   validateAndIndex(ctx);
   ind.manualButtons.forEach((b) => {
@@ -753,14 +762,17 @@ export function generateIndustrialStepSequence(
   lines.push('END_VAR');
   lines.push('');
 
-  // 1) HMI 边沿
-  lines.push('    // ---- 1) HMI 命令上升沿 ----');
+  // 1) 启动/停止/HMI 边沿
+  lines.push('    // ---- 1) 启动/停止/HMI 命令上升沿 ----');
   const edge = (name: string, dev: string, last: string) => {
     lines.push(`    ${name} := ${dev} AND NOT ${last};`);
     lines.push(`    ${last} := ${dev};`);
   };
-  edge('bStartEdge', h.start, 'bStartLast');
-  edge('bStopEdge', h.stop, 'bStopLast');
+  // 启动/停止支持物理按钮与 HMI 命令并联（X0 OR M0）
+  lines.push(`    bStartEdge := ${ctx.startSignal} AND NOT bStartLast;`);
+  lines.push(`    bStartLast := ${ctx.startSignal};`);
+  lines.push(`    bStopEdge := ${ctx.stopSignal} AND NOT bStopLast;`);
+  lines.push(`    bStopLast := ${ctx.stopSignal};`);
   edge('bResetEdge', h.reset, 'bResetLast');
   edge('bManualEdge', h.manual, 'bManualLast');
   edge('bExitEdge', h.exitManual, 'bExitLast');

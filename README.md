@@ -79,7 +79,7 @@ node --experimental-strip-types --no-warnings src/cli.ts gen specs/motor_start_s
 # 2) 本地静态校验
 node --experimental-strip-types --no-warnings src/cli.ts check out/motor_start_stop.st
 
-# 3) 工业步进示例（六模式/气缸 FB/报警冻结/停止序列/HMI）
+# 3) 工业步进示例（六模式/气缸 FB/报警冻结/停止序列/HMI；启动/停止 = 物理按钮 X0/X1 或 HMI M0/M1）
 node --experimental-strip-types --no-warnings src/cli.ts gen specs/robot_transfer_steps_v2.json -o ./out
 
 # 4) 叠加“编程习惯档案”（标签名/前缀/模式名/停止顺序/HMI/报警码）
@@ -279,7 +279,7 @@ tools/              demo 与维护脚本
 |---|---|
 | 单元/集成测试 | **297/297 通过**（`npm test`） |
 | GX Works3 XML 导入 + 全部转换 | 标准模板、工业 v2、FB、中文标签、自动停止序列均 `Error:0`（证据见 `docs/evidence/M4/`） |
-| 工业程序 | robot_transfer_steps_v2：六模式/气缸 FB/报警冻结/停止序列/HMI 地址 |
+| 工业程序 | robot_transfer_steps_v2：六模式/气缸 FB/报警冻结/停止序列/HMI 地址；启动/停止支持物理按钮与 HMI 并联 |
 | 习惯档案闭环 | 单用户闭环、多用户多级（demo 脚本实际运行通过） |
 | 中文标签 | 全局/局部/FB 形参导入编译 `Error:0` |
 
